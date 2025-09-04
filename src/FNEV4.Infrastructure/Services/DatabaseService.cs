@@ -13,6 +13,7 @@ namespace FNEV4.Infrastructure.Services
     {
         Task<DatabaseInfo> GetDatabaseInfoAsync();
         Task<List<TableInfo>> GetTablesInfoAsync();
+        Task<DataTable> GetTableDataAsync(string tableName, int pageSize = 50, int pageNumber = 1, string searchFilter = "");
         Task<bool> BackupDatabaseAsync(string backupPath);
         Task<bool> RestoreDatabaseAsync(string backupPath);
         Task<bool> OptimizeDatabaseAsync();
@@ -20,6 +21,11 @@ namespace FNEV4.Infrastructure.Services
         Task<string> ExecuteQueryAsync(string query);
         Task<bool> ApplyMigrationsAsync();
         Task<bool> InitializeDatabaseAsync();
+        Task<bool> InsertRecordAsync(string tableName, Dictionary<string, object> values);
+        Task<bool> UpdateRecordAsync(string tableName, string id, Dictionary<string, object> values);
+        Task<bool> DeleteRecordAsync(string tableName, string id);
+        Task<List<string>> GetTableColumnsAsync(string tableName);
+        string GetConnectionString();
     }
 
     public class DatabaseService : IDatabaseService
@@ -107,6 +113,148 @@ namespace FNEV4.Infrastructure.Services
             return tables;
         }
 
+        public async Task<DataTable> GetTableDataAsync(string tableName, int pageSize = 50, int pageNumber = 1, string searchFilter = "")
+        {
+            var dataTable = new DataTable();
+
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                await connection.OpenAsync();
+
+                // D'abord, récupérer la structure de la table
+                using var schemaCommand = connection.CreateCommand();
+                schemaCommand.CommandText = $"PRAGMA table_info([{tableName}])";
+                
+                using var schemaReader = await schemaCommand.ExecuteReaderAsync();
+                var columns = new List<(string Name, string Type)>();
+                
+                while (await schemaReader.ReadAsync())
+                {
+                    var columnName = schemaReader.GetString("name");
+                    var columnType = schemaReader.GetString("type");
+                    
+                    // Exclure les colonnes ID techniques (GUIDs) de l'affichage utilisateur
+                    if (ShouldExcludeColumn(columnName, columnType))
+                    {
+                        continue;
+                    }
+                    
+                    columns.Add((columnName, columnType));
+                    
+                    // Ajouter la colonne au DataTable
+                    var netType = GetNetTypeFromSqliteType(columnType);
+                    dataTable.Columns.Add(columnName, netType);
+                }
+
+                // Construire la liste des colonnes à récupérer (exclure les techniques)
+                var selectColumns = columns.Select(c => $"[{c.Name}]").ToArray();
+                var baseQuery = selectColumns.Any() 
+                    ? $"SELECT {string.Join(", ", selectColumns)} FROM [{tableName}]"
+                    : $"SELECT * FROM [{tableName}]"; // Fallback si aucune colonne
+                var whereClause = "";
+                var orderClause = " ORDER BY 1"; // Ordonner par la première colonne
+                
+                // Ajouter le filtre de recherche si spécifié
+                if (!string.IsNullOrWhiteSpace(searchFilter) && columns.Any())
+                {
+                    // Rechercher seulement dans les colonnes visibles (non-exclues)
+                    var searchConditions = columns
+                        .Where(c => IsTextColumn(c.Type))
+                        .Select(c => $"[{c.Name}] LIKE @search")
+                        .ToArray();
+                    
+                    if (searchConditions.Any())
+                    {
+                        whereClause = " WHERE " + string.Join(" OR ", searchConditions);
+                    }
+                }
+
+                // Pagination
+                var offset = (pageNumber - 1) * pageSize;
+                var limitClause = $" LIMIT {pageSize} OFFSET {offset}";
+
+                var finalQuery = baseQuery + whereClause + orderClause + limitClause;
+
+                // Exécuter la requête
+                using var dataCommand = connection.CreateCommand();
+                dataCommand.CommandText = finalQuery;
+                
+                if (!string.IsNullOrWhiteSpace(searchFilter) && whereClause.Contains("@search"))
+                {
+                    var parameter = dataCommand.CreateParameter();
+                    parameter.ParameterName = "@search";
+                    parameter.Value = $"%{searchFilter}%";
+                    dataCommand.Parameters.Add(parameter);
+                }
+
+                using var dataReader = await dataCommand.ExecuteReaderAsync();
+                while (await dataReader.ReadAsync())
+                {
+                    var row = dataTable.NewRow();
+                    for (int i = 0; i < dataReader.FieldCount; i++)
+                    {
+                        row[i] = dataReader.IsDBNull(i) ? DBNull.Value : dataReader.GetValue(i);
+                    }
+                    dataTable.Rows.Add(row);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la récupération des données de la table {tableName}: {ex.Message}");
+                // Retourner un DataTable vide plutôt que de lever l'exception
+            }
+
+            return dataTable;
+        }
+
+        private static bool ShouldExcludeColumn(string columnName, string columnType)
+        {
+            // Exclure les colonnes ID techniques (clés primaires GUID)
+            if (columnName.Equals("Id", StringComparison.OrdinalIgnoreCase) && 
+                columnType.Equals("TEXT", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            
+            // Exclure les colonnes de métadonnées techniques
+            var technicalColumns = new[]
+            {
+                "CreatedAt", "UpdatedAt", "IsDeleted", "CreatedBy", "ModifiedBy",
+                "CreatedDate", "LastModifiedDate", "LastConnectivityTest",
+                "LastConnectivityResult", "LastTestErrorMessages"
+            };
+            
+            return technicalColumns.Contains(columnName, StringComparer.OrdinalIgnoreCase);
+        }
+
+        private static Type GetNetTypeFromSqliteType(string sqliteType)
+        {
+            return sqliteType.ToUpper() switch
+            {
+                "INTEGER" => typeof(long),
+                "REAL" => typeof(double),
+                "TEXT" => typeof(string),
+                "BLOB" => typeof(byte[]),
+                _ when sqliteType.Contains("INT") => typeof(long),
+                _ when sqliteType.Contains("CHAR") || sqliteType.Contains("TEXT") => typeof(string),
+                _ when sqliteType.Contains("REAL") || sqliteType.Contains("FLOAT") || sqliteType.Contains("DOUBLE") => typeof(double),
+                _ when sqliteType.Contains("DECIMAL") || sqliteType.Contains("NUMERIC") => typeof(decimal),
+                _ when sqliteType.Contains("DATE") || sqliteType.Contains("TIME") => typeof(DateTime),
+                _ when sqliteType.Contains("BOOL") => typeof(bool),
+                _ => typeof(string) // Par défaut
+            };
+        }
+
+        private static bool IsTextColumn(string sqliteType)
+        {
+            var upperType = sqliteType.ToUpper();
+            return upperType.Contains("TEXT") || 
+                   upperType.Contains("CHAR") || 
+                   upperType.Contains("VARCHAR") ||
+                   upperType == "TEXT";
+        }
+
         private async Task<TableInfo> GetTableInfoAsync(SqliteConnection connection, string tableName)
         {
             var tableInfo = new TableInfo { Name = tableName };
@@ -147,8 +295,11 @@ namespace FNEV4.Infrastructure.Services
                     Directory.CreateDirectory(backupDir);
                 }
 
-                // Copier le fichier de base de données
-                File.Copy(dbPath, backupPath, true);
+                // Copier le fichier de base de données de manière asynchrone
+                using var sourceStream = new FileStream(dbPath, FileMode.Open, FileAccess.Read);
+                using var destinationStream = new FileStream(backupPath, FileMode.Create, FileAccess.Write);
+                await sourceStream.CopyToAsync(destinationStream);
+                
                 return true;
             }
             catch
@@ -362,6 +513,115 @@ namespace FNEV4.Infrastructure.Services
             // Estimation approximative : 1KB par 10 lignes
             var estimatedBytes = rowCount * 100;
             return FormatFileSize(estimatedBytes);
+        }
+
+        public async Task<bool> InsertRecordAsync(string tableName, Dictionary<string, object> values)
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                await connection.OpenAsync();
+
+                var columns = string.Join(", ", values.Keys);
+                var parameters = string.Join(", ", values.Keys.Select(k => $"@{k}"));
+                var sql = $"INSERT INTO {tableName} ({columns}) VALUES ({parameters})";
+
+                using var command = new SqliteCommand(sql, connection);
+                foreach (var kvp in values)
+                {
+                    command.Parameters.AddWithValue($"@{kvp.Key}", kvp.Value ?? DBNull.Value);
+                }
+
+                await command.ExecuteNonQueryAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de l'insertion : {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateRecordAsync(string tableName, string id, Dictionary<string, object> values)
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                await connection.OpenAsync();
+
+                var setClause = string.Join(", ", values.Keys.Select(k => $"{k} = @{k}"));
+                var sql = $"UPDATE {tableName} SET {setClause} WHERE Id = @Id";
+
+                using var command = new SqliteCommand(sql, connection);
+                command.Parameters.AddWithValue("@Id", id);
+                foreach (var kvp in values)
+                {
+                    command.Parameters.AddWithValue($"@{kvp.Key}", kvp.Value ?? DBNull.Value);
+                }
+
+                var rowsAffected = await command.ExecuteNonQueryAsync();
+                return rowsAffected > 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la mise à jour : {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteRecordAsync(string tableName, string id)
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                await connection.OpenAsync();
+
+                var sql = $"DELETE FROM {tableName} WHERE Id = @Id";
+                using var command = new SqliteCommand(sql, connection);
+                command.Parameters.AddWithValue("@Id", id);
+
+                var rowsAffected = await command.ExecuteNonQueryAsync();
+                return rowsAffected > 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la suppression : {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<List<string>> GetTableColumnsAsync(string tableName)
+        {
+            var columns = new List<string>();
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                await connection.OpenAsync();
+
+                var sql = $"PRAGMA table_info({tableName})";
+                using var command = new SqliteCommand(sql, connection);
+                using var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    var columnName = reader.GetString("name");
+                    var columnType = reader.GetString("type");
+                    if (!ShouldExcludeColumn(columnName, columnType))
+                    {
+                        columns.Add(columnName);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la récupération des colonnes : {ex.Message}");
+            }
+            return columns;
+        }
+
+        public string GetConnectionString()
+        {
+            return _connectionString;
         }
     }
 

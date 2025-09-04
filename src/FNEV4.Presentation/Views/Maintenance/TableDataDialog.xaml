@@ -1,0 +1,169 @@
+<Window x:Class="FNEV4.Presentation.Views.Maintenance.TableDataDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Données de la Table"
+        Height="600" Width="900"
+        WindowStartupLocation="CenterOwner"
+        Style="{StaticResource MaterialDesignWindow}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tête -->
+        <materialDesign:Card Grid.Row="0" Margin="16,16,16,8">
+            <Grid Margin="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <materialDesign:PackIcon Grid.Column="0" 
+                                       Kind="Table" 
+                                       Width="24" Height="24"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0"/>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding TableName, StringFormat='Table : \{0\}'}"
+                              Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                    <TextBlock Text="{Binding RowCount, StringFormat='\{0\} lignes trouvées'}"
+                              Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                              Opacity="0.7"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Ajouter un enregistrement"
+                            Command="{Binding AddRecordCommand}">
+                        <materialDesign:PackIcon Kind="Plus"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Modifier l'enregistrement sélectionné"
+                            Command="{Binding EditRecordCommand}">
+                        <materialDesign:PackIcon Kind="Edit"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Supprimer l'enregistrement sélectionné"
+                            Command="{Binding DeleteRecordCommand}">
+                        <materialDesign:PackIcon Kind="Delete"/>
+                    </Button>
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="8,0"/>
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Actualiser les données"
+                            Command="{Binding RefreshDataCommand}">
+                        <materialDesign:PackIcon Kind="Refresh"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Exporter en CSV"
+                            Command="{Binding ExportCsvCommand}">
+                        <materialDesign:PackIcon Kind="FileExport"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- Contenu principal -->
+        <materialDesign:Card Grid.Row="1" Margin="16,0,16,8">
+            <Grid Margin="16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Filtres et recherche -->
+                <Grid Grid.Row="0" Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Grid.Column="0"
+                            materialDesign:HintAssist.Hint="Rechercher dans les données..."
+                            Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                            Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                    <ComboBox Grid.Column="1"
+                             materialDesign:HintAssist.Hint="Lignes par page"
+                             SelectedValue="{Binding PageSize}"
+                             Width="120"
+                             Margin="8,0,0,0"
+                             Style="{StaticResource MaterialDesignOutlinedComboBox}">
+                        <ComboBoxItem Content="25" Tag="25"/>
+                        <ComboBoxItem Content="50" Tag="50"/>
+                        <ComboBoxItem Content="100" Tag="100"/>
+                        <ComboBoxItem Content="500" Tag="500"/>
+                    </ComboBox>
+                </Grid>
+
+                <!-- DataGrid avec données -->
+                <DataGrid Grid.Row="1"
+                         ItemsSource="{Binding TableData.DefaultView}"
+                         SelectedItem="{Binding SelectedRecord}"
+                         AutoGenerateColumns="True"
+                         CanUserAddRows="False"
+                         CanUserDeleteRows="False"
+                         IsReadOnly="True"
+                         materialDesign:DataGridAssist.CellPadding="8"
+                         materialDesign:DataGridAssist.ColumnHeaderPadding="8"
+                         EnableRowVirtualization="True"
+                         EnableColumnVirtualization="True"
+                         VirtualizingPanel.VirtualizationMode="Recycling"
+                         SelectionMode="Single">
+                    <DataGrid.InputBindings>
+                        <MouseBinding Gesture="LeftDoubleClick" Command="{Binding EditRecordCommand}"/>
+                        <KeyBinding Key="Delete" Command="{Binding DeleteRecordCommand}"/>
+                        <KeyBinding Key="F2" Command="{Binding EditRecordCommand}"/>
+                        <KeyBinding Key="Insert" Command="{Binding AddRecordCommand}"/>
+                    </DataGrid.InputBindings>
+                </DataGrid>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- Pagination et actions -->
+        <materialDesign:Card Grid.Row="2" Margin="16,0,16,16">
+            <Grid Margin="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Info pagination -->
+                <TextBlock Grid.Column="0" 
+                          Text="{Binding PaginationInfo}"
+                          VerticalAlignment="Center"
+                          Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
+
+                <!-- Contrôles pagination -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,16,0">
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Page précédente"
+                            Command="{Binding PreviousPageCommand}">
+                        <materialDesign:PackIcon Kind="ChevronLeft"/>
+                    </Button>
+                    <TextBlock Text="{Binding CurrentPageInfo}"
+                              VerticalAlignment="Center"
+                              Margin="8,0"/>
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Page suivante"
+                            Command="{Binding NextPageCommand}">
+                        <materialDesign:PackIcon Kind="ChevronRight"/>
+                    </Button>
+                </StackPanel>
+
+                <!-- Bouton fermer -->
+                <Button Grid.Column="2"
+                       Content="Fermer"
+                       Style="{StaticResource MaterialDesignOutlinedButton}"
+                       IsCancel="True"
+                       Click="CloseButton_Click"/>
+            </Grid>
+        </materialDesign:Card>
+    </Grid>
+</Window>

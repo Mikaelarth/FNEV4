@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -79,6 +80,8 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
         }
 
         private ObservableCollection<TableInfoViewModel> _tables = new();
+        private ObservableCollection<TableInfoViewModel> _allTables = new(); // Liste complète des tables
+        
         public ObservableCollection<TableInfoViewModel> Tables
         {
             get => _tables;
@@ -89,7 +92,12 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
         public string TableSearchText
         {
             get => _tableSearchText;
-            set { _tableSearchText = value; OnPropertyChanged(nameof(TableSearchText)); }
+            set 
+            { 
+                _tableSearchText = value; 
+                OnPropertyChanged(nameof(TableSearchText));
+                FilterTables(); // Filtrer automatiquement
+            }
         }
 
         private bool _autoBackupEnabled = true;
@@ -262,11 +270,11 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             try
             {
                 var tablesInfo = await _databaseService.GetTablesInfoAsync();
-                Tables.Clear();
+                _allTables.Clear();
                 
                 foreach (var table in tablesInfo)
                 {
-                    Tables.Add(new TableInfoViewModel
+                    _allTables.Add(new TableInfoViewModel
                     {
                         Name = table.Name,
                         RowCount = table.RowCount,
@@ -275,8 +283,9 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
                     });
                 }
 
-                SqlResults = $"Liste des tables actualisée. {Tables.Count} tables trouvées.";
-                TableCount = Tables.Count;
+                FilterTables(); // Appliquer le filtre actuel
+                SqlResults = $"Liste des tables actualisée. {_allTables.Count} tables trouvées.";
+                TableCount = _allTables.Count;
             }
             catch (Exception ex)
             {
@@ -284,20 +293,68 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             }
         }
 
+        private void FilterTables()
+        {
+            Tables.Clear();
+            
+            var filteredTables = string.IsNullOrWhiteSpace(TableSearchText) 
+                ? _allTables
+                : _allTables.Where(t => t.Name.ToLowerInvariant().Contains(TableSearchText.ToLowerInvariant()));
+
+            foreach (var table in filteredTables)
+            {
+                Tables.Add(table);
+            }
+        }
+
         private void ViewTableData(TableInfoViewModel? table)
         {
             if (table == null) return;
-            
-            SqlResults = $"Affichage des données de la table '{table.Name}' ({table.RowCount} lignes).\n" +
-                        "Fonctionnalité complète à implémenter...";
+
+            try
+            {
+                var dialog = new Views.Maintenance.TableDataDialog();
+                var viewModel = new TableDataViewModel(_databaseService);
+                
+                // Charger les données de la table
+                viewModel.LoadTableData(table.Name);
+                
+                dialog.DataContext = viewModel;
+                dialog.Owner = System.Windows.Application.Current.MainWindow;
+                
+                dialog.ShowDialog();
+                
+                SqlResults = $"Fenêtre de données ouverte pour la table '{table.Name}'.";
+            }
+            catch (Exception ex)
+            {
+                SqlResults = $"Erreur lors de l'ouverture des données de la table '{table.Name}': {ex.Message}";
+            }
         }
 
-        private void ViewTableStructure(TableInfoViewModel? table)
+        private async void ViewTableStructure(TableInfoViewModel? table)
         {
             if (table == null) return;
-            
-            SqlResults = $"Structure de la table '{table.Name}' :\n" +
-                        "Fonctionnalité complète à implémenter...";
+
+            try
+            {
+                var dialog = new Views.Maintenance.TableStructureDialog();
+                var viewModel = new TableStructureViewModel(_databaseService);
+                
+                dialog.DataContext = viewModel;
+                dialog.Owner = System.Windows.Application.Current.MainWindow;
+                
+                // Charger la vraie structure depuis la base
+                await viewModel.LoadTableStructureAsync(table.Name);
+                
+                dialog.ShowDialog();
+                
+                SqlResults = $"Fenêtre de structure ouverte pour la table '{table.Name}'.";
+            }
+            catch (Exception ex)
+            {
+                SqlResults = $"Erreur lors de l'ouverture de la structure de la table '{table.Name}': {ex.Message}";
+            }
         }
 
         private async Task BackupDatabaseAsync()

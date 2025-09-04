@@ -199,21 +199,31 @@
                                     <DataGridTextColumn Header="Dernière modification" 
                                                        Binding="{Binding LastModified}" 
                                                        Width="150"/>
-                                    <DataGridTemplateColumn Header="Actions" Width="120">
+                                    <DataGridTemplateColumn Width="160">
+                                        <DataGridTemplateColumn.Header>
+                                            <TextBlock Text="Actions" HorizontalAlignment="Right" Margin="0,0,20,0"/>
+                                        </DataGridTemplateColumn.Header>
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <StackPanel Orientation="Horizontal">
+                                                <StackPanel Orientation="Horizontal" 
+                                                           HorizontalAlignment="Right"
+                                                           Margin="0,0,20,0">
                                                     <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                           ToolTip="Voir les données"
+                                                           ToolTip="Afficher les données de cette table"
                                                            Command="{Binding DataContext.ViewTableDataCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                           CommandParameter="{Binding}">
-                                                        <materialDesign:PackIcon Kind="Eye" Width="16" Height="16"/>
+                                                           CommandParameter="{Binding}"
+                                                           Margin="2">
+                                                        <materialDesign:PackIcon Kind="Eye" Width="20" Height="20"/>
                                                     </Button>
+                                                    <Border Width="1" Height="16" 
+                                                           Background="{DynamicResource MaterialDesignDivider}" 
+                                                           Margin="4,0"/>
                                                     <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                           ToolTip="Structure"
+                                                           ToolTip="Afficher la structure de cette table"
                                                            Command="{Binding DataContext.ViewTableStructureCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                           CommandParameter="{Binding}">
-                                                        <materialDesign:PackIcon Kind="FileTree" Width="16" Height="16"/>
+                                                           CommandParameter="{Binding}"
+                                                           Margin="2">
+                                                        <materialDesign:PackIcon Kind="FileTree" Width="20" Height="20"/>
                                                     </Button>
                                                 </StackPanel>
                                             </DataTemplate>
