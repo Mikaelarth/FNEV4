@@ -1,0 +1,131 @@
+                        <!-- MODULE 4: CERTIFICATION FNE -->
+                        <Border x:Name="CertificationSection" Margin="0,4">
+                            <Button Style="{StaticResource MenuSectionButton}"
+                                    Command="{Binding NavigateToCertificationManuelleCommand}"
+                                    ToolTip="Certification FNE">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon Grid.Column="0" Kind="Certificate" 
+                                                           Width="24" Height="24"
+                                                           VerticalAlignment="Center"
+                                                           HorizontalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="Certification FNE"
+                                             VerticalAlignment="Center" Margin="8,0,0,0"
+                                             FontSize="14" FontWeight="Medium"
+                                             Visibility="{Binding IsMenuExpanded, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                </Grid>
+                            </Button>
+                        </Border>
+
+                        <!-- MODULE 5: GESTION CLIENTS -->
+                        <Border x:Name="ClientsSection" Margin="0,4">
+                            <Button Style="{StaticResource MenuSectionButton}"
+                                    Command="{Binding NavigateToListeClientsCommand}"
+                                    ToolTip="Gestion Clients">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon Grid.Column="0" Kind="AccountGroup" 
+                                                           Width="24" Height="24"
+                                                           VerticalAlignment="Center"
+                                                           HorizontalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="Gestion Clients"
+                                             VerticalAlignment="Center" Margin="8,0,0,0"
+                                             FontSize="14" FontWeight="Medium"
+                                             Visibility="{Binding IsMenuExpanded, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                </Grid>
+                            </Button>
+                        </Border>
+
+                        <!-- MODULE 6: RAPPORTS & ANALYSES -->
+                        <Border x:Name="RapportsSection" Margin="0,4">
+                            <Button Style="{StaticResource MenuSectionButton}"
+                                    Command="{Binding NavigateToStatistiquesCommand}"
+                                    ToolTip="Rapports &amp; Analyses">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon Grid.Column="0" Kind="ChartLine" 
+                                                           Width="24" Height="24"
+                                                           VerticalAlignment="Center"
+                                                           HorizontalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="Rapports &amp; Analyses"
+                                             VerticalAlignment="Center" Margin="8,0,0,0"
+                                             FontSize="14" FontWeight="Medium"
+                                             Visibility="{Binding IsMenuExpanded, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                </Grid>
+                            </Button>
+                        </Border>
+
+                        <!-- MODULE 7: CONFIGURATION -->
+                        <Border x:Name="ConfigurationSection" Margin="0,4">
+                            <Button Style="{StaticResource MenuSectionButton}"
+                                    Command="{Binding NavigateToConfigurationCommand}"
+                                    ToolTip="Configuration">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon Grid.Column="0" Kind="Settings" 
+                                                           Width="24" Height="24"
+                                                           VerticalAlignment="Center"
+                                                           HorizontalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="Configuration"
+                                             VerticalAlignment="Center" Margin="8,0,0,0"
+                                             FontSize="14" FontWeight="Medium"
+                                             Visibility="{Binding IsMenuExpanded, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                </Grid>
+                            </Button>
+                        </Border>
+
+                        <!-- MODULE 8: MAINTENANCE -->
+                        <Border x:Name="MaintenanceSection" Margin="0,4">
+                            <Button Style="{StaticResource MenuSectionButton}"
+                                    Command="{Binding NavigateToMaintenanceCommand}"
+                                    ToolTip="Maintenance">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon Grid.Column="0" Kind="Tools" 
+                                                           Width="24" Height="24"
+                                                           VerticalAlignment="Center"
+                                                           HorizontalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="Maintenance"
+                                             VerticalAlignment="Center" Margin="8,0,0,0"
+                                             FontSize="14" FontWeight="Medium"
+                                             Visibility="{Binding IsMenuExpanded, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                </Grid>
+                            </Button>
+                        </Border>
+
+                        <!-- MODULE 9: AIDE & SUPPORT -->
+                        <Border x:Name="AideSection" Margin="0,4">
+                            <Button Style="{StaticResource MenuSectionButton}"
+                                    Command="{Binding NavigateToDocumentationCommand}"
+                                    ToolTip="Aide &amp; Support">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon Grid.Column="0" Kind="Help" 
+                                                           Width="24" Height="24"
+                                                           VerticalAlignment="Center"
+                                                           HorizontalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="Aide &amp; Support"
+                                             VerticalAlignment="Center" Margin="8,0,0,0"
+                                             FontSize="14" FontWeight="Medium"
+                                             Visibility="{Binding IsMenuExpanded, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                </Grid>
+                            </Button>
+                        </Border>

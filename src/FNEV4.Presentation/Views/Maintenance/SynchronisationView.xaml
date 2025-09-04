@@ -1,0 +1,439 @@
+<UserControl x:Class="FNEV4.Presentation.Views.Maintenance.SynchronisationView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="1000">
+    
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tête de la page -->
+        <Grid Grid.Row="0" Margin="0,0,0,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <materialDesign:PackIcon Grid.Column="0" 
+                                   Kind="Sync" 
+                                   Width="32" Height="32"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+            
+            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="Synchronisation FNE" 
+                         FontSize="24" 
+                         FontWeight="Bold"
+                         Foreground="{DynamicResource MaterialDesignBody}"/>
+                <TextBlock Text="Synchronisation des données avec les services France Numérique Ensemble" 
+                         FontSize="14" 
+                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                         Margin="0,4,0,0"/>
+            </StackPanel>
+            
+            <Button Grid.Column="2" 
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    VerticalAlignment="Center">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="CloudSync" Width="16" Height="16" Margin="0,0,8,0"/>
+                        <TextBlock Text="Synchroniser maintenant"/>
+                    </StackPanel>
+                </Button.Content>
+            </Button>
+        </Grid>
+
+        <!-- Statut de synchronisation -->
+        <materialDesign:Card Grid.Row="1" Margin="0,0,0,16" Padding="20">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Indicateur de statut -->
+                <Border Grid.Column="0" 
+                        Background="#4CAF50" 
+                        CornerRadius="12" 
+                        Width="24" Height="24"
+                        VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="Check" 
+                                           Width="16" Height="16" 
+                                           Foreground="White"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                </Border>
+                
+                <!-- Informations de statut -->
+                <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="Dernière synchronisation réussie" 
+                             FontSize="16" FontWeight="Medium"
+                             Foreground="{DynamicResource MaterialDesignBody}"/>
+                    <TextBlock Text="Aujourd'hui à 14:32 - 1,247 enregistrements traités" 
+                             FontSize="14" 
+                             Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                </StackPanel>
+                
+                <!-- Prochaine synchronisation -->
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="16,0">
+                    <TextBlock Text="Prochaine sync." 
+                             FontSize="12" FontWeight="Medium"
+                             Foreground="{DynamicResource MaterialDesignBodyLight}"
+                             HorizontalAlignment="Center"/>
+                    <TextBlock Text="17:00" 
+                             FontSize="16" FontWeight="Bold"
+                             Foreground="{DynamicResource MaterialDesignBody}"
+                             HorizontalAlignment="Center"/>
+                </StackPanel>
+                
+                <!-- Bouton de configuration -->
+                <Button Grid.Column="3" 
+                        Style="{StaticResource MaterialDesignIconButton}"
+                        ToolTip="Configurer la synchronisation">
+                    <materialDesign:PackIcon Kind="Settings" Width="20" Height="20"/>
+                </Button>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- Zone principale -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="4"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Panneau de gauche : Historique des synchronisations -->
+            <materialDesign:Card Grid.Column="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <Border Grid.Row="0" 
+                            Background="{DynamicResource MaterialDesignToolBarBackground}"
+                            Padding="16,12">
+                        <Grid>
+                            <TextBlock Text="Historique des synchronisations" 
+                                     FontWeight="Medium"
+                                     Foreground="{DynamicResource MaterialDesignBody}"
+                                     VerticalAlignment="Center"/>
+                            <Button HorizontalAlignment="Right"
+                                    Style="{StaticResource MaterialDesignIconButton}"
+                                    ToolTip="Actualiser">
+                                <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+                    
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl Margin="12">
+                            <!-- Synchronisation réussie -->
+                            <Border Padding="12" Margin="0,0,0,8" 
+                                  Background="{DynamicResource MaterialDesignPaper}"
+                                  BorderBrush="#E8F5E8"
+                                  BorderThickness="1"
+                                  CornerRadius="8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <Border Grid.Column="0" 
+                                            Background="#4CAF50" 
+                                            CornerRadius="8" 
+                                            Width="16" Height="16"
+                                            VerticalAlignment="Top" Margin="0,2,0,0">
+                                        <materialDesign:PackIcon Kind="Check" 
+                                                               Width="12" Height="12" 
+                                                               Foreground="White"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"/>
+                                    </Border>
+                                    
+                                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                        <TextBlock Text="04/09/2024 - 14:32" 
+                                                 FontWeight="Medium" FontSize="14"/>
+                                        <TextBlock Text="Synchronisation complète réussie" 
+                                                 FontSize="13" Margin="0,2,0,0"/>
+                                        <TextBlock Text="1,247 enregistrements • Durée : 2m 15s" 
+                                                 FontSize="11" 
+                                                 Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                 Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    
+                                    <Button Grid.Column="2" 
+                                            Style="{StaticResource MaterialDesignIconButton}"
+                                            ToolTip="Voir les détails">
+                                        <materialDesign:PackIcon Kind="InformationOutline" Width="16" Height="16"/>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                            
+                            <!-- Synchronisation avec avertissement -->
+                            <Border Padding="12" Margin="0,0,0,8" 
+                                  Background="{DynamicResource MaterialDesignPaper}"
+                                  BorderBrush="#FFF3E0"
+                                  BorderThickness="1"
+                                  CornerRadius="8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <Border Grid.Column="0" 
+                                            Background="#FF9800" 
+                                            CornerRadius="8" 
+                                            Width="16" Height="16"
+                                            VerticalAlignment="Top" Margin="0,2,0,0">
+                                        <materialDesign:PackIcon Kind="Warning" 
+                                                               Width="12" Height="12" 
+                                                               Foreground="White"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"/>
+                                    </Border>
+                                    
+                                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                        <TextBlock Text="04/09/2024 - 11:15" 
+                                                 FontWeight="Medium" FontSize="14"/>
+                                        <TextBlock Text="Synchronisation partielle" 
+                                                 FontSize="13" Margin="0,2,0,0"/>
+                                        <TextBlock Text="1,180 enregistrements • 67 conflits résolus" 
+                                                 FontSize="11" 
+                                                 Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                 Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    
+                                    <Button Grid.Column="2" 
+                                            Style="{StaticResource MaterialDesignIconButton}"
+                                            ToolTip="Voir les détails">
+                                        <materialDesign:PackIcon Kind="InformationOutline" Width="16" Height="16"/>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                            
+                            <!-- Synchronisation échouée -->
+                            <Border Padding="12" Margin="0,0,0,8" 
+                                  Background="{DynamicResource MaterialDesignPaper}"
+                                  BorderBrush="#FFEBEE"
+                                  BorderThickness="1"
+                                  CornerRadius="8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <Border Grid.Column="0" 
+                                            Background="#F44336" 
+                                            CornerRadius="8" 
+                                            Width="16" Height="16"
+                                            VerticalAlignment="Top" Margin="0,2,0,0">
+                                        <materialDesign:PackIcon Kind="Close" 
+                                                               Width="12" Height="12" 
+                                                               Foreground="White"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"/>
+                                    </Border>
+                                    
+                                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                        <TextBlock Text="04/09/2024 - 08:00" 
+                                                 FontWeight="Medium" FontSize="14"/>
+                                        <TextBlock Text="Échec de synchronisation" 
+                                                 FontSize="13" Margin="0,2,0,0"/>
+                                        <TextBlock Text="Erreur réseau - Timeout de connexion" 
+                                                 FontSize="11" 
+                                                 Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                 Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    
+                                    <Button Grid.Column="2" 
+                                            Style="{StaticResource MaterialDesignIconButton}"
+                                            ToolTip="Voir les détails">
+                                        <materialDesign:PackIcon Kind="InformationOutline" Width="16" Height="16"/>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    
+                    <Border Grid.Row="2" Padding="16" 
+                            Background="{DynamicResource MaterialDesignToolBarBackground}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button Content="Voir tout" 
+                                  Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,4,0"/>
+                            <Button Content="Exporter logs" 
+                                  Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,4,0"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </materialDesign:Card>
+            
+            <!-- Séparateur -->
+            <GridSplitter Grid.Column="1" 
+                        HorizontalAlignment="Stretch" 
+                        Background="{DynamicResource MaterialDesignDivider}"/>
+            
+            <!-- Panneau de droite : Configuration et actions -->
+            <materialDesign:Card Grid.Column="2">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <Border Grid.Row="0" 
+                            Background="{DynamicResource MaterialDesignToolBarBackground}"
+                            Padding="16,12">
+                        <TextBlock Text="Configuration et actions" 
+                                 FontWeight="Medium"
+                                 Foreground="{DynamicResource MaterialDesignBody}"/>
+                    </Border>
+                    
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16">
+                            
+                            <!-- Configuration de la synchronisation -->
+                            <Expander Header="Configuration" IsExpanded="True" Margin="0,0,0,16">
+                                <StackPanel Margin="0,12,0,0">
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" Text="Fréquence de synchronisation" 
+                                                 FontWeight="Medium" Margin="0,0,0,4"/>
+                                        <ComboBox Grid.Row="1" SelectedIndex="1">
+                                            <ComboBoxItem Content="Toutes les heures"/>
+                                            <ComboBoxItem Content="Toutes les 3 heures"/>
+                                            <ComboBoxItem Content="Toutes les 6 heures"/>
+                                            <ComboBoxItem Content="Une fois par jour"/>
+                                            <ComboBoxItem Content="Manuel uniquement"/>
+                                        </ComboBox>
+                                    </Grid>
+                                    
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" Text="Heure de synchronisation" 
+                                                 FontWeight="Medium" Margin="0,0,0,4"/>
+                                        <materialDesign:TimePicker Grid.Row="1" 
+                                                                 SelectedTime="17:00"
+                                                                 HorizontalAlignment="Stretch"/>
+                                    </Grid>
+                                    
+                                    <CheckBox Content="Synchronisation automatique au démarrage" 
+                                            IsChecked="True"/>
+                                    <CheckBox Content="Notifications de synchronisation" 
+                                            IsChecked="True"/>
+                                    <CheckBox Content="Synchronisation en arrière-plan" 
+                                            IsChecked="False"/>
+                                </StackPanel>
+                            </Expander>
+                            
+                            <!-- Types de données à synchroniser -->
+                            <Expander Header="Types de données" Margin="0,0,0,16">
+                                <StackPanel Margin="0,12,0,0">
+                                    <CheckBox Content="Données clients" IsChecked="True" Margin="0,0,0,8"/>
+                                    <CheckBox Content="Factures et paiements" IsChecked="True"/>
+                                    <CheckBox Content="Formations FNE" IsChecked="True"/>
+                                    <CheckBox Content="Certifications" IsChecked="True"/>
+                                    <CheckBox Content="Référentiels" IsChecked="False"/>
+                                    <CheckBox Content="Logs d'activité" IsChecked="False"/>
+                                </StackPanel>
+                            </Expander>
+                            
+                            <!-- Actions rapides -->
+                            <Expander Header="Actions rapides" Margin="0,0,0,16">
+                                <StackPanel Margin="0,12,0,0">
+                                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                          HorizontalAlignment="Stretch" Margin="0,0,0,8">
+                                        <Button.Content>
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="CloudSync" Width="16" Height="16" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Synchroniser maintenant"/>
+                                            </StackPanel>
+                                        </Button.Content>
+                                    </Button>
+                                    
+                                    <Button Content="Tester la connexion API" 
+                                          Style="{StaticResource MaterialDesignOutlinedButton}"
+                                          HorizontalAlignment="Stretch"/>
+                                    
+                                    <Button Content="Résoudre les conflits" 
+                                          Style="{StaticResource MaterialDesignOutlinedButton}"
+                                          HorizontalAlignment="Stretch"/>
+                                    
+                                    <Button Content="Réinitialiser la sync" 
+                                          Style="{StaticResource MaterialDesignOutlinedButton}"
+                                          HorizontalAlignment="Stretch"/>
+                                </StackPanel>
+                            </Expander>
+                            
+                            <!-- Statistiques -->
+                            <Expander Header="Statistiques">
+                                <StackPanel Margin="0,12,0,0">
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Total synchronisé :" FontWeight="Medium"/>
+                                        <TextBlock Grid.Column="1" Text="24,567 enreg." FontWeight="Bold"/>
+                                    </Grid>
+                                    
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Dernière semaine :" FontWeight="Medium"/>
+                                        <TextBlock Grid.Column="1" Text="1,247 enreg." FontWeight="Bold"/>
+                                    </Grid>
+                                    
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Taux de succès :" FontWeight="Medium"/>
+                                        <TextBlock Grid.Column="1" Text="98.5%" FontWeight="Bold" Foreground="#4CAF50"/>
+                                    </Grid>
+                                    
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Conflits résolus :" FontWeight="Medium"/>
+                                        <TextBlock Grid.Column="1" Text="12" FontWeight="Bold"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Expander>
+                            
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </materialDesign:Card>
+        </Grid>
+    </Grid>
+</UserControl>

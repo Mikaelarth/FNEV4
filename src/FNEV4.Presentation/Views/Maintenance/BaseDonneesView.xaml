@@ -1,0 +1,462 @@
+<UserControl x:Class="FNEV4.Presentation.Views.Maintenance.BaseDonneesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+    
+    <UserControl.Resources>
+        <Style TargetType="materialDesign:Card">
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="Padding" Value="16"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tête -->
+        <materialDesign:Card Grid.Row="0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Orientation="Vertical">
+                    <TextBlock Text="Gestion de la Base de Données" 
+                              Style="{StaticResource MaterialDesignHeadline5TextBlock}"/>
+                    <TextBlock Text="Administration et maintenance de la base de données SQLite" 
+                              Style="{StaticResource MaterialDesignCaptionTextBlock}" 
+                              Opacity="0.7"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Actualiser"
+                            Command="{Binding RefreshCommand}">
+                        <materialDesign:PackIcon Kind="Refresh"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Paramètres"
+                            Command="{Binding SettingsCommand}">
+                        <materialDesign:PackIcon Kind="Settings"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- Contenu principal -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                
+                <!-- Informations de la base de données -->
+                <materialDesign:Card>
+                    <Expander Header="Informations de la Base de Données" IsExpanded="True">
+                        <Expander.HeaderTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Database" 
+                                                           VerticalAlignment="Center" 
+                                                           Margin="0,0,8,0"/>
+                                    <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </Expander.HeaderTemplate>
+                        
+                        <Grid Margin="0,16,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <Grid Margin="0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Chemin :" FontWeight="Bold" Width="120"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding DatabasePath}" TextWrapping="Wrap"/>
+                                </Grid>
+                                
+                                <Grid Margin="0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Taille :" FontWeight="Bold" Width="120"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding DatabaseSize}"/>
+                                </Grid>
+                                
+                                <Grid Margin="0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Version :" FontWeight="Bold" Width="120"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding DatabaseVersion}"/>
+                                </Grid>
+                            </StackPanel>
+                            
+                            <StackPanel Grid.Column="1">
+                                <Grid Margin="0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="État :" FontWeight="Bold" Width="120"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <Ellipse Width="8" Height="8" 
+                                               Fill="{Binding ConnectionStatusColor}" 
+                                               VerticalAlignment="Center" 
+                                               Margin="0,0,8,0"/>
+                                        <TextBlock Text="{Binding ConnectionStatus}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                                
+                                <Grid Margin="0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Dernière sauvegarde :" FontWeight="Bold" Width="120"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding LastBackupDate}"/>
+                                </Grid>
+                                
+                                <Grid Margin="0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Nb de tables :" FontWeight="Bold" Width="120"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding TableCount}"/>
+                                </Grid>
+                            </StackPanel>
+                        </Grid>
+                    </Expander>
+                </materialDesign:Card>
+
+                <!-- Structure des tables -->
+                <materialDesign:Card>
+                    <Expander Header="Structure des Tables">
+                        <Expander.HeaderTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Table" 
+                                                           VerticalAlignment="Center" 
+                                                           Margin="0,0,8,0"/>
+                                    <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </Expander.HeaderTemplate>
+                        
+                        <Grid Margin="0,16,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Filtres -->
+                            <Grid Grid.Row="0" Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBox Grid.Column="0"
+                                        materialDesign:HintAssist.Hint="Rechercher une table..."
+                                        Text="{Binding TableSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                        Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                
+                                <Button Grid.Column="1" 
+                                       Content="Actualiser les tables"
+                                       Style="{StaticResource MaterialDesignOutlinedButton}"
+                                       Command="{Binding RefreshTablesCommand}"
+                                       Margin="8,0,0,0"/>
+                            </Grid>
+                            
+                            <!-- Liste des tables -->
+                            <DataGrid Grid.Row="1" 
+                                     ItemsSource="{Binding Tables}"
+                                     AutoGenerateColumns="False"
+                                     CanUserAddRows="False"
+                                     CanUserDeleteRows="False"
+                                     IsReadOnly="True"
+                                     materialDesign:DataGridAssist.CellPadding="8"
+                                     materialDesign:DataGridAssist.ColumnHeaderPadding="8">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Nom de la table" 
+                                                       Binding="{Binding Name}" 
+                                                       Width="200"/>
+                                    <DataGridTextColumn Header="Nombre de lignes" 
+                                                       Binding="{Binding RowCount}" 
+                                                       Width="120"/>
+                                    <DataGridTextColumn Header="Taille" 
+                                                       Binding="{Binding Size}" 
+                                                       Width="100"/>
+                                    <DataGridTextColumn Header="Dernière modification" 
+                                                       Binding="{Binding LastModified}" 
+                                                       Width="150"/>
+                                    <DataGridTemplateColumn Header="Actions" Width="120">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                           ToolTip="Voir les données"
+                                                           Command="{Binding DataContext.ViewTableDataCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                           CommandParameter="{Binding}">
+                                                        <materialDesign:PackIcon Kind="Eye" Width="16" Height="16"/>
+                                                    </Button>
+                                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                           ToolTip="Structure"
+                                                           Command="{Binding DataContext.ViewTableStructureCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                           CommandParameter="{Binding}">
+                                                        <materialDesign:PackIcon Kind="FileTree" Width="16" Height="16"/>
+                                                    </Button>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Expander>
+                </materialDesign:Card>
+
+                <!-- Outils de maintenance -->
+                <materialDesign:Card>
+                    <Expander Header="Outils de Maintenance">
+                        <Expander.HeaderTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Tools" 
+                                                           VerticalAlignment="Center" 
+                                                           Margin="0,0,8,0"/>
+                                    <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </Expander.HeaderTemplate>
+                        
+                        <Grid Margin="0,16,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Sauvegarde et restauration -->
+                            <GroupBox Grid.Row="0" Header="Sauvegarde et Restauration" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <Grid Margin="0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0" 
+                                                  Text="Créer une sauvegarde complète de la base de données" 
+                                                  VerticalAlignment="Center"/>
+                                        
+                                        <Button Grid.Column="1" 
+                                               Content="Sauvegarder"
+                                               Style="{StaticResource MaterialDesignRaisedButton}"
+                                               Command="{Binding BackupDatabaseCommand}"
+                                               Margin="8,0,0,0"/>
+                                        
+                                        <Button Grid.Column="2" 
+                                               Content="Restaurer"
+                                               Style="{StaticResource MaterialDesignOutlinedButton}"
+                                               Command="{Binding RestoreDatabaseCommand}"
+                                               Margin="8,0,0,0"/>
+                                    </Grid>
+                                    
+                                    <CheckBox Content="Sauvegarde automatique quotidienne" 
+                                             IsChecked="{Binding AutoBackupEnabled}"
+                                             Margin="0,8"/>
+                                </StackPanel>
+                            </GroupBox>
+                            
+                            <!-- Optimisation -->
+                            <GroupBox Grid.Row="1" Header="Optimisation" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <Grid Margin="0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0" 
+                                                  Text="Optimiser la base de données (VACUUM)" 
+                                                  VerticalAlignment="Center"/>
+                                        
+                                        <Button Grid.Column="1" 
+                                               Content="Optimiser"
+                                               Style="{StaticResource MaterialDesignRaisedButton}"
+                                               Command="{Binding OptimizeDatabaseCommand}"
+                                               Margin="8,0,0,0"/>
+                                    </Grid>
+                                    
+                                    <Grid Margin="0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0" 
+                                                  Text="Réindexer toutes les tables" 
+                                                  VerticalAlignment="Center"/>
+                                        
+                                        <Button Grid.Column="1" 
+                                               Content="Réindexer"
+                                               Style="{StaticResource MaterialDesignOutlinedButton}"
+                                               Command="{Binding ReindexDatabaseCommand}"
+                                               Margin="8,0,0,0"/>
+                                    </Grid>
+                                    
+                                    <Grid Margin="0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0" 
+                                                  Text="Analyser l'intégrité de la base" 
+                                                  VerticalAlignment="Center"/>
+                                        
+                                        <Button Grid.Column="1" 
+                                               Content="Analyser"
+                                               Style="{StaticResource MaterialDesignOutlinedButton}"
+                                               Command="{Binding CheckIntegrityCommand}"
+                                               Margin="8,0,0,0"/>
+                                    </Grid>
+                                </StackPanel>
+                            </GroupBox>
+                            
+                            <!-- Migration et initialisation -->
+                            <GroupBox Grid.Row="2" Header="Migration et Initialisation">
+                                <StackPanel>
+                                    <Grid Margin="0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0" 
+                                                  Text="Appliquer les migrations en attente" 
+                                                  VerticalAlignment="Center"/>
+                                        
+                                        <Button Grid.Column="1" 
+                                               Content="Migrer"
+                                               Style="{StaticResource MaterialDesignRaisedButton}"
+                                               Command="{Binding ApplyMigrationsCommand}"
+                                               Margin="8,0,0,0"/>
+                                    </Grid>
+                                    
+                                    <Grid Margin="0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0" 
+                                                  Text="Réinitialiser la base de données vide" 
+                                                  VerticalAlignment="Center"/>
+                                        
+                                        <Button Grid.Column="1" 
+                                               Content="Réinitialiser"
+                                               Style="{StaticResource MaterialDesignOutlinedButton}"
+                                               Command="{Binding InitializeDatabaseCommand}"
+                                               Margin="8,0,0,0"/>
+                                    </Grid>
+                                    
+                                    <!-- BOUTON TEST TEMPORAIRE -->
+                                    <Button Content="🔥 TEST DATACONTEXT 🔥"
+                                           Background="Red"
+                                           Foreground="White"
+                                           Command="{Binding TestCommand}"
+                                           Margin="0,8"/>
+                                    
+                                    <TextBlock Text="⚠️ Attention : La réinitialisation supprimera toutes les données existantes" 
+                                              Foreground="Orange" 
+                                              FontStyle="Italic" 
+                                              Margin="0,8"/>
+                                </StackPanel>
+                            </GroupBox>
+                        </Grid>
+                    </Expander>
+                </materialDesign:Card>
+
+                <!-- Exécution de requêtes SQL -->
+                <materialDesign:Card>
+                    <Expander Header="Console SQL">
+                        <Expander.HeaderTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Console" 
+                                                           VerticalAlignment="Center" 
+                                                           Margin="0,0,8,0"/>
+                                    <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </Expander.HeaderTemplate>
+                        
+                        <Grid Margin="0,16,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="200"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Zone de saisie SQL -->
+                            <TextBlock Grid.Row="0" 
+                                      Text="Requête SQL :" 
+                                      FontWeight="Bold" 
+                                      Margin="0,0,0,8"/>
+                            
+                            <TextBox Grid.Row="1"
+                                    Text="{Binding SqlQuery, UpdateSourceTrigger=PropertyChanged}"
+                                    AcceptsReturn="True"
+                                    TextWrapping="Wrap"
+                                    VerticalScrollBarVisibility="Auto"
+                                    FontFamily="Consolas"
+                                    materialDesign:HintAssist.Hint="SELECT * FROM ..."
+                                    Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            
+                            <!-- Boutons d'action -->
+                            <StackPanel Grid.Row="2" 
+                                       Orientation="Horizontal" 
+                                       HorizontalAlignment="Right" 
+                                       Margin="0,8">
+                                <Button Content="Exécuter"
+                                       Style="{StaticResource MaterialDesignRaisedButton}"
+                                       Command="{Binding ExecuteSqlCommand}"
+                                       Margin="0,0,8,0"/>
+                                <Button Content="Effacer"
+                                       Style="{StaticResource MaterialDesignOutlinedButton}"
+                                       Command="{Binding ClearSqlCommand}"/>
+                            </StackPanel>
+                            
+                            <!-- Résultats -->
+                            <ScrollViewer Grid.Row="3" 
+                                         VerticalScrollBarVisibility="Auto" 
+                                         MaxHeight="300">
+                                <TextBox Text="{Binding SqlResults}"
+                                        IsReadOnly="True"
+                                        FontFamily="Consolas"
+                                        FontSize="12"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        TextWrapping="Wrap"/>
+                            </ScrollViewer>
+                        </Grid>
+                    </Expander>
+                </materialDesign:Card>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

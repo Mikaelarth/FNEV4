@@ -1,0 +1,558 @@
+<UserControl x:Class="FNEV4.Presentation.Views.Maintenance.OutilsTechniquesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="1000">
+    
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tête de la page -->
+        <Grid Grid.Row="0" Margin="0,0,0,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <materialDesign:PackIcon Grid.Column="0" 
+                                   Kind="Wrench" 
+                                   Width="32" Height="32"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+            
+            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="Outils techniques" 
+                         FontSize="24" 
+                         FontWeight="Bold"
+                         Foreground="{DynamicResource MaterialDesignBody}"/>
+                <TextBlock Text="Outils avancés pour l'administration et le débogage du système" 
+                         FontSize="14" 
+                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                         Margin="0,4,0,0"/>
+            </StackPanel>
+            
+            <Button Grid.Column="2" 
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    VerticalAlignment="Center">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Console" Width="16" Height="16" Margin="0,0,8,0"/>
+                        <TextBlock Text="Console de debug"/>
+                    </StackPanel>
+                </Button.Content>
+            </Button>
+        </Grid>
+
+        <!-- Barre d'outils rapides -->
+        <materialDesign:Card Grid.Row="1" Margin="0,0,0,16" Padding="16">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Style="{StaticResource MaterialDesignRaisedButton}" 
+                        ToolTip="Redémarrer l'application" Margin="0,0,8,0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Restart" Width="16" Height="16" Margin="0,0,8,0"/>
+                        <TextBlock Text="Redémarrer"/>
+                    </StackPanel>
+                </Button>
+                
+                <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
+                        ToolTip="Vider tous les caches" Margin="0,0,8,0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="BroomOutline" Width="16" Height="16" Margin="0,0,8,0"/>
+                        <TextBlock Text="Vider cache"/>
+                    </StackPanel>
+                </Button>
+                
+                <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
+                        ToolTip="Générer un rapport de débogage" Margin="0,0,8,0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="FileTextOutline" Width="16" Height="16" Margin="0,0,8,0"/>
+                        <TextBlock Text="Rapport debug"/>
+                    </StackPanel>
+                </Button>
+                
+                <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
+                        ToolTip="Ouvrir le dossier de logs">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="FolderOpen" Width="16" Height="16" Margin="0,0,8,0"/>
+                        <TextBlock Text="Dossier logs"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </materialDesign:Card>
+
+        <!-- Zone principale -->
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="4"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <!-- Panneau du haut -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="4"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Informations système -->
+                <materialDesign:Card Grid.Column="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <Border Grid.Row="0" 
+                                Background="{DynamicResource MaterialDesignToolBarBackground}"
+                                Padding="16,12">
+                            <TextBlock Text="Informations système" 
+                                     FontWeight="Medium"
+                                     Foreground="{DynamicResource MaterialDesignBody}"/>
+                        </Border>
+                        
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="16">
+                                
+                                <!-- Version et build -->
+                                <GroupBox Header="Version et build" Style="{StaticResource MaterialDesignGroupBox}" Margin="0,0,0,12">
+                                    <StackPanel Margin="8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Version :" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text="FNEV4 v1.0.0" FontFamily="Consolas"/>
+                                        </Grid>
+                                        
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Build :" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text="2024.09.04.1430" FontFamily="Consolas"/>
+                                        </Grid>
+                                        
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Framework :" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text=".NET 8.0" FontFamily="Consolas"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </GroupBox>
+                                
+                                <!-- Environnement -->
+                                <GroupBox Header="Environnement" Style="{StaticResource MaterialDesignGroupBox}">
+                                    <StackPanel Margin="8">
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="OS :" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text="Windows 11 Pro" FontFamily="Consolas"/>
+                                        </Grid>
+                                        
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Uptime :" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text="2h 45m 12s" FontFamily="Consolas"/>
+                                        </Grid>
+                                        
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Processus :" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text="PID 1248" FontFamily="Consolas"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </GroupBox>
+                                
+                                <!-- Ressources -->
+                                <GroupBox Header="Utilisation des ressources" Style="{StaticResource MaterialDesignGroupBox}">
+                                    <StackPanel Margin="8">
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Mémoire :" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text="145.6 MB / 16 GB" FontFamily="Consolas"/>
+                                        </Grid>
+                                        
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="CPU :" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text="2.1%" FontFamily="Consolas"/>
+                                        </Grid>
+                                        
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Threads :" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text="24 actifs" FontFamily="Consolas"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </GroupBox>
+                                
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </materialDesign:Card>
+                
+                <!-- Séparateur vertical -->
+                <GridSplitter Grid.Column="1" 
+                            HorizontalAlignment="Stretch" 
+                            Background="{DynamicResource MaterialDesignDivider}"/>
+                
+                <!-- Variables d'environnement et configuration -->
+                <materialDesign:Card Grid.Column="2">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <Border Grid.Row="0" 
+                                Background="{DynamicResource MaterialDesignToolBarBackground}"
+                                Padding="16,12">
+                            <Grid>
+                                <TextBlock Text="Configuration runtime" 
+                                         FontWeight="Medium"
+                                         Foreground="{DynamicResource MaterialDesignBody}"
+                                         VerticalAlignment="Center"/>
+                                <Button HorizontalAlignment="Right"
+                                        Style="{StaticResource MaterialDesignIconButton}"
+                                        ToolTip="Recharger la configuration">
+                                    <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+                        
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="16">
+                                
+                                <!-- Chemins importants -->
+                                <GroupBox Header="Chemins" Style="{StaticResource MaterialDesignGroupBox}" Margin="0,0,0,12">
+                                    <StackPanel Margin="8">
+                                        <Grid Margin="0,0,0,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="App :" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text="C:\Program Files\FNEV4\" 
+                                                     FontFamily="Consolas" FontSize="11" 
+                                                     TextTrimming="CharacterEllipsis"/>
+                                            <Button Grid.Column="2" Style="{StaticResource MaterialDesignIconButton}"
+                                                    ToolTip="Copier le chemin">
+                                                <materialDesign:PackIcon Kind="ContentCopy" Width="14" Height="14"/>
+                                            </Button>
+                                        </Grid>
+                                        
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Data :" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text="C:\ProgramData\FNEV4\" 
+                                                     FontFamily="Consolas" FontSize="11" 
+                                                     TextTrimming="CharacterEllipsis"/>
+                                            <Button Grid.Column="2" Style="{StaticResource MaterialDesignIconButton}"
+                                                    ToolTip="Copier le chemin">
+                                                <materialDesign:PackIcon Kind="ContentCopy" Width="14" Height="14"/>
+                                            </Button>
+                                        </Grid>
+                                        
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Logs :" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text="C:\ProgramData\FNEV4\Logs\" 
+                                                     FontFamily="Consolas" FontSize="11" 
+                                                     TextTrimming="CharacterEllipsis"/>
+                                            <Button Grid.Column="2" Style="{StaticResource MaterialDesignIconButton}"
+                                                    ToolTip="Copier le chemin">
+                                                <materialDesign:PackIcon Kind="ContentCopy" Width="14" Height="14"/>
+                                            </Button>
+                                        </Grid>
+                                        
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Base :" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text="C:\ProgramData\FNEV4\fnev4.db" 
+                                                     FontFamily="Consolas" FontSize="11" 
+                                                     TextTrimming="CharacterEllipsis"/>
+                                            <Button Grid.Column="2" Style="{StaticResource MaterialDesignIconButton}"
+                                                    ToolTip="Copier le chemin">
+                                                <materialDesign:PackIcon Kind="ContentCopy" Width="14" Height="14"/>
+                                            </Button>
+                                        </Grid>
+                                    </StackPanel>
+                                </GroupBox>
+                                
+                                <!-- Configuration API -->
+                                <GroupBox Header="Configuration API" Style="{StaticResource MaterialDesignGroupBox}" Margin="0,0,0,12">
+                                    <StackPanel Margin="8">
+                                        <Grid Margin="0,0,0,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="URL FNE :" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text="https://api.fne.gouv.fr/v3" 
+                                                     FontFamily="Consolas" FontSize="11"/>
+                                        </Grid>
+                                        
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Timeout :" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text="30000 ms" FontFamily="Consolas" FontSize="11"/>
+                                        </Grid>
+                                        
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Retry :" FontWeight="Medium"/>
+                                            <TextBlock Grid.Column="1" Text="3 tentatives" FontFamily="Consolas" FontSize="11"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </GroupBox>
+                                
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </materialDesign:Card>
+            </Grid>
+            
+            <!-- Séparateur horizontal -->
+            <GridSplitter Grid.Row="1" 
+                        VerticalAlignment="Stretch" 
+                        Background="{DynamicResource MaterialDesignDivider}"/>
+            
+            <!-- Panneau du bas : Console et outils avancés -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="4"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Console de commandes -->
+                <materialDesign:Card Grid.Column="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <Border Grid.Row="0" 
+                                Background="{DynamicResource MaterialDesignToolBarBackground}"
+                                Padding="16,12">
+                            <Grid>
+                                <TextBlock Text="Console de commandes" 
+                                         FontWeight="Medium"
+                                         Foreground="{DynamicResource MaterialDesignBody}"
+                                         VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                            ToolTip="Effacer la console">
+                                        <materialDesign:PackIcon Kind="Eraser" Width="16" Height="16"/>
+                                    </Button>
+                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                            ToolTip="Sauvegarder l'historique">
+                                        <materialDesign:PackIcon Kind="ContentSave" Width="16" Height="16"/>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        
+                        <ScrollViewer Grid.Row="1" 
+                                    VerticalScrollBarVisibility="Auto"
+                                    Background="#1E1E1E">
+                            <TextBlock Margin="12" 
+                                     FontFamily="Consolas" 
+                                     FontSize="12"
+                                     Foreground="#FFFFFF"
+                                     TextWrapping="Wrap">
+FNEV4 Console v1.0.0 - Tapez 'help' pour voir les commandes disponibles
+
+&gt; status
+Application: En cours d'exécution
+Base de données: Connectée (342.5 MB)
+API FNE: Accessible (ping: 45ms)
+Cache: 24.7 MB utilisés
+
+&gt; cache stats
+Cache principal: 15.2 MB (1,247 objets)
+Cache images: 8.1 MB (456 images)
+Cache API: 1.4 MB (89 réponses)
+
+&gt; log level debug
+Niveau de log défini sur: DEBUG
+Les logs détaillés sont maintenant activés.
+
+&gt; _
+                            </TextBlock>
+                        </ScrollViewer>
+                        
+                        <Border Grid.Row="2" 
+                                Background="#2D2D30" 
+                                Padding="12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBlock Grid.Column="0" 
+                                         Text="&gt;" 
+                                         FontFamily="Consolas" 
+                                         FontWeight="Bold"
+                                         Foreground="#FFFFFF" 
+                                         VerticalAlignment="Center"
+                                         Margin="0,0,8,0"/>
+                                
+                                <TextBox Grid.Column="1" 
+                                       Background="Transparent"
+                                       BorderThickness="0"
+                                       FontFamily="Consolas"
+                                       Foreground="#FFFFFF"
+                                       CaretBrush="#FFFFFF"
+                                       materialDesign:HintAssist.Hint="Tapez une commande..."
+                                       materialDesign:HintAssist.Foreground="#CCCCCC"/>
+                                
+                                <Button Grid.Column="2" 
+                                        Style="{StaticResource MaterialDesignIconButton}"
+                                        Margin="8,0,0,0">
+                                    <materialDesign:PackIcon Kind="Send" Width="16" Height="16" Foreground="#FFFFFF"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </materialDesign:Card>
+                
+                <!-- Séparateur -->
+                <GridSplitter Grid.Column="1" 
+                            HorizontalAlignment="Stretch" 
+                            Background="{DynamicResource MaterialDesignDivider}"/>
+                
+                <!-- Outils de développement -->
+                <materialDesign:Card Grid.Column="2">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <Border Grid.Row="0" 
+                                Background="{DynamicResource MaterialDesignToolBarBackground}"
+                                Padding="16,12">
+                            <TextBlock Text="Outils de développement" 
+                                     FontWeight="Medium"
+                                     Foreground="{DynamicResource MaterialDesignBody}"/>
+                        </Border>
+                        
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="16">
+                                
+                                <!-- Débogage -->
+                                <Expander Header="Débogage" IsExpanded="True" Margin="0,0,0,12">
+                                    <StackPanel Margin="0,8,0,0">
+                                        <Button Content="Mode développeur" 
+                                              Style="{StaticResource MaterialDesignOutlinedButton}"
+                                              HorizontalAlignment="Stretch" Margin="0,0,0,6"/>
+                                        <Button Content="Inspecteur d'objets" 
+                                              Style="{StaticResource MaterialDesignOutlinedButton}"
+                                              HorizontalAlignment="Stretch"/>
+                                        <Button Content="Profiler mémoire" 
+                                              Style="{StaticResource MaterialDesignOutlinedButton}"
+                                              HorizontalAlignment="Stretch"/>
+                                        <Button Content="Traces SQL" 
+                                              Style="{StaticResource MaterialDesignOutlinedButton}"
+                                              HorizontalAlignment="Stretch"/>
+                                    </StackPanel>
+                                </Expander>
+                                
+                                <!-- Export/Import -->
+                                <Expander Header="Export/Import" Margin="0,0,0,12">
+                                    <StackPanel Margin="0,8,0,0">
+                                        <Button Content="Export configuration" 
+                                              Style="{StaticResource MaterialDesignOutlinedButton}"
+                                              HorizontalAlignment="Stretch" Margin="0,0,0,6"/>
+                                        <Button Content="Import configuration" 
+                                              Style="{StaticResource MaterialDesignOutlinedButton}"
+                                              HorizontalAlignment="Stretch"/>
+                                        <Button Content="Export logs" 
+                                              Style="{StaticResource MaterialDesignOutlinedButton}"
+                                              HorizontalAlignment="Stretch"/>
+                                    </StackPanel>
+                                </Expander>
+                                
+                                <!-- Tests -->
+                                <Expander Header="Tests système">
+                                    <StackPanel Margin="0,8,0,0">
+                                        <Button Content="Test complet" 
+                                              Style="{StaticResource MaterialDesignRaisedButton}"
+                                              HorizontalAlignment="Stretch" Margin="0,0,0,6"/>
+                                        <Button Content="Test base de données" 
+                                              Style="{StaticResource MaterialDesignOutlinedButton}"
+                                              HorizontalAlignment="Stretch"/>
+                                        <Button Content="Test API" 
+                                              Style="{StaticResource MaterialDesignOutlinedButton}"
+                                              HorizontalAlignment="Stretch"/>
+                                        <Button Content="Test performances" 
+                                              Style="{StaticResource MaterialDesignOutlinedButton}"
+                                              HorizontalAlignment="Stretch"/>
+                                    </StackPanel>
+                                </Expander>
+                                
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </materialDesign:Card>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

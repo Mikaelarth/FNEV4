@@ -667,12 +667,47 @@
 
             <!-- ZONE DE CONTENU PRINCIPAL -->
             <Grid Grid.Column="1" Background="{DynamicResource MaterialDesignBackground}">
-                <!-- Contenu temporaire - sera remplacé par la navigation -->
-                <TextBlock Text="Zone de contenu principal - Navigation à implémenter"
-                         HorizontalAlignment="Center"
-                         VerticalAlignment="Center"
-                         FontSize="16"
-                         Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                <!-- Zone de contenu dynamique -->
+                <Border Margin="0" Background="{DynamicResource MaterialDesignPaper}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- En-tête du module actuel -->
+                        <Border Grid.Row="0" 
+                                Background="{DynamicResource MaterialDesignToolBarBackground}"
+                                BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                BorderThickness="0,0,0,1"
+                                Padding="24,16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBlock Grid.Column="0"
+                                         Text="{Binding CurrentModuleName}"
+                                         FontSize="20"
+                                         FontWeight="Medium"
+                                         Foreground="{DynamicResource MaterialDesignBody}"
+                                         VerticalAlignment="Center"/>
+                                         
+                                <TextBlock Grid.Column="1"
+                                         Text="{Binding ApplicationVersion}"
+                                         FontSize="12"
+                                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                         VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- Contenu du module -->
+                        <ContentPresenter Grid.Row="1" 
+                                        Content="{Binding CurrentView}"
+                                        Margin="0"/>
+                    </Grid>
+                </Border>
             </Grid>
 
         </Grid>

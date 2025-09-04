@@ -1,7 +1,9 @@
 using System;
+using System.Windows.Controls;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FNEV4.Presentation.Views.Maintenance;
 
 namespace FNEV4.Presentation.ViewModels
 {
@@ -23,6 +25,9 @@ namespace FNEV4.Presentation.ViewModels
 
         [ObservableProperty]
         private string _currentModuleName = "Dashboard";
+
+        [ObservableProperty]
+        private UserControl? _currentView;
 
         [ObservableProperty]
         private string _applicationTitle = "FNEV4 - Application FNE Desktop";
@@ -227,24 +232,28 @@ namespace FNEV4.Presentation.ViewModels
         private void NavigateToLogsDiagnostics()
         {
             CurrentModuleName = "Maintenance - Logs & Diagnostics";
+            CurrentView = new LogsDiagnosticsView();
         }
 
         [RelayCommand]
         private void NavigateToBaseDonnees()
         {
             CurrentModuleName = "Maintenance - Base de données";
+            CurrentView = new BaseDonneesView();
         }
 
         [RelayCommand]
         private void NavigateToSynchronisation()
         {
             CurrentModuleName = "Maintenance - Synchronisation";
+            // TODO: CurrentView = new SynchronisationView();
         }
 
         [RelayCommand]
         private void NavigateToOutilsTechniques()
         {
             CurrentModuleName = "Maintenance - Outils techniques";
+            // TODO: CurrentView = new OutilsTechniquesView();
         }
 
         /// <summary>
