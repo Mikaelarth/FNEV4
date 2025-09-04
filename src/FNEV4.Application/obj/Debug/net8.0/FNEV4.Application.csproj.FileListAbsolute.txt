@@ -1,0 +1,15 @@
+C:\wamp64\www\FNEV4\src\FNEV4.Application\bin\Debug\net8.0\FNEV4.Application.deps.json
+C:\wamp64\www\FNEV4\src\FNEV4.Application\bin\Debug\net8.0\FNEV4.Application.dll
+C:\wamp64\www\FNEV4\src\FNEV4.Application\bin\Debug\net8.0\FNEV4.Application.pdb
+C:\wamp64\www\FNEV4\src\FNEV4.Application\bin\Debug\net8.0\FNEV4.Core.dll
+C:\wamp64\www\FNEV4\src\FNEV4.Application\bin\Debug\net8.0\FNEV4.Core.pdb
+C:\wamp64\www\FNEV4\src\FNEV4.Application\obj\Debug\net8.0\FNEV4.Application.csproj.AssemblyReference.cache
+C:\wamp64\www\FNEV4\src\FNEV4.Application\obj\Debug\net8.0\FNEV4.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\wamp64\www\FNEV4\src\FNEV4.Application\obj\Debug\net8.0\FNEV4.Application.AssemblyInfoInputs.cache
+C:\wamp64\www\FNEV4\src\FNEV4.Application\obj\Debug\net8.0\FNEV4.Application.AssemblyInfo.cs
+C:\wamp64\www\FNEV4\src\FNEV4.Application\obj\Debug\net8.0\FNEV4.Application.csproj.CoreCompileInputs.cache
+C:\wamp64\www\FNEV4\src\FNEV4.Application\obj\Debug\net8.0\FNEV4.Ap.5509C309.Up2Date
+C:\wamp64\www\FNEV4\src\FNEV4.Application\obj\Debug\net8.0\FNEV4.Application.dll
+C:\wamp64\www\FNEV4\src\FNEV4.Application\obj\Debug\net8.0\refint\FNEV4.Application.dll
+C:\wamp64\www\FNEV4\src\FNEV4.Application\obj\Debug\net8.0\FNEV4.Application.pdb
+C:\wamp64\www\FNEV4\src\FNEV4.Application\obj\Debug\net8.0\ref\FNEV4.Application.dll

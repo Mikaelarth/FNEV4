@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyTitle>FNEV4.Application</AssemblyTitle>
+    <AssemblyDescription>Couche application - Use Cases et logique métier</AssemblyDescription>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Références aux autres projets -->
+    <ProjectReference Include="..\FNEV4.Core\FNEV4.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- AutoMapper -->
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    
+    <!-- Validation -->
+    <PackageReference Include="FluentValidation" Version="11.8.1" />
+    
+    <!-- MVVM Community Toolkit -->
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+  </ItemGroup>
+
+</Project>

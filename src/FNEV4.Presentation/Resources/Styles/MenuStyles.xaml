@@ -1,0 +1,109 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <!-- Style pour le menu principal vertical -->
+    <Style x:Key="MainMenuStyle" TargetType="Menu">
+        <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}" />
+        <Setter Property="BorderThickness" Value="0,0,1,0" />
+        <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+
+    <!-- Style pour les items du menu principal -->
+    <Style x:Key="MainMenuItemStyle" TargetType="MenuItem">
+        <Setter Property="Height" Value="56" />
+        <Setter Property="Padding" Value="16,8" />
+        <Setter Property="Margin" Value="8,2" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Border x:Name="Border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="40" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Icône -->
+                            <materialDesign:PackIcon Grid.Column="0"
+                                                   Kind="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"
+                                                   Width="24" Height="24"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Center"
+                                                   Foreground="{DynamicResource MaterialDesignBody}" />
+                            
+                            <!-- Texte -->
+                            <TextBlock Grid.Column="1"
+                                     Text="{TemplateBinding Header}"
+                                     VerticalAlignment="Center"
+                                     Margin="8,0,0,0"
+                                     Foreground="{DynamicResource MaterialDesignBody}" />
+                            
+                            <!-- Flèche pour sous-menu -->
+                            <materialDesign:PackIcon Grid.Column="2"
+                                                   Kind="ChevronRight"
+                                                   Width="16" Height="16"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Center"
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                   Visibility="{Binding HasItems, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        </Grid>
+                    </Border>
+                    
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource MaterialDesignSelection}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource MaterialDesignSelection}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.56" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Style pour les sous-menus -->
+    <Style x:Key="SubMenuItemStyle" TargetType="MenuItem">
+        <Setter Property="Height" Value="40" />
+        <Setter Property="Padding" Value="56,8,16,8" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Border x:Name="Border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="4"
+                            Margin="16,1">
+                        <TextBlock Text="{TemplateBinding Header}"
+                                 VerticalAlignment="Center"
+                                 Padding="{TemplateBinding Padding}"
+                                 Foreground="{DynamicResource MaterialDesignBody}" />
+                    </Border>
+                    
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource MaterialDesignSelection}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

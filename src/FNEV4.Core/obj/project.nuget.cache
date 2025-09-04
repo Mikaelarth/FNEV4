@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "pEKbq37dRQo=",
+  "success": true,
+  "projectFilePath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\HP\\.nuget\\packages\\fluentvalidation\\11.8.1\\fluentvalidation.11.8.1.nupkg.sha512"
+  ],
+  "logs": []
+}

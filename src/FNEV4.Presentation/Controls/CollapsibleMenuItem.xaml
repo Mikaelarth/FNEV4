@@ -1,0 +1,59 @@
+<UserControl x:Class="FNEV4.Presentation.Controls.CollapsibleMenuItem"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             x:Name="Root">
+    
+    <StackPanel>
+        <!-- Header du menu item -->
+        <Button Style="{StaticResource MenuSectionButton}"
+                Click="HeaderButton_Click"
+                ToolTip="{Binding HeaderText, ElementName=Root}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="40" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                
+                <!-- Icône -->
+                <materialDesign:PackIcon Grid.Column="0" 
+                                       Kind="{Binding IconKind, ElementName=Root}" 
+                                       Width="24" Height="24"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Center" />
+                                       
+                <!-- Texte (visible seulement si menu étendu) -->
+                <TextBlock Grid.Column="1" 
+                         Text="{Binding HeaderText, ElementName=Root}"
+                         VerticalAlignment="Center"
+                         Margin="8,0,0,0"
+                         FontSize="14"
+                         FontWeight="Medium"
+                         Visibility="{Binding IsMenuExpanded, ElementName=Root, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                         
+                <!-- Chevron (visible seulement si menu étendu) -->
+                <materialDesign:PackIcon Grid.Column="2" 
+                                       Width="16" Height="16"
+                                       VerticalAlignment="Center"
+                                       Visibility="{Binding IsMenuExpanded, ElementName=Root, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <materialDesign:PackIcon.Kind>
+                        <MultiBinding Converter="{StaticResource BooleanToExpandChevronConverter}">
+                            <Binding Path="IsExpanded" ElementName="Root" />
+                        </MultiBinding>
+                    </materialDesign:PackIcon.Kind>
+                </materialDesign:PackIcon>
+            </Grid>
+        </Button>
+        
+        <!-- Contenu du sous-menu -->
+        <ContentPresenter Margin="48,0,0,8">
+            <ContentPresenter.Visibility>
+                <MultiBinding Converter="{StaticResource MenuVisibilityConverter}">
+                    <Binding Path="IsMenuExpanded" ElementName="Root" />
+                    <Binding Path="IsExpanded" ElementName="Root" />
+                </MultiBinding>
+            </ContentPresenter.Visibility>
+        </ContentPresenter>
+    </StackPanel>
+</UserControl>

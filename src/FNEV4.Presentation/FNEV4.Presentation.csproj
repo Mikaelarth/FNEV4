@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyTitle>FNEV4 - Application FNE Desktop</AssemblyTitle>
+    <AssemblyDescription>Application d'interfaçage FNE pour la DGI Côte d'Ivoire</AssemblyDescription>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Copyright>© 2025 FNEV4 Project</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Material Design pour WPF -->
+    <PackageReference Include="MaterialDesignThemes" Version="4.9.0" />
+    <PackageReference Include="MaterialDesignColors" Version="2.1.4" />
+    
+    <!-- MVVM Community Toolkit -->
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    
+    <!-- Logging -->
+    <PackageReference Include="Serilog" Version="3.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
+    
+    <!-- Validation -->
+    <PackageReference Include="FluentValidation" Version="11.8.1" />
+    
+    <!-- AutoMapper -->
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    
+    <!-- HTTP Client avec Polly -->
+    <PackageReference Include="Polly" Version="7.2.4" />
+    <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Références aux autres projets -->
+    <ProjectReference Include="..\FNEV4.Core\FNEV4.Core.csproj" />
+    <ProjectReference Include="..\FNEV4.Application\FNEV4.Application.csproj" />
+    <ProjectReference Include="..\FNEV4.Infrastructure\FNEV4.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Framework de test -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.6.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    
+    <!-- Assertions fluides -->
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    
+    <!-- Mocking -->
+    <PackageReference Include="Moq" Version="4.20.70" />
+    
+    <!-- Tests WPF -->
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.77" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Référence au projet à tester -->
+    <ProjectReference Include="..\..\..\src\FNEV4.Presentation\FNEV4.Presentation.csproj" />
+    <ProjectReference Include="..\..\..\src\FNEV4.Core\FNEV4.Core.csproj" />
+    <ProjectReference Include="..\..\..\src\FNEV4.Application\FNEV4.Application.csproj" />
+    <ProjectReference Include="..\..\..\src\FNEV4.Infrastructure\FNEV4.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
