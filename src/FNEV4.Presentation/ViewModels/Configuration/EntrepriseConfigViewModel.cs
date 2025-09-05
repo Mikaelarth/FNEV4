@@ -306,7 +306,7 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
         ExportConfigurationCommand = new RelayCommand(async () => await ExportConfigurationAsync());
         ImportConfigurationCommand = new RelayCommand(async () => await ImportConfigurationAsync());
         SyncWithDgiCommand = new RelayCommand(async () => await SyncWithDgiAsync());
-        ResetCommand = new RelayCommand(() => ResetForm());
+        ResetCommand = new RelayCommand(async () => await ResetForm());
         VerifyNccCommand = new RelayCommand(async () => await VerifyNccWithDgiAsync());
         DetectLocationCommand = new RelayCommand(() => DetectLocation());
         FormatPhoneCommand = new RelayCommand(() => FormatPhone());
@@ -667,17 +667,23 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
     #endregion
 
     #region Actions utilisateur (simplifiées)
-    private void ResetForm()
+    private async Task ResetForm()
     {
         // Demander confirmation avant de réinitialiser
         var result = System.Windows.MessageBox.Show(
-            "Êtes-vous sûr de vouloir réinitialiser tous les champs ?\n\n" +
-            "⚠️ Cette action effacera toutes les données saisies et ne peut pas être annulée.\n\n" +
-            "Configuration actuelle :\n" +
+            "🗑️ RÉINITIALISATION COMPLÈTE\n\n" +
+            "Cette action va :\n" +
+            "• Vider tous les champs du formulaire\n" +
+            "• Supprimer DÉFINITIVEMENT la configuration de la base de données\n" +
+            "• Effacer tous les paramètres FNE sauvegardés\n\n" +
+            "⚠️ ATTENTION : Cette opération est IRRÉVERSIBLE !\n\n" +
+            "Configuration actuelle qui sera supprimée :\n" +
             $"• Entreprise : {(string.IsNullOrWhiteSpace(CompanyName) ? "Non définie" : CompanyName)}\n" +
             $"• NCC : {(string.IsNullOrWhiteSpace(NccNumber) ? "Non défini" : NccNumber)}\n" +
-            $"• Point de vente : {(string.IsNullOrWhiteSpace(DefaultPointOfSale) ? "Non défini" : DefaultPointOfSale)}",
-            "Confirmation de réinitialisation",
+            $"• Point de vente : {(string.IsNullOrWhiteSpace(DefaultPointOfSale) ? "Non défini" : DefaultPointOfSale)}\n" +
+            $"• API : {(string.IsNullOrWhiteSpace(ApiBaseUrl) ? "Non configurée" : ApiBaseUrl)}\n\n" +
+            "Voulez-vous vraiment continuer ?",
+            "⚠️ Confirmation de suppression définitive",
             System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Warning);
 
@@ -688,33 +694,97 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
             return;
         }
 
-        // Réinitialiser tous les champs de données
-        CompanyName = string.Empty;
-        NccNumber = string.Empty;
-        BusinessAddress = string.Empty;
-        PhoneNumber = string.Empty;
-        Email = string.Empty;
-        DefaultPointOfSale = string.Empty;
-        ApiKey = string.Empty;
-        ApiBaseUrl = string.Empty;
-        Environment = "Test"; // Valeur par défaut
+        try
+        {
+            StatusMessage = "🔄 Suppression des données en cours...";
+            
+            // Supprimer les données de la base de données
+            bool databaseCleared = await ClearDatabaseConfigurationAsync();
+            
+            if (databaseCleared)
+            {
+                // Réinitialiser tous les champs de données
+                CompanyName = string.Empty;
+                NccNumber = string.Empty;
+                BusinessAddress = string.Empty;
+                PhoneNumber = string.Empty;
+                Email = string.Empty;
+                DefaultPointOfSale = string.Empty;
+                ApiKey = string.Empty;
+                ApiBaseUrl = string.Empty;
+                Environment = "Test"; // Valeur par défaut
 
-        // Réinitialiser tous les états de validation
-        IsNccValid = false;
-        IsCompanyNameValid = false;
-        IsBusinessAddressValid = false;
-        IsPhoneNumberValid = false;
-        IsEmailValid = false;
-        IsPointOfSaleValid = false;
+                // Réinitialiser tous les états de validation
+                IsNccValid = false;
+                IsCompanyNameValid = false;
+                IsBusinessAddressValid = false;
+                IsPhoneNumberValid = false;
+                IsEmailValid = false;
+                IsPointOfSaleValid = false;
 
-        // Recalculer la progression et mettre à jour le statut
-        CalculateCompletionPercentage();
-        StatusMessage = "✅ Formulaire réinitialisé avec succès";
-        
-        // Afficher la notification de succès
-        ShowNotification("🔄 Formulaire réinitialisé avec succès !", true);
-        
-        System.Diagnostics.Debug.WriteLine("=== FORMULAIRE RÉINITIALISÉ ===");
+                // Recalculer la progression et mettre à jour le statut
+                CalculateCompletionPercentage();
+                StatusMessage = "✅ Configuration supprimée définitivement";
+                
+                // Afficher la notification de succès
+                ShowNotification("�️ Configuration supprimée définitivement de la base de données !", true);
+                
+                System.Diagnostics.Debug.WriteLine("=== CONFIGURATION SUPPRIMÉE COMPLÈTEMENT ===");
+            }
+            else
+            {
+                StatusMessage = "❌ Erreur lors de la suppression";
+                ShowNotification("❌ Erreur lors de la suppression de la configuration", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "❌ Erreur lors de la réinitialisation";
+            ShowNotification($"❌ Erreur : {ex.Message}", false);
+            System.Diagnostics.Debug.WriteLine($"Erreur ResetForm: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Supprime définitivement la configuration de l'entreprise de la base de données
+    /// </summary>
+    private async Task<bool> ClearDatabaseConfigurationAsync()
+    {
+        try
+        {
+            bool success = true;
+            
+            // Supprimer toutes les configurations Company
+            var deletedCompanies = await _databaseService.ExecuteQueryAsync(
+                "DELETE FROM Companies"
+            );
+            System.Diagnostics.Debug.WriteLine($"Companies supprimées : {deletedCompanies}");
+            
+            // Supprimer toutes les configurations FNE personnalisées (garder les données par défaut)
+            var deletedFneConfigs = await _databaseService.ExecuteQueryAsync(
+                "DELETE FROM FneConfigurations WHERE ConfigurationName != 'Test DGI'"
+            );
+            System.Diagnostics.Debug.WriteLine($"FneConfigurations personnalisées supprimées : {deletedFneConfigs}");
+            
+            // Réinitialiser les paramètres par défaut de la configuration Test DGI
+            var resetDefaultConfig = await _databaseService.ExecuteQueryAsync(
+                "UPDATE FneConfigurations SET " +
+                "IsValidatedByDgi = 0, " +
+                "SubmittedSpecimens = NULL, " +
+                "Notes = 'Configuration par défaut pour l''environnement de test DGI', " +
+                "LastModifiedDate = datetime('now'), " +
+                "ModifiedBy = 'System Reset' " +
+                "WHERE ConfigurationName = 'Test DGI'"
+            );
+            System.Diagnostics.Debug.WriteLine($"Configuration par défaut réinitialisée : {resetDefaultConfig}");
+            
+            return success;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Erreur ClearDatabaseConfigurationAsync: {ex.Message}");
+            return false;
+        }
     }
 
     private void DetectLocation()
