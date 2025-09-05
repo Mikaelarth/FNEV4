@@ -159,6 +159,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 
                 <!-- Ligne de statut -->
@@ -178,7 +179,7 @@
                              Style="{StaticResource MaterialDesignHeadline6TextBlock}"
                              FontWeight="Medium"/>
                     
-                    <TextBlock Text="{Binding CompletionPercentage, StringFormat='({0}% complet)'}" 
+                    <TextBlock Text="{Binding CompletionPercentage, StringFormat='{}{0:F0}% complet'}" 
                              VerticalAlignment="Center"
                              Style="{StaticResource MaterialDesignBody2TextBlock}"
                              Foreground="{DynamicResource MaterialDesignBodyLight}"
@@ -192,7 +193,17 @@
                            Height="6"
                            Background="{DynamicResource MaterialDesignDivider}"
                            Foreground="{DynamicResource PrimaryHueMidBrush}"
+                           Margin="0,0,0,8"
                            materialDesign:TransitionAssist.DisableTransitions="False"/>
+                
+                <!-- Détail de progression -->
+                <TextBlock Grid.Row="2" 
+                          Text="{Binding ProgressDetails}"
+                          Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                          Foreground="{DynamicResource MaterialDesignBodyLight}"
+                          Margin="0,4,0,0"
+                          TextWrapping="Wrap"
+                          Opacity="0.8"/>
             </Grid>
         </materialDesign:Card>
 
@@ -710,5 +721,27 @@
                 </StackPanel>
             </Grid>
         </ScrollViewer>
+
+        <!-- Snackbar pour les notifications -->
+        <materialDesign:Snackbar Grid.Row="2" 
+                               MessageQueue="{materialDesign:MessageQueue}"
+                               x:Name="NotificationSnackbar"
+                               IsActive="{Binding IsNotificationVisible}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Bottom"
+                               Margin="16">
+            <materialDesign:SnackbarMessage>
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="{Binding NotificationIcon}" 
+                                           Width="20" Height="20"
+                                           VerticalAlignment="Center"
+                                           Foreground="{Binding NotificationColor}"
+                                           Margin="0,0,8,0"/>
+                    <TextBlock Text="{Binding NotificationMessage}" 
+                             VerticalAlignment="Center"
+                             FontWeight="Medium"/>
+                </StackPanel>
+            </materialDesign:SnackbarMessage>
+        </materialDesign:Snackbar>
     </Grid>
 </UserControl>

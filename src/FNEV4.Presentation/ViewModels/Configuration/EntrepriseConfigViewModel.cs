@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using FNEV4.Infrastructure.Data;
 using FNEV4.Infrastructure.Services;
 using System;
+using System.Collections.Generic;
 
 namespace FNEV4.Presentation.ViewModels.Configuration;
 
@@ -93,7 +94,7 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
     #endregion
 
     #region Propriétés de validation et UI
-    private bool _isNccValid = true;
+    private bool _isNccValid = false;
     public bool IsNccValid
     {
         get => _isNccValid;
@@ -200,6 +201,13 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
         set { _completionPercentage = value; OnPropertyChanged(); }
     }
 
+    private string _progressDetails = string.Empty;
+    public string ProgressDetails
+    {
+        get => _progressDetails;
+        set { _progressDetails = value; OnPropertyChanged(); }
+    }
+
     private bool _canSave = false;
     public bool CanSave
     {
@@ -226,6 +234,35 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
     {
         get => _statusColor;
         set { _statusColor = value; OnPropertyChanged(); }
+    }
+
+    // Propriétés pour les notifications
+    private string _notificationMessage = string.Empty;
+    public string NotificationMessage
+    {
+        get => _notificationMessage;
+        set { _notificationMessage = value; OnPropertyChanged(); }
+    }
+
+    private bool _isNotificationVisible = false;
+    public bool IsNotificationVisible
+    {
+        get => _isNotificationVisible;
+        set { _isNotificationVisible = value; OnPropertyChanged(); }
+    }
+
+    private PackIconKind _notificationIcon = PackIconKind.Information;
+    public PackIconKind NotificationIcon
+    {
+        get => _notificationIcon;
+        set { _notificationIcon = value; OnPropertyChanged(); }
+    }
+
+    private SolidColorBrush _notificationColor = Brushes.Blue;
+    public SolidColorBrush NotificationColor
+    {
+        get => _notificationColor;
+        set { _notificationColor = value; OnPropertyChanged(); }
     }
     #endregion
 
@@ -507,42 +544,122 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
     #region Calcul de progression
     private void CalculateCompletionPercentage()
     {
-        var fields = new[]
-        {
-            !string.IsNullOrWhiteSpace(CompanyName),
-            !string.IsNullOrWhiteSpace(NccNumber),
-            !string.IsNullOrWhiteSpace(BusinessAddress),
-            !string.IsNullOrWhiteSpace(PhoneNumber),
-            !string.IsNullOrWhiteSpace(Email),
-            !string.IsNullOrWhiteSpace(DefaultPointOfSale),
-            !string.IsNullOrWhiteSpace(ApiKey),
-            !string.IsNullOrWhiteSpace(ApiBaseUrl),
-            !string.IsNullOrWhiteSpace(Environment)
-        };
+        double totalProgress = 0;
+        int completedSteps = 0;
+        int totalSteps = 4; // 4 étapes principales pour la configuration d'entreprise
+        var progressText = new List<string>();
 
-        CompletionPercentage = (double)fields.Count(f => f) / fields.Length * 100;
-        CanSave = CompletionPercentage >= 50; // Au moins 50% complété (abaissé pour test)
-        System.Diagnostics.Debug.WriteLine($"CalculateCompletionPercentage: {CompletionPercentage:F1}% - CanSave: {CanSave}");
+        // Étape 1: Informations légales entreprise (40% du total)
+        double legalInfoProgress = CalculateLegalInfoProgress();
+        totalProgress += legalInfoProgress * 0.40;
+        string legalStatus = legalInfoProgress >= 100 ? "✅" : legalInfoProgress > 0 ? "🔄" : "❌";
+        progressText.Add($"{legalStatus} Informations légales ({legalInfoProgress:F0}%)");
+        if (legalInfoProgress >= 100) completedSteps++;
+
+        // Étape 2: Informations de contact (30% du total)
+        double contactProgress = CalculateContactProgress();
+        totalProgress += contactProgress * 0.30;
+        string contactStatus = contactProgress >= 100 ? "✅" : contactProgress > 0 ? "🔄" : "❌";
+        progressText.Add($"{contactStatus} Informations contact ({contactProgress:F0}%)");
+        if (contactProgress >= 100) completedSteps++;
+
+        // Étape 3: Configuration point de vente (20% du total)
+        double posProgress = CalculatePointOfSaleProgress();
+        totalProgress += posProgress * 0.20;
+        string posStatus = posProgress >= 100 ? "✅" : posProgress > 0 ? "🔄" : "❌";
+        progressText.Add($"{posStatus} Point de vente ({posProgress:F0}%)");
+        if (posProgress >= 100) completedSteps++;
+
+        // Étape 4: Validation format et règles (10% du total)
+        double validationProgress = CalculateValidationProgress();
+        totalProgress += validationProgress * 0.10;
+        string validationStatus = validationProgress >= 100 ? "✅" : validationProgress > 0 ? "🔄" : "❌";
+        progressText.Add($"{validationStatus} Validation ({validationProgress:F0}%)");
+        if (validationProgress >= 100) completedSteps++;
+
+        CompletionPercentage = Math.Round(totalProgress, 0);
+        ProgressDetails = string.Join(" • ", progressText);
+        
+        // Sauvegarde possible si au moins les 2 premières étapes sont complètes
+        CanSave = completedSteps >= 2;
+        
+        System.Diagnostics.Debug.WriteLine($"Configuration entreprise: {completedSteps}/{totalSteps} étapes complètes = {CompletionPercentage}% - CanSave: {CanSave}");
         UpdateStatus();
+    }
+
+    private double CalculateLegalInfoProgress()
+    {
+        int validFields = 0;
+        int totalFields = 2;
+
+        // NCC valide (vérification réelle du contenu ET de la validation)
+        if (!string.IsNullOrWhiteSpace(NccNumber) && IsNccValid && NccNumber.Length >= 8) validFields++;
+        
+        // Nom d'entreprise valide (vérification réelle du contenu ET de la validation)
+        if (!string.IsNullOrWhiteSpace(CompanyName) && IsCompanyNameValid && CompanyName.Length >= 2) validFields++;
+
+        return (double)validFields / totalFields * 100;
+    }
+
+    private double CalculateContactProgress()
+    {
+        int validFields = 0;
+        int totalFields = 3;
+
+        // Adresse valide (vérification réelle du contenu ET de la validation)
+        if (!string.IsNullOrWhiteSpace(BusinessAddress) && IsBusinessAddressValid && BusinessAddress.Length >= 10) validFields++;
+        
+        // Téléphone valide (vérification réelle du contenu ET de la validation)
+        if (!string.IsNullOrWhiteSpace(PhoneNumber) && IsPhoneNumberValid && PhoneNumber.Length >= 8) validFields++;
+        
+        // Email valide (vérification réelle du contenu ET de la validation)
+        if (!string.IsNullOrWhiteSpace(Email) && IsEmailValid && Email.Contains("@")) validFields++;
+
+        return (double)validFields / totalFields * 100;
+    }
+
+    private double CalculatePointOfSaleProgress()
+    {
+        // Point de vente configuré et valide (vérification réelle du contenu ET de la validation)
+        return (!string.IsNullOrWhiteSpace(DefaultPointOfSale) && IsPointOfSaleValid && DefaultPointOfSale.Length >= 2) ? 100 : 0;
+    }
+
+    private double CalculateValidationProgress()
+    {
+        // Tous les champs obligatoires sont valides
+        int validCount = 0;
+        if (IsNccValid) validCount++;
+        if (IsCompanyNameValid) validCount++;
+        if (IsPhoneNumberValid) validCount++;
+        if (IsEmailValid) validCount++;
+        if (IsPointOfSaleValid) validCount++;
+
+        return validCount >= 5 ? 100 : (double)validCount / 5 * 100;
     }
 
     private void UpdateStatus()
     {
         if (CompletionPercentage >= 90)
         {
-            StatusMessage = "Configuration complète - Prêt pour certification";
+            StatusMessage = "Configuration d'entreprise complète";
             StatusIcon = PackIconKind.CheckCircle;
             StatusColor = Brushes.Green;
         }
         else if (CompletionPercentage >= 70)
         {
-            StatusMessage = "Configuration en cours - Presque terminé";
-            StatusIcon = PackIconKind.ClockOutline;
+            StatusMessage = "Configuration d'entreprise avancée";
+            StatusIcon = PackIconKind.CheckCircleOutline;
             StatusColor = Brushes.Orange;
+        }
+        else if (CompletionPercentage >= 40)
+        {
+            StatusMessage = "Configuration d'entreprise en cours";
+            StatusIcon = PackIconKind.ProgressClock;
+            StatusColor = Brushes.Blue;
         }
         else
         {
-            StatusMessage = "Configuration incomplète";
+            StatusMessage = "Configuration d'entreprise incomplète";
             StatusIcon = PackIconKind.AlertCircle;
             StatusColor = Brushes.Red;
         }
@@ -552,14 +669,52 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
     #region Actions utilisateur (simplifiées)
     private void ResetForm()
     {
+        // Demander confirmation avant de réinitialiser
+        var result = System.Windows.MessageBox.Show(
+            "Êtes-vous sûr de vouloir réinitialiser tous les champs ?\n\n" +
+            "⚠️ Cette action effacera toutes les données saisies et ne peut pas être annulée.\n\n" +
+            "Configuration actuelle :\n" +
+            $"• Entreprise : {(string.IsNullOrWhiteSpace(CompanyName) ? "Non définie" : CompanyName)}\n" +
+            $"• NCC : {(string.IsNullOrWhiteSpace(NccNumber) ? "Non défini" : NccNumber)}\n" +
+            $"• Point de vente : {(string.IsNullOrWhiteSpace(DefaultPointOfSale) ? "Non défini" : DefaultPointOfSale)}",
+            "Confirmation de réinitialisation",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (result != System.Windows.MessageBoxResult.Yes)
+        {
+            StatusMessage = "Réinitialisation annulée";
+            ShowNotification("🚫 Réinitialisation annulée", false);
+            return;
+        }
+
+        // Réinitialiser tous les champs de données
         CompanyName = string.Empty;
         NccNumber = string.Empty;
         BusinessAddress = string.Empty;
         PhoneNumber = string.Empty;
         Email = string.Empty;
         DefaultPointOfSale = string.Empty;
+        ApiKey = string.Empty;
+        ApiBaseUrl = string.Empty;
+        Environment = "Test"; // Valeur par défaut
+
+        // Réinitialiser tous les états de validation
+        IsNccValid = false;
+        IsCompanyNameValid = false;
+        IsBusinessAddressValid = false;
+        IsPhoneNumberValid = false;
+        IsEmailValid = false;
+        IsPointOfSaleValid = false;
+
+        // Recalculer la progression et mettre à jour le statut
         CalculateCompletionPercentage();
-        StatusMessage = "Formulaire réinitialisé";
+        StatusMessage = "✅ Formulaire réinitialisé avec succès";
+        
+        // Afficher la notification de succès
+        ShowNotification("🔄 Formulaire réinitialisé avec succès !", true);
+        
+        System.Diagnostics.Debug.WriteLine("=== FORMULAIRE RÉINITIALISÉ ===");
     }
 
     private void DetectLocation()
@@ -616,18 +771,21 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
             if (string.IsNullOrWhiteSpace(CompanyName))
             {
                 StatusMessage = "❌ Le nom de l'entreprise est obligatoire";
+                ShowNotification("❌ Le nom de l'entreprise est obligatoire", false);
                 return;
             }
             
             if (string.IsNullOrWhiteSpace(NccNumber))
             {
                 StatusMessage = "❌ Le numéro NCC est obligatoire";
+                ShowNotification("❌ Le numéro NCC est obligatoire", false);
                 return;
             }
             
             if (!IsNccValid)
             {
                 StatusMessage = "❌ Le format du NCC n'est pas valide";
+                ShowNotification("❌ Le format du NCC n'est pas valide", false);
                 return;
             }
 
@@ -701,10 +859,14 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
             {
                 StatusMessage = "✅ Configuration sauvegardée avec succès dans la base de données";
                 System.Diagnostics.Debug.WriteLine($"Configuration sauvegardée dans: {connectionString}");
+                
+                // Afficher la notification de succès
+                ShowNotification("✅ Configuration sauvegardée avec succès !", true);
             }
             else
             {
                 StatusMessage = "❌ Aucune modification détectée";
+                ShowNotification("ℹ️ Aucune modification détectée", false);
             }
             
             System.Diagnostics.Debug.WriteLine("=== FIN SaveConfigurationAsync ===");
@@ -713,6 +875,9 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
         {
             StatusMessage = $"❌ Erreur lors de la sauvegarde : {ex.Message}";
             System.Diagnostics.Debug.WriteLine($"Erreur SaveConfiguration: {ex}");
+            
+            // Afficher la notification d'erreur
+            ShowNotification($"❌ Erreur: {ex.Message}", false);
         }
     }
 
@@ -863,6 +1028,19 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
         StatusMessage = "Vérification NCC avec DGI...";
         await Task.Delay(2000); // Simulation
         StatusMessage = "NCC vérifié avec succès";
+    }
+
+    // Méthode pour afficher les notifications
+    private async void ShowNotification(string message, bool isSuccess = true)
+    {
+        NotificationMessage = message;
+        NotificationIcon = isSuccess ? PackIconKind.CheckCircle : PackIconKind.AlertCircle;
+        NotificationColor = isSuccess ? Brushes.Green : Brushes.Red;
+        IsNotificationVisible = true;
+
+        // Auto-hide notification après 4 secondes
+        await Task.Delay(4000);
+        IsNotificationVisible = false;
     }
     #endregion
 
