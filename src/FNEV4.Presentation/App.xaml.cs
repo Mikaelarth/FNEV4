@@ -18,7 +18,7 @@ namespace FNEV4.Presentation
         private IHost? _host;
         public static IServiceProvider ServiceProvider { get; private set; } = null!;
 
-        protected override void OnStartup(StartupEventArgs e)
+        protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
             
@@ -28,7 +28,7 @@ namespace FNEV4.Presentation
                 
                 // Configuration de l'hôte avec DI
                 _host = CreateHostBuilder().Build();
-                _host.Start();
+                await _host.StartAsync();
                 
                 // Exposer le ServiceProvider globalement
                 ServiceProvider = _host.Services;
@@ -44,6 +44,9 @@ namespace FNEV4.Presentation
                 // Configuration de l'application
                 ConfigureApplication();
                 
+                // Charger et appliquer la configuration de base de données sauvegardée
+                await LoadDatabaseConfiguration();
+                
                 System.Diagnostics.Debug.WriteLine("Application démarrée avec succès");
             }
             catch (Exception ex)
@@ -51,6 +54,20 @@ namespace FNEV4.Presentation
                 System.Diagnostics.Debug.WriteLine($"Erreur lors du démarrage: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"StackTrace: {ex.StackTrace}");
                 throw;
+            }
+        }
+
+        private async Task LoadDatabaseConfiguration()
+        {
+            try
+            {
+                var configLoader = ServiceProvider.GetRequiredService<IDatabaseConfigurationLoader>();
+                await configLoader.LoadAndApplyConfigurationAsync();
+                System.Diagnostics.Debug.WriteLine("Configuration de base de données chargée avec succès");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur lors du chargement de la configuration: {ex.Message}");
             }
         }
 
@@ -71,9 +88,18 @@ namespace FNEV4.Presentation
 
                     // Services Infrastructure
                     services.AddScoped<IDatabaseService, DatabaseService>();
+                    services.AddScoped<ILoggingService, LoggingService>();
+                    services.AddScoped<IDiagnosticService, DiagnosticService>();
+
+                    // Services de notification
+                    services.AddSingleton<IDatabaseConfigurationNotificationService, DatabaseConfigurationNotificationService>();
+                    
+                    // Service de chargement de configuration
+                    services.AddScoped<IDatabaseConfigurationLoader, DatabaseConfigurationLoader>();
 
                     // ViewModels avec injection
                     services.AddTransient<BaseDonneesViewModel>();
+                    services.AddTransient<LogsDiagnosticsViewModel>();
 
                     // Service locator pour les ViewModels
                     services.AddSingleton<ViewModelLocator>();

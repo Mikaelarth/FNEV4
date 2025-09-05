@@ -10,6 +10,7 @@ using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using FNEV4.Infrastructure.Data;
 using FNEV4.Infrastructure.Services;
+using FNEV4.Presentation.Services;
 
 namespace FNEV4.Presentation.ViewModels.Maintenance
 {
@@ -19,6 +20,7 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
     public class BaseDonneesViewModel : INotifyPropertyChanged
     {
         private readonly IDatabaseService _databaseService;
+        private readonly IDatabaseConfigurationNotificationService? _notificationService;
 
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -165,13 +167,37 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             InitializeCommands();
         }
 
-        public BaseDonneesViewModel(IDatabaseService databaseService)
+        public BaseDonneesViewModel(IDatabaseService databaseService, IDatabaseConfigurationNotificationService? notificationService = null)
         {
             _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
+            _notificationService = notificationService;
+            
+            // S'abonner aux notifications de changement de configuration
+            if (_notificationService != null)
+            {
+                _notificationService.DatabaseConfigurationChanged += OnConfigurationChanged;
+            }
+            
             SqlResults = "🔧 Interface de maintenance - Prêt pour les opérations...";
             // Initialiser la Console SQL avec un message d'accueil
             ClearSqlQuery();
             InitializeCommands();
+        }
+
+        private async Task OnConfigurationChanged()
+        {
+            try
+            {
+                // Rafraîchir les données quand la configuration change
+                await RefreshDatabaseInfoAsync();
+                
+                // Ajouter un message de notification dans la console
+                SqlResults = $"✅ Configuration mise à jour automatiquement - {DateTime.Now:HH:mm:ss}";
+            }
+            catch (Exception ex)
+            {
+                SqlResults = $"❌ Erreur lors de la mise à jour automatique: {ex.Message}";
+            }
         }
 
         private void InitializeCommands()
@@ -213,6 +239,15 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
         {
             await RefreshDatabaseInfoAsync();
             await RefreshTablesAsync();
+        }
+
+        /// <summary>
+        /// Méthode publique pour rafraîchir les informations de la base de données
+        /// Utilisée pour synchroniser après des modifications de configuration
+        /// </summary>
+        public async Task RefreshDatabaseDataAsync()
+        {
+            await RefreshDatabaseInfoAsync();
         }
 
         private async Task RefreshDatabaseInfoAsync()

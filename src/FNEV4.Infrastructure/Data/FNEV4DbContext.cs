@@ -57,6 +57,11 @@ namespace FNEV4.Infrastructure.Data
         /// </summary>
         public DbSet<FneApiLog> FneApiLogs { get; set; }
 
+        /// <summary>
+        /// Logs système de l'application
+        /// </summary>
+        public DbSet<LogEntry> LogEntries { get; set; }
+
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

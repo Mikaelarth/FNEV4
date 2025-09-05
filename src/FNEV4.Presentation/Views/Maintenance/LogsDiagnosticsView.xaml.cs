@@ -1,4 +1,6 @@
 using System.Windows.Controls;
+using FNEV4.Presentation.ViewModels.Maintenance;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FNEV4.Presentation.Views.Maintenance
 {
@@ -11,6 +13,12 @@ namespace FNEV4.Presentation.Views.Maintenance
         public LogsDiagnosticsView()
         {
             InitializeComponent();
+            
+            // Récupérer le ViewModel via l'injection de dépendances
+            if (App.ServiceProvider != null)
+            {
+                DataContext = App.ServiceProvider.GetService(typeof(LogsDiagnosticsViewModel));
+            }
         }
     }
 }

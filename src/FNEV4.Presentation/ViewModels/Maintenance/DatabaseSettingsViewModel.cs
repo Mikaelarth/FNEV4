@@ -10,6 +10,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Win32;
 using System.Linq;
+using FNEV4.Presentation.Services;
 
 namespace FNEV4.Presentation.ViewModels.Maintenance
 {
@@ -20,6 +21,7 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
     public class DatabaseSettingsViewModel : INotifyPropertyChanged
     {
         private readonly IDatabaseService _databaseService;
+        private readonly IDatabaseConfigurationNotificationService? _notificationService;
 
         #region Propriétés de connexion
 
@@ -251,9 +253,10 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
         {
         }
 
-        public DatabaseSettingsViewModel(IDatabaseService databaseService)
+        public DatabaseSettingsViewModel(IDatabaseService databaseService, IDatabaseConfigurationNotificationService? notificationService = null)
         {
             _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
+            _notificationService = notificationService;
 
             // Initialisation des commandes
             TestConnectionCommand = new SimpleCommand(TestConnection);
@@ -880,7 +883,7 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
 
             if (result == MessageBoxResult.Yes)
             {
-                LoadDefaultSettings();
+                ResetToDefaults();
             }
         }
 
@@ -948,6 +951,12 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
                     }
                 }
 
+                // Notifier les autres ViewModels que la configuration a changé
+                if (_notificationService != null)
+                {
+                    await _notificationService.NotifyConfigurationChangedAsync();
+                }
+
                 DialogResult = true;
                 _dialogWindow?.Close();
 
@@ -958,7 +967,7 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
                     $"💾 Cache : {CacheSize} KB\n" +
                     $"⚙️ Mode WAL : {(EnableWalMode ? "Activé" : "Désactivé")}\n" +
                     $"🔄 Auto-vacuum : {(EnableAutoVacuum ? "Activé" : "Désactivé")}\n\n" +
-                    "ℹ️ Redémarrez l'application pour que tous les changements prennent effet.",
+                    "ℹ️ L'interface principale a été mise à jour automatiquement.",
                     "Paramètres appliqués",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information
@@ -999,74 +1008,93 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
                     if (config.TryGetProperty("EnableWalMode", out var wal))
                         EnableWalMode = wal.GetBoolean();
                     
-                    if (config.TryGetProperty("EnableAutoVacuum", out var vacuum))
-                        EnableAutoVacuum = vacuum.GetBoolean();
+                    if (config.TryGetProperty("EnableAutoVacuum", out var autoVac))
+                        EnableAutoVacuum = autoVac.GetBoolean();
                     
-                    if (config.TryGetProperty("PageSize", out var page))
-                        PageSize = page.GetInt32();
+                    if (config.TryGetProperty("PageSize", out var pageSize))
+                        PageSize = pageSize.GetInt32();
                     
                     if (config.TryGetProperty("ForceSynchronous", out var sync))
                         ForceSynchronous = sync.GetBoolean();
                     
-                    // Charger les autres paramètres...
-                    if (config.TryGetProperty("AutoBackupEnabled", out var backup))
-                        AutoBackupEnabled = backup.GetBoolean();
+                    // Charger les paramètres de sauvegarde
+                    if (config.TryGetProperty("AutoBackupEnabled", out var autoBackup))
+                        AutoBackupEnabled = autoBackup.GetBoolean();
+                    
+                    if (config.TryGetProperty("BackupFrequency", out var freq))
+                        BackupFrequency = freq.GetString() ?? "Daily";
+                    
+                    if (config.TryGetProperty("BackupTime", out var timeStr) && TimeSpan.TryParse(timeStr.GetString(), out var time))
+                        BackupTime = time;
                     
                     if (config.TryGetProperty("BackupDirectory", out var backupDir))
-                        BackupDirectory = backupDir.GetString() ?? string.Empty;
+                        BackupDirectory = backupDir.GetString() ?? "";
                     
-                    System.Diagnostics.Debug.WriteLine($"Configuration chargée depuis : {configPath}");
+                    if (config.TryGetProperty("BackupRetentionDays", out var retention))
+                        BackupRetentionDays = retention.GetInt32();
+                    
+                    if (config.TryGetProperty("CompressBackups", out var compress))
+                        CompressBackups = compress.GetBoolean();
+                    
+                    if (config.TryGetProperty("CompressionLevel", out var compLevel))
+                        CompressionLevel = compLevel.GetString() ?? "Normal";
+                    
+                    // Charger les paramètres d'alertes
+                    if (config.TryGetProperty("MaxDatabaseSizeMB", out var maxSize))
+                        MaxDatabaseSizeMB = maxSize.GetDouble();
+                    
+                    if (config.TryGetProperty("MaxTableCount", out var maxTables))
+                        MaxTableCount = maxTables.GetInt32();
+                    
+                    if (config.TryGetProperty("EmailAlertsEnabled", out var emailAlerts))
+                        EmailAlertsEnabled = emailAlerts.GetBoolean();
+                    
+                    if (config.TryGetProperty("AlertEmailAddress", out var emailAddr))
+                        AlertEmailAddress = emailAddr.GetString() ?? "";
+                    
+                    // Charger les paramètres d'affichage
+                    if (config.TryGetProperty("DateFormat", out var dateFormat))
+                        DateFormat = dateFormat.GetString() ?? "dd/MM/yyyy HH:mm";
+                    
+                    if (config.TryGetProperty("SizeUnit", out var sizeUnit))
+                        SizeUnit = sizeUnit.GetString() ?? "Auto";
+                    
+                    if (config.TryGetProperty("ShowMilliseconds", out var showMs))
+                        ShowMilliseconds = showMs.GetBoolean();
+                    
+                    if (config.TryGetProperty("AutoRefreshEnabled", out var autoRefresh))
+                        AutoRefreshEnabled = autoRefresh.GetBoolean();
+                    
+                    // Appliquer le chemin de base de données chargé au service
+                    if (!string.IsNullOrWhiteSpace(DatabasePath) && File.Exists(DatabasePath))
+                    {
+                        await _databaseService.UpdateConnectionStringAsync(DatabasePath);
+                    }
                 }
                 else
                 {
-                    // Pas de fichier de configuration, charger depuis la base de données ou valeurs par défaut
-                    var dbInfo = await _databaseService.GetDatabaseInfoAsync();
-                    
-                    if (dbInfo != null)
-                    {
-                        // Utiliser le vrai chemin de la base de données
-                        DatabasePath = dbInfo.Path ?? Path.GetFullPath(@"Data\FNEV4.db");
-                        
-                        if (File.Exists(DatabasePath))
-                        {
-                            var fileInfo = new FileInfo(DatabasePath);
-                            System.Diagnostics.Debug.WriteLine($"Base de données trouvée : {DatabasePath} ({fileInfo.Length} bytes)");
-                        }
-                    }
-                    else
-                    {
-                        LoadDefaultSettings();
-                    }
+                    // Utiliser les valeurs par défaut et les sauvegarder
+                    await SaveSettingsToConfig();
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Erreur lors du chargement de la configuration : {ex.Message}");
-                LoadDefaultSettings();
+                // En cas d'erreur, utiliser les valeurs par défaut
+                System.Diagnostics.Debug.WriteLine($"Erreur lors du chargement de la configuration: {ex.Message}");
+                ResetToDefaults();
             }
         }
 
-        private void LoadDefaultSettings()
+        private void ResetToDefaults()
         {
-            // Connexion - Utiliser le vrai chemin de la base de données depuis le service
-            try
-            {
-                var dbInfo = _databaseService.GetDatabaseInfoAsync().Result;
-                DatabasePath = dbInfo?.Path ?? Path.GetFullPath(@"Data\FNEV4.db");
-            }
-            catch
-            {
-                DatabasePath = Path.GetFullPath(@"Data\FNEV4.db");
-            }
-            
+            // Valeurs par défaut
+            DatabasePath = Path.GetFullPath(@"Data\FNEV4.db");
             ConnectionTimeout = 30;
             CacheSize = 2048;
             EnableWalMode = true;
             EnableAutoVacuum = true;
             PageSize = 4096;
             ForceSynchronous = false;
-
-            // Sauvegarde
             AutoBackupEnabled = true;
             BackupFrequency = "Daily";
             BackupTime = new TimeSpan(2, 0, 0);
@@ -1074,14 +1102,10 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             BackupRetentionDays = 30;
             CompressBackups = true;
             CompressionLevel = "Normal";
-
-            // Alertes
             MaxDatabaseSizeMB = 1000;
             MaxTableCount = 100;
             EmailAlertsEnabled = false;
             AlertEmailAddress = "";
-
-            // Affichage
             DateFormat = "dd/MM/yyyy HH:mm";
             SizeUnit = "Auto";
             ShowMilliseconds = false;

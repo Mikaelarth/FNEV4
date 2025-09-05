@@ -593,7 +593,8 @@
                                         </Grid>
                                     </Button>
 
-                                    <!-- Synchronisation -->
+                                    <!-- Synchronisation - TEMPORAIREMENT DÉSACTIVÉ -->
+                                    <!--
                                     <Button Style="{StaticResource MenuSubItemButton}"
                                             Command="{Binding NavigateToSynchronisationCommand}"
                                             Margin="0,2">
@@ -613,8 +614,10 @@
                                                      Visibility="{Binding IsMenuExpanded, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                         </Grid>
                                     </Button>
+                                    -->
 
-                                    <!-- Outils techniques -->
+                                    <!-- Outils techniques - TEMPORAIREMENT DÉSACTIVÉ -->
+                                    <!--
                                     <Button Style="{StaticResource MenuSubItemButton}"
                                             Command="{Binding NavigateToOutilsTechniquesCommand}"
                                             Margin="0,2">
@@ -634,6 +637,7 @@
                                                      Visibility="{Binding IsMenuExpanded, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                         </Grid>
                                     </Button>
+                                    -->
                                 </StackPanel>
                             </StackPanel>
                         </Border>

@@ -132,7 +132,7 @@
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="Version :" FontWeight="Medium"/>
-                                            <TextBlock Grid.Column="1" Text="FNEV4 v1.0.0" FontFamily="Consolas"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding SystemVersion}" FontFamily="Consolas"/>
                                         </Grid>
                                         
                                         <Grid>
@@ -141,7 +141,7 @@
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="Build :" FontWeight="Medium"/>
-                                            <TextBlock Grid.Column="1" Text="2024.09.04.1430" FontFamily="Consolas"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding BuildVersion}" FontFamily="Consolas"/>
                                         </Grid>
                                         
                                         <Grid>
@@ -150,7 +150,7 @@
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="Framework :" FontWeight="Medium"/>
-                                            <TextBlock Grid.Column="1" Text=".NET 8.0" FontFamily="Consolas"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding FrameworkVersion}" FontFamily="Consolas"/>
                                         </Grid>
                                     </StackPanel>
                                 </GroupBox>
@@ -164,7 +164,7 @@
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="OS :" FontWeight="Medium"/>
-                                            <TextBlock Grid.Column="1" Text="Windows 11 Pro" FontFamily="Consolas"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding OperatingSystem}" FontFamily="Consolas"/>
                                         </Grid>
                                         
                                         <Grid>
@@ -173,7 +173,7 @@
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="Uptime :" FontWeight="Medium"/>
-                                            <TextBlock Grid.Column="1" Text="2h 45m 12s" FontFamily="Consolas"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding ApplicationUptime}" FontFamily="Consolas"/>
                                         </Grid>
                                         
                                         <Grid>
@@ -182,7 +182,7 @@
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="Processus :" FontWeight="Medium"/>
-                                            <TextBlock Grid.Column="1" Text="PID 1248" FontFamily="Consolas"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding ProcessId}" FontFamily="Consolas"/>
                                         </Grid>
                                     </StackPanel>
                                 </GroupBox>
@@ -196,7 +196,7 @@
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="Mémoire :" FontWeight="Medium"/>
-                                            <TextBlock Grid.Column="1" Text="145.6 MB / 16 GB" FontFamily="Consolas"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding MemoryUsage}" FontFamily="Consolas"/>
                                         </Grid>
                                         
                                         <Grid>
@@ -205,16 +205,7 @@
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="CPU :" FontWeight="Medium"/>
-                                            <TextBlock Grid.Column="1" Text="2.1%" FontFamily="Consolas"/>
-                                        </Grid>
-                                        
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="120"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="Threads :" FontWeight="Medium"/>
-                                            <TextBlock Grid.Column="1" Text="24 actifs" FontFamily="Consolas"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding CpuUsage}" FontFamily="Consolas"/>
                                         </Grid>
                                     </StackPanel>
                                 </GroupBox>
@@ -266,7 +257,7 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="App :" FontWeight="Medium"/>
-                                            <TextBlock Grid.Column="1" Text="C:\Program Files\FNEV4\" 
+                                            <TextBlock Grid.Column="1" Text="{Binding ApplicationPath}" 
                                                      FontFamily="Consolas" FontSize="11" 
                                                      TextTrimming="CharacterEllipsis"/>
                                             <Button Grid.Column="2" Style="{StaticResource MaterialDesignIconButton}"
@@ -282,7 +273,7 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="Data :" FontWeight="Medium"/>
-                                            <TextBlock Grid.Column="1" Text="C:\ProgramData\FNEV4\" 
+                                            <TextBlock Grid.Column="1" Text="{Binding DataPath}" 
                                                      FontFamily="Consolas" FontSize="11" 
                                                      TextTrimming="CharacterEllipsis"/>
                                             <Button Grid.Column="2" Style="{StaticResource MaterialDesignIconButton}"
@@ -298,7 +289,7 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="Logs :" FontWeight="Medium"/>
-                                            <TextBlock Grid.Column="1" Text="C:\ProgramData\FNEV4\Logs\" 
+                                            <TextBlock Grid.Column="1" Text="{Binding LogsPath}" 
                                                      FontFamily="Consolas" FontSize="11" 
                                                      TextTrimming="CharacterEllipsis"/>
                                             <Button Grid.Column="2" Style="{StaticResource MaterialDesignIconButton}"
@@ -314,7 +305,7 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="Base :" FontWeight="Medium"/>
-                                            <TextBlock Grid.Column="1" Text="C:\ProgramData\FNEV4\fnev4.db" 
+                                            <TextBlock Grid.Column="1" Text="{Binding DatabasePath}" 
                                                      FontFamily="Consolas" FontSize="11" 
                                                      TextTrimming="CharacterEllipsis"/>
                                             <Button Grid.Column="2" Style="{StaticResource MaterialDesignIconButton}"
@@ -530,21 +521,25 @@ Les logs détaillés sont maintenant activés.
                                     </StackPanel>
                                 </Expander>
                                 
-                                <!-- Tests -->
-                                <Expander Header="Tests système">
+                                <!-- Tests système -->
+                                <Expander Header="Tests de connectivité" IsExpanded="True">
                                     <StackPanel Margin="0,8,0,0">
+                                        <Button Content="Test API FNE" 
+                                              Style="{StaticResource MaterialDesignOutlinedButton}"
+                                              HorizontalAlignment="Stretch" Margin="0,0,0,6"
+                                              Command="{Binding TestApiFneCommand}"/>
+                                        <Button Content="Test réseau" 
+                                              Style="{StaticResource MaterialDesignOutlinedButton}"
+                                              HorizontalAlignment="Stretch" Margin="0,0,0,6"
+                                              Command="{Binding TestNetworkCommand}"/>
                                         <Button Content="Test complet" 
                                               Style="{StaticResource MaterialDesignRaisedButton}"
-                                              HorizontalAlignment="Stretch" Margin="0,0,0,6"/>
-                                        <Button Content="Test base de données" 
-                                              Style="{StaticResource MaterialDesignOutlinedButton}"
-                                              HorizontalAlignment="Stretch"/>
-                                        <Button Content="Test API" 
-                                              Style="{StaticResource MaterialDesignOutlinedButton}"
-                                              HorizontalAlignment="Stretch"/>
+                                              HorizontalAlignment="Stretch" Margin="0,0,0,6"
+                                              Command="{Binding RunCompleteTestCommand}"/>
                                         <Button Content="Test performances" 
                                               Style="{StaticResource MaterialDesignOutlinedButton}"
-                                              HorizontalAlignment="Stretch"/>
+                                              HorizontalAlignment="Stretch"
+                                              Command="{Binding TestPerformanceCommand}"/>
                                     </StackPanel>
                                 </Expander>
                                 

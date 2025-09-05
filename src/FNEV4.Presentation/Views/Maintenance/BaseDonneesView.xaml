@@ -254,10 +254,33 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             
+                            <!-- Test de connectivité -->
+                            <GroupBox Grid.Row="0" Header="Test de Connectivité" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <Grid Margin="0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0" 
+                                                  Text="Tester la connexion à la base de données" 
+                                                  VerticalAlignment="Center"/>
+                                        
+                                        <Button Grid.Column="1" 
+                                               Content="Test Base de données"
+                                               Style="{StaticResource MaterialDesignRaisedButton}"
+                                               Command="{Binding RefreshCommand}"
+                                               Margin="8,0,0,0"/>
+                                    </Grid>
+                                </StackPanel>
+                            </GroupBox>
+                            
                             <!-- Sauvegarde et restauration -->
-                            <GroupBox Grid.Row="0" Header="Sauvegarde et Restauration" Margin="0,0,0,16">
+                            <GroupBox Grid.Row="1" Header="Sauvegarde et Restauration" Margin="0,0,0,16">
                                 <StackPanel>
                                     <Grid Margin="0,8">
                                         <Grid.ColumnDefinitions>
@@ -290,7 +313,7 @@
                             </GroupBox>
                             
                             <!-- Optimisation -->
-                            <GroupBox Grid.Row="1" Header="Optimisation" Margin="0,0,0,16">
+                            <GroupBox Grid.Row="2" Header="Optimisation" Margin="0,0,0,16">
                                 <StackPanel>
                                     <Grid Margin="0,8">
                                         <Grid.ColumnDefinitions>
@@ -346,7 +369,7 @@
                             </GroupBox>
                             
                             <!-- Migration et initialisation -->
-                            <GroupBox Grid.Row="2" Header="Migration et Initialisation">
+                            <GroupBox Grid.Row="3" Header="Migration et Initialisation">
                                 <StackPanel>
                                     <Grid Margin="0,8">
                                         <Grid.ColumnDefinitions>

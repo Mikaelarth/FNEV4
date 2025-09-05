@@ -41,7 +41,8 @@
             
             <Button Grid.Column="2" 
                     Style="{StaticResource MaterialDesignOutlinedButton}"
-                    VerticalAlignment="Center">
+                    VerticalAlignment="Center"
+                    Command="{Binding RefreshLogsCommand}">
                 <StackPanel Orientation="Horizontal">
                     <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" Margin="0,0,8,0"/>
                     <TextBlock Text="Actualiser"/>
@@ -56,38 +57,54 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
                 <!-- Filtres de niveau de log -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
                     <TextBlock Text="Niveau :" VerticalAlignment="Center" Margin="0,0,8,0" 
                              Foreground="{DynamicResource MaterialDesignBody}"/>
-                    <CheckBox Content="Debug" IsChecked="True" Margin="0,0,16,0"/>
-                    <CheckBox Content="Info" IsChecked="True" Margin="0,0,16,0"/>
-                    <CheckBox Content="Warning" IsChecked="True" Margin="0,0,16,0"/>
-                    <CheckBox Content="Error" IsChecked="True" Margin="0,0,16,0"/>
+                    <CheckBox Content="Debug" IsChecked="{Binding IsDebugEnabled}" 
+                            Command="{Binding FilterLogsCommand}" Margin="0,0,16,0"/>
+                    <CheckBox Content="Info" IsChecked="{Binding IsInfoEnabled}" 
+                            Command="{Binding FilterLogsCommand}" Margin="0,0,16,0"/>
+                    <CheckBox Content="Warning" IsChecked="{Binding IsWarningEnabled}" 
+                            Command="{Binding FilterLogsCommand}" Margin="0,0,16,0"/>
+                    <CheckBox Content="Error" IsChecked="{Binding IsErrorEnabled}" 
+                            Command="{Binding FilterLogsCommand}" Margin="0,0,16,0"/>
                 </StackPanel>
                 
                 <!-- Boutons d'action -->
-                <Button Grid.Column="1" 
-                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                        Margin="8,0"
-                        ToolTip="Exporter les logs">
-                    <materialDesign:PackIcon Kind="Export" Width="16" Height="16"/>
-                </Button>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Margin="8,0"
+                            ToolTip="Générer des logs de test"
+                            Command="{Binding GenerateTestLogsCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="TestTube" Width="16" Height="16" Margin="0,0,4,0"/>
+                            <TextBlock Text="Test"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Margin="8,0"
+                            ToolTip="Exporter les logs"
+                            Command="{Binding ExportLogsCommand}">
+                        <materialDesign:PackIcon Kind="Export" Width="16" Height="16"/>
+                    </Button>
+                    
+                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Margin="8,0"
+                            ToolTip="Effacer les logs"
+                            Command="{Binding ClearLogsCommand}">
+                        <materialDesign:PackIcon Kind="Delete" Width="16" Height="16"/>
+                    </Button>
+                </StackPanel>
                 
                 <Button Grid.Column="2" 
-                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                        Margin="8,0"
-                        ToolTip="Effacer les logs">
-                    <materialDesign:PackIcon Kind="Delete" Width="16" Height="16"/>
-                </Button>
-                
-                <Button Grid.Column="3" 
                         Style="{StaticResource MaterialDesignRaisedButton}"
                         Margin="8,0"
-                        ToolTip="Lancer un diagnostic">
+                        ToolTip="Lancer un diagnostic"
+                        Command="{Binding RunDiagnosticsCommand}">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Magnify" Width="16" Height="16" Margin="0,0,8,0"/>
                         <TextBlock Text="Diagnostic"/>
@@ -123,61 +140,31 @@
                     <ScrollViewer Grid.Row="1" 
                                 VerticalScrollBarVisibility="Auto"
                                 Background="{DynamicResource MaterialDesignPaper}">
-                        <ItemsControl Margin="8">
-                            <!-- Exemple de logs (à remplacer par binding réel) -->
-                            <Border Padding="8,4" Margin="0,2" 
-                                  Background="#FFF3E0" 
-                                  CornerRadius="4">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="12:34:56" FontFamily="Consolas" 
-                                             Foreground="#FF6F00" FontWeight="Bold" Margin="0,0,8,0"/>
-                                    <TextBlock Grid.Column="1" Text="[INFO]" FontFamily="Consolas" 
-                                             Foreground="#2E7D32" FontWeight="Bold" Margin="0,0,8,0"/>
-                                    <TextBlock Grid.Column="2" Text="Application démarrée avec succès" 
-                                             FontFamily="Consolas" TextWrapping="Wrap"/>
-                                </Grid>
-                            </Border>
-                            
-                            <Border Padding="8,4" Margin="0,2" 
-                                  Background="#FFEBEE" 
-                                  CornerRadius="4">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="12:35:12" FontFamily="Consolas" 
-                                             Foreground="#FF6F00" FontWeight="Bold" Margin="0,0,8,0"/>
-                                    <TextBlock Grid.Column="1" Text="[WARN]" FontFamily="Consolas" 
-                                             Foreground="#F57C00" FontWeight="Bold" Margin="0,0,8,0"/>
-                                    <TextBlock Grid.Column="2" Text="Connexion base de données lente (2.3s)" 
-                                             FontFamily="Consolas" TextWrapping="Wrap"/>
-                                </Grid>
-                            </Border>
-                            
-                            <Border Padding="8,4" Margin="0,2" 
-                                  Background="#F3E5F5" 
-                                  CornerRadius="4">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="12:35:45" FontFamily="Consolas" 
-                                             Foreground="#FF6F00" FontWeight="Bold" Margin="0,0,8,0"/>
-                                    <TextBlock Grid.Column="1" Text="[DEBUG]" FontFamily="Consolas" 
-                                             Foreground="#7B1FA2" FontWeight="Bold" Margin="0,0,8,0"/>
-                                    <TextBlock Grid.Column="2" Text="Traitement fichier : factures_2024.xlsx" 
-                                             FontFamily="Consolas" TextWrapping="Wrap"/>
-                                </Grid>
-                            </Border>
+                        <ItemsControl Margin="8" ItemsSource="{Binding Logs}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="8,4" Margin="0,2" 
+                                          Background="{Binding BackgroundColor}" 
+                                          CornerRadius="4"
+                                          Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding TimestampFormatted}" 
+                                                     FontFamily="Consolas" 
+                                                     Foreground="#FF6F00" FontWeight="Bold" Margin="0,0,8,0"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding LevelText}" 
+                                                     FontFamily="Consolas" 
+                                                     Foreground="{Binding LevelColor}" FontWeight="Bold" Margin="0,0,8,0"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding Message}" 
+                                                     FontFamily="Consolas" TextWrapping="Wrap"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
                 </Grid>
@@ -216,7 +203,7 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="Version :" FontWeight="Medium"/>
-                                        <TextBlock Grid.Column="1" Text="FNEV4 v1.0.0"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding SystemVersion}"/>
                                     </Grid>
                                     <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>
@@ -224,46 +211,69 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="Uptime :" FontWeight="Medium"/>
-                                        <TextBlock Grid.Column="1" Text="2h 15m"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding SystemUptime}"/>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Mémoire :" FontWeight="Medium"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding MemoryUsage}"/>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="CPU :" FontWeight="Medium"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding CpuUsage}"/>
                                     </Grid>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="Mémoire :" FontWeight="Medium"/>
-                                        <TextBlock Grid.Column="1" Text="145 MB"/>
+                                        <TextBlock Grid.Column="0" Text="Système :" FontWeight="Medium"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding OperatingSystem}" TextWrapping="Wrap"/>
                                     </Grid>
                                 </StackPanel>
                             </Expander>
                             
-                            <!-- Tests de connectivité -->
-                            <Expander Header="Tests de connectivité" Margin="0,0,0,12">
+                            <!-- Actions de logs spécifiques -->
+                            <Expander Header="Actions de logs" Margin="0,0,0,12">
                                 <StackPanel Margin="0,8,0,0">
-                                    <Button Content="Test Base de données" 
+                                    <Button Content="Exporter tous les logs" 
                                           Style="{StaticResource MaterialDesignOutlinedButton}"
-                                          HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
-                                    <Button Content="Test API FNE" 
+                                          HorizontalAlignment="Stretch" Margin="0,0,0,8"
+                                          Command="{Binding ExportLogsCommand}"/>
+                                    <Button Content="Archiver anciens logs" 
                                           Style="{StaticResource MaterialDesignOutlinedButton}"
-                                          HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
-                                    <Button Content="Test Réseau" 
+                                          HorizontalAlignment="Stretch" Margin="0,0,0,8"
+                                          Command="{Binding ArchiveOldLogsCommand}"/>
+                                    <Button Content="Analyser erreurs récurrentes" 
                                           Style="{StaticResource MaterialDesignOutlinedButton}"
-                                          HorizontalAlignment="Stretch"/>
+                                          HorizontalAlignment="Stretch"
+                                          Margin="0,0,0,8"
+                                          Command="{Binding AnalyzeRecurringErrorsCommand}"/>
                                 </StackPanel>
                             </Expander>
                             
-                            <!-- Actions de maintenance -->
-                            <Expander Header="Actions de maintenance">
+                            <!-- Diagnostic avancé -->
+                            <Expander Header="Diagnostic avancé">
                                 <StackPanel Margin="0,8,0,0">
-                                    <Button Content="Nettoyer cache" 
+                                    <Button Content="Analyser performances" 
                                           Style="{StaticResource MaterialDesignOutlinedButton}"
-                                          HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
-                                    <Button Content="Compacter BDD" 
+                                          HorizontalAlignment="Stretch" Margin="0,0,0,8"
+                                          Command="{Binding AnalyzePerformanceCommand}"/>
+                                    <Button Content="Rapport détaillé système" 
                                           Style="{StaticResource MaterialDesignOutlinedButton}"
-                                          HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
-                                    <Button Content="Vérifier intégrité" 
-                                          Style="{StaticResource MaterialDesignOutlinedButton}"
-                                          HorizontalAlignment="Stretch"/>
+                                          HorizontalAlignment="Stretch" Margin="0,0,0,8"
+                                          Command="{Binding GenerateDetailedReportCommand}"/>
+                                    <Button Content="Diagnostic complet" 
+                                          Style="{StaticResource MaterialDesignRaisedButton}"
+                                          HorizontalAlignment="Stretch"
+                                          Command="{Binding RunDiagnosticsCommand}"/>
                                 </StackPanel>
                             </Expander>
                             
