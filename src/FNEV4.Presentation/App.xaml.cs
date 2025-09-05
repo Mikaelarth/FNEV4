@@ -7,6 +7,9 @@ using FNEV4.Infrastructure.Services;
 using FNEV4.Presentation.ViewModels.Maintenance;
 using FNEV4.Presentation.ViewModels.Configuration;
 using FNEV4.Presentation.Services;
+using FNEV4.Core.Interfaces;
+using Microsoft.Extensions.Logging;
+using System.Net.Http;
 
 namespace FNEV4.Presentation
 {
@@ -91,6 +94,11 @@ namespace FNEV4.Presentation
                     services.AddScoped<IDatabaseService, DatabaseService>();
                     services.AddScoped<ILoggingService, LoggingService>();
                     services.AddScoped<IDiagnosticService, DiagnosticService>();
+                    
+                    // Services externes
+                    services.AddSingleton<HttpClient>();
+                    services.AddLogging();
+                    services.AddScoped<IDgiService, DgiService>();
 
                     // Services de notification
                     services.AddSingleton<IDatabaseConfigurationNotificationService, DatabaseConfigurationNotificationService>();
@@ -101,7 +109,10 @@ namespace FNEV4.Presentation
                     // ViewModels avec injection
                     services.AddTransient<BaseDonneesViewModel>();
                     services.AddTransient<LogsDiagnosticsViewModel>();
-                    services.AddTransient<EntrepriseConfigViewModel>();
+                    services.AddTransient<EntrepriseConfigViewModel>(provider =>
+                        new EntrepriseConfigViewModel(
+                            provider.GetService<IDgiService>(),
+                            provider.GetRequiredService<IDatabaseService>()));
 
                     // Service locator pour les ViewModels
                     services.AddSingleton<ViewModelLocator>();
