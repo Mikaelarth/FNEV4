@@ -237,7 +237,7 @@
                                                            Foreground="{DynamicResource MaterialDesignBodyLight}"
                                                            ToolTip="Format requis: 7 chiffres suivis d'une lettre (ex: 9606123E)"/>
                                 </StackPanel>
-                                <TextBox Text="{Binding CompanyNcc, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                                <TextBox Text="{Binding NccNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                                          materialDesign:HintAssist.Hint="Ex: 9606123E"
                                          materialDesign:TextFieldAssist.CharacterCounterVisibility="Visible"
                                          MaxLength="8"
@@ -297,40 +297,83 @@
                             </Button>
                         </Grid>
 
-                        <!-- Nom Entreprise avec suggestions -->
-                        <StackPanel Margin="0,0,0,24">
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <TextBlock Text="Nom de l'entreprise" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
-                                <TextBlock Text="*" Foreground="Red" FontWeight="Bold" Margin="4,0,0,0"/>
+                        <!-- Nom Entreprise avec suggestions et validation -->
+                        <Grid Margin="0,0,0,24">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="Nom de l'entreprise" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                    <TextBlock Text="*" Foreground="Red" FontWeight="Bold" Margin="4,0,0,0"/>
+                                </StackPanel>
+                                <ComboBox IsEditable="True"
+                                          Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}"
+                                          ItemsSource="{Binding CompanyNameSuggestions}"
+                                          materialDesign:HintAssist.Hint="Ex: SARL FNEV4"
+                                          Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                                <TextBlock Text="{Binding CompanyNameValidationMessage}" 
+                                         Foreground="{Binding IsCompanyNameValid, Converter={StaticResource BooleanToBrushConverter}}"
+                                         FontSize="12"
+                                         Margin="0,4,0,0"
+                                         Visibility="{Binding CompanyNameValidationMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
                             </StackPanel>
-                            <ComboBox IsEditable="True"
-                                      Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}"
-                                      ItemsSource="{Binding CompanyNameSuggestions}"
-                                      materialDesign:HintAssist.Hint="Ex: SARL FNEV4"
-                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
-                        </StackPanel>
+                            
+                            <!-- Indicateur de validation -->
+                            <materialDesign:PackIcon Grid.Column="1" 
+                                                   Kind="CheckCircle" 
+                                                   Width="28" Height="28"
+                                                   VerticalAlignment="Bottom" 
+                                                   Margin="12,0,0,16"
+                                                   Foreground="Green"
+                                                   Visibility="{Binding IsCompanyNameValid, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        </Grid>
                         
-                        <!-- Adresse avec géolocalisation -->
-                        <StackPanel Margin="0,0,0,24">
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <TextBlock Text="Adresse" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
-                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                        Command="{Binding DetectLocationCommand}"
-                                        ToolTip="Détecter ma position"
-                                        Width="20" Height="20"
-                                        Margin="8,0,0,0">
-                                    <materialDesign:PackIcon Kind="MapMarker" Width="16" Height="16"/>
-                                </Button>
+                        <!-- Adresse avec géolocalisation et validation -->
+                        <Grid Margin="0,0,0,24">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="Adresse" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                    <TextBlock Text="*" Foreground="Red" FontWeight="Bold" Margin="4,0,0,0"/>
+                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                            Command="{Binding DetectLocationCommand}"
+                                            ToolTip="Aide pour saisir l'adresse"
+                                            Width="20" Height="20"
+                                            Margin="8,0,0,0">
+                                        <materialDesign:PackIcon Kind="HelpCircle" Width="16" Height="16"/>
+                                    </Button>
+                                </StackPanel>
+                                <TextBox Text="{Binding BusinessAddress, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="Adresse complète de l'entreprise"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         MaxLength="500"
+                                         AcceptsReturn="True"
+                                         Height="100"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"/>
+                                <TextBlock Text="{Binding BusinessAddressValidationMessage}" 
+                                         Foreground="{Binding IsBusinessAddressValid, Converter={StaticResource BooleanToBrushConverter}}"
+                                         FontSize="12"
+                                         Margin="0,4,0,0"
+                                         Visibility="{Binding BusinessAddressValidationMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
                             </StackPanel>
-                            <TextBox Text="{Binding CompanyAddress, UpdateSourceTrigger=PropertyChanged}"
-                                     materialDesign:HintAssist.Hint="Adresse complète de l'entreprise"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     MaxLength="200"
-                                     AcceptsReturn="True"
-                                     Height="100"
-                                     TextWrapping="Wrap"
-                                     VerticalScrollBarVisibility="Auto"/>
-                        </StackPanel>
+                            
+                            <!-- Indicateur de validation -->
+                            <materialDesign:PackIcon Grid.Column="1" 
+                                                   Kind="CheckCircle" 
+                                                   Width="28" Height="28"
+                                                   VerticalAlignment="Bottom" 
+                                                   Margin="12,0,0,16"
+                                                   Foreground="Green"
+                                                   Visibility="{Binding IsBusinessAddressValid, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        </Grid>
                         
                         <!-- Contact avec validation formatée -->
                         <Grid Margin="0,0,0,24">
@@ -348,15 +391,27 @@
                                                            Width="16" Height="16" 
                                                            Margin="8,0,0,0"
                                                            Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                    <!-- Icône de validation téléphone -->
+                                    <materialDesign:PackIcon Kind="CheckCircle" 
+                                                           Width="16" Height="16" 
+                                                           Margin="8,0,0,0"
+                                                           Foreground="{Binding IsPhoneNumberValid, Converter={StaticResource BooleanToBrushConverter}}"
+                                                           Visibility="{Binding IsPhoneNumberValid, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                 </StackPanel>
-                                <TextBox Text="{Binding CompanyPhone, UpdateSourceTrigger=PropertyChanged}"
-                                         materialDesign:HintAssist.Hint="Ex: +225 01 02 03 04 05"
+                                <TextBox Text="{Binding PhoneNumber, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="Ex: +225 01 23 45 67 89"
                                          Style="{StaticResource ValidatedTextBoxStyle}"
                                          MaxLength="20">
                                     <TextBox.InputBindings>
                                         <KeyBinding Key="Enter" Command="{Binding FormatPhoneCommand}"/>
                                     </TextBox.InputBindings>
                                 </TextBox>
+                                <!-- Message de validation téléphone -->
+                                <TextBlock Text="{Binding PhoneNumberValidationMessage}"
+                                         Foreground="{Binding IsPhoneNumberValid, Converter={StaticResource BooleanToBrushConverter}}"
+                                         FontSize="11"
+                                         Margin="0,2,0,0"
+                                         Visibility="{Binding PhoneNumberValidationMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
                             </StackPanel>
                             
                             <!-- Email -->
@@ -367,11 +422,23 @@
                                                            Width="16" Height="16" 
                                                            Margin="8,0,0,0"
                                                            Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                    <!-- Icône de validation email -->
+                                    <materialDesign:PackIcon Kind="CheckCircle" 
+                                                           Width="16" Height="16" 
+                                                           Margin="8,0,0,0"
+                                                           Foreground="{Binding IsEmailValid, Converter={StaticResource BooleanToBrushConverter}}"
+                                                           Visibility="{Binding IsEmailValid, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                 </StackPanel>
-                                <TextBox Text="{Binding CompanyEmail, UpdateSourceTrigger=PropertyChanged}"
+                                <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
                                          materialDesign:HintAssist.Hint="Ex: contact@entreprise.ci"
                                          Style="{StaticResource ValidatedTextBoxStyle}"
                                          MaxLength="100"/>
+                                <!-- Message de validation email -->
+                                <TextBlock Text="{Binding EmailValidationMessage}"
+                                         Foreground="{Binding IsEmailValid, Converter={StaticResource BooleanToBrushConverter}}"
+                                         FontSize="11"
+                                         Margin="0,2,0,0"
+                                         Visibility="{Binding EmailValidationMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
@@ -384,206 +451,60 @@
 
                 <!-- Colonne Droite : Points de Vente et Actions -->
                 <StackPanel Grid.Column="2">
-                    <!-- Points de Vente avec fonctionnalités avancées -->
+                    <!-- Point de vente simplifié - Aligné DGI -->
                     <materialDesign:Card Style="{StaticResource InfoCardStyle}">
                         <StackPanel>
-                            <Grid Margin="0,0,0,20">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <materialDesign:PackIcon Grid.Column="0"
-                                                       Kind="Store" 
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                <materialDesign:PackIcon Kind="Store" 
                                                        Width="24" Height="24"
                                                        VerticalAlignment="Center" 
                                                        Margin="0,0,12,0" 
                                                        Foreground="{DynamicResource PrimaryHueMidBrush}"/>
-                                
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="Points de Vente" 
-                                             Style="{StaticResource SectionHeaderStyle}" 
+                                <StackPanel>
+                                    <TextBlock Text="Point de vente" 
+                                             Style="{StaticResource SectionHeaderStyle}"
                                              Margin="0"/>
-                                    <TextBlock Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                                             Foreground="{DynamicResource MaterialDesignBodyLight}">
-                                        <TextBlock.Text>
-                                            <MultiBinding StringFormat="{}{0} point(s) configuré(s)">
-                                                <Binding Path="PointsOfSale.Count"/>
-                                            </MultiBinding>
-                                        </TextBlock.Text>
-                                    </TextBlock>
+                                    <TextBlock Text="Identifiant pour votre point de vente (format libre)"
+                                             Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                             Foreground="{DynamicResource MaterialDesignBodyLight}"/>
                                 </StackPanel>
-                                
-                                <!-- Templates de points de vente -->
-                                <Button Grid.Column="2"
-                                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                                        Command="{Binding LoadTemplatesCommand}"
-                                        ToolTip="Charger des modèles prédéfinis"
-                                        Height="36"
-                                        Margin="0,0,8,0">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="FileMultiple" 
-                                                               Width="16" Height="16"
-                                                               VerticalAlignment="Center"
-                                                               Margin="0,0,8,0"/>
-                                        <TextBlock Text="Templates" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-                                
-                                <Button Grid.Column="3"
-                                        Style="{StaticResource AnimatedButtonStyle}"
-                                        Command="{Binding AddPointOfSaleCommand}"
-                                        ToolTip="Ajouter un nouveau point de vente"
-                                        Height="36"
-                                        Background="{DynamicResource SecondaryHueMidBrush}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Plus" 
-                                                               Width="16" Height="16"
-                                                               VerticalAlignment="Center"
-                                                               Margin="0,0,8,0"/>
-                                        <TextBlock Text="Ajouter" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-                            </Grid>
-
-                            <!-- Liste des points de vente avec glisser-déposer -->
-                            <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{Binding PointsOfSale}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <materialDesign:Card Style="{StaticResource SubCardStyle}"
-                                                               Background="{DynamicResource MaterialDesignChipBackground}"
-                                                               AllowDrop="True">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    
-                                                    <!-- Handle pour drag & drop -->
-                                                    <materialDesign:PackIcon Grid.Column="0"
-                                                                           Kind="DragVertical" 
-                                                                           Width="16" Height="16"
-                                                                           VerticalAlignment="Center" 
-                                                                           Margin="0,0,8,0" 
-                                                                           Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                                                           Cursor="SizeAll"/>
-                                                    
-                                                    <!-- Icône du point de vente -->
-                                                    <materialDesign:PackIcon Grid.Column="1"
-                                                                           Kind="StorefrontOutline" 
-                                                                           Width="20" Height="20"
-                                                                           VerticalAlignment="Center" 
-                                                                           Margin="0,0,12,0" 
-                                                                           Foreground="{DynamicResource PrimaryHueMidBrush}"/>
-                                                    
-                                                    <!-- Champs du point de vente -->
-                                                    <StackPanel Grid.Column="2">
-                                                        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
-                                                                 materialDesign:HintAssist.Hint="Nom du point de vente"
-                                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                                                 MaxLength="50"
-                                                                 Margin="0,0,0,8"/>
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="*"/>
-                                                                <ColumnDefinition Width="8"/>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                            </Grid.ColumnDefinitions>
-                                                            <TextBox Grid.Column="0"
-                                                                     Text="{Binding Code, UpdateSourceTrigger=PropertyChanged}"
-                                                                     materialDesign:HintAssist.Hint="Code (ex: 01, 02, Gestoci)"
-                                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                                                     MaxLength="10"
-                                                                     FontFamily="Consolas"/>
-                                                            <CheckBox Grid.Column="2"
-                                                                      IsChecked="{Binding IsActive}"
-                                                                      Content="Actif"
-                                                                      VerticalAlignment="Center"/>
-                                                        </Grid>
-                                                    </StackPanel>
-                                                    
-                                                    <!-- Bouton duplicate -->
-                                                    <Button Grid.Column="3"
-                                                            Style="{StaticResource MaterialDesignIconButton}"
-                                                            Command="{Binding DataContext.DuplicatePointOfSaleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            CommandParameter="{Binding}"
-                                                            ToolTip="Dupliquer ce point de vente"
-                                                            VerticalAlignment="Top"
-                                                            Margin="4,0">
-                                                        <materialDesign:PackIcon Kind="ContentDuplicate" 
-                                                                               Width="18" Height="18"
-                                                                               Foreground="{DynamicResource PrimaryHueMidBrush}"/>
-                                                    </Button>
-                                                    
-                                                    <!-- Bouton supprimer -->
-                                                    <Button Grid.Column="4"
-                                                            Style="{StaticResource MaterialDesignIconButton}"
-                                                            Command="{Binding DataContext.RemovePointOfSaleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            CommandParameter="{Binding}"
-                                                            ToolTip="Supprimer ce point de vente"
-                                                            VerticalAlignment="Top"
-                                                            Margin="4,0">
-                                                        <materialDesign:PackIcon Kind="Delete" 
-                                                                               Width="18" Height="18"
-                                                                               Foreground="{DynamicResource ValidationErrorBrush}"/>
-                                                    </Button>
-                                                </Grid>
-                                            </materialDesign:Card>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
+                            </StackPanel>
                             
-                            <!-- Message si aucun point de vente avec actions rapides -->
-                            <materialDesign:Card Style="{StaticResource SubCardStyle}"
-                                               Background="{DynamicResource MaterialDesignDivider}"
-                                               Opacity="0.7">
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <materialDesign:PackIcon Kind="StoreOff" 
-                                                           Width="48" Height="48"
-                                                           HorizontalAlignment="Center" 
-                                                           Margin="0,0,0,12" 
-                                                           Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                                    <TextBlock Text="Aucun point de vente configuré"
-                                             Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                                             Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                             HorizontalAlignment="Center"
-                                             FontWeight="Medium"/>
-                                    <TextBlock Text="Cliquez sur 'Ajouter' ou 'Templates' pour commencer"
-                                             Style="{StaticResource MaterialDesignBody2TextBlock}"
-                                             Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                             HorizontalAlignment="Center"
-                                             Margin="0,4,0,12"/>
-                                    
-                                    <!-- Actions rapides -->
-                                    <StackPanel Orientation="Horizontal">
-                                        <Button Content="📄 Siège social"
-                                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                Command="{Binding AddHeadOfficeCommand}"
-                                                Margin="0,0,8,0"/>
-                                        <Button Content="🏪 Magasin"
-                                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                Command="{Binding AddStoreCommand}"
-                                                Margin="0,0,8,0"/>
-                                        <Button Content="🚚 Dépôt"
-                                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                Command="{Binding AddWarehouseCommand}"/>
-                                    </StackPanel>
-                                </StackPanel>
-                                <materialDesign:Card.Visibility>
-                                    <Binding Path="HasPointsOfSale">
-                                        <Binding.Converter>
-                                            <BooleanToVisibilityConverter/>
-                                        </Binding.Converter>
-                                    </Binding>
-                                </materialDesign:Card.Visibility>
-                            </materialDesign:Card>
+                            <!-- Champ point de vente simple -->
+                            <TextBox Text="{Binding DefaultPointOfSale, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Point de vente (ex: 23, Station IDC Williamsville, Boutique Promo Plus)"
+                                     Style="{StaticResource ValidatedTextBoxStyle}"
+                                     Margin="0,0,0,8"/>
+                            
+                            <!-- Message de validation -->
+                            <TextBlock Text="{Binding PointOfSaleValidationMessage}"
+                                     Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                     Foreground="Red"
+                                     FontWeight="Medium"
+                                     Visibility="{Binding IsPointOfSaleValid, Converter={StaticResource InverseBooleanToVisibilityConverter}}"
+                                     Margin="0,0,0,8"/>
+                            
+                            <!-- Exemples -->
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <TextBlock Text="Exemples: " 
+                                         Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                         Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                <Button Content="23" 
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Height="24" Padding="8,0" Margin="4,0"
+                                        Command="{Binding SetPointOfSaleCommand}"
+                                        CommandParameter="23"/>
+                                <Button Content="Station IDC" 
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Height="24" Padding="8,0" Margin="4,0"
+                                        Command="{Binding SetPointOfSaleCommand}"
+                                        CommandParameter="Station IDC Williamsville"/>
+                                <Button Content="Boutique Promo Plus" 
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Height="24" Padding="8,0" Margin="4,0"
+                                        Command="{Binding SetPointOfSaleCommand}"
+                                        CommandParameter="Boutique Promo Plus"/>
+                            </StackPanel>
                         </StackPanel>
                     </materialDesign:Card>
 
@@ -637,7 +558,7 @@
                                 
                                 <Button Grid.Column="0"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
-                                        Command="{Binding ExportConfigCommand}"
+                                        Command="{Binding ExportConfigurationCommand}"
                                         Height="40">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Export" 
@@ -650,7 +571,7 @@
                                 
                                 <Button Grid.Column="2"
                                         Style="{StaticResource MaterialDesignOutlinedButton}"
-                                        Command="{Binding ImportConfigCommand}"
+                                        Command="{Binding ImportConfigurationCommand}"
                                         Height="40">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Import" 

@@ -19,7 +19,10 @@
             </ResourceDictionary.MergedDictionaries>
             
             <!-- Convertisseurs globaux -->
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
             <converters:BooleanToGridLengthConverter x:Key="BooleanToGridLengthConverter" />
+            <converters:BooleanToBrushConverter x:Key="BooleanToBrushConverter" />
+            <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

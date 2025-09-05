@@ -6,6 +6,7 @@ namespace FNEV4.Core.DTOs;
 public class PointOfSaleItem
 {
     public string Name { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
@@ -16,7 +17,10 @@ public class PointOfSaleItem
     /// <summary>
     /// Validation du point de vente
     /// </summary>
-    public bool IsValid => !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Address);
+    public bool IsValid => !string.IsNullOrWhiteSpace(Name) && 
+                          !string.IsNullOrWhiteSpace(Code) && 
+                          !string.IsNullOrWhiteSpace(Address) &&
+                          Code.Length <= 10;
 
     /// <summary>
     /// Description complète du point de vente
@@ -33,9 +37,10 @@ public class PointOfSaleItem
     /// <summary>
     /// Constructeur avec paramètres
     /// </summary>
-    public PointOfSaleItem(string name, string address, string phoneNumber = "", bool isActive = true)
+    public PointOfSaleItem(string name, string code, string address, string phoneNumber = "", bool isActive = true)
     {
         Name = name;
+        Code = code;
         Address = address;
         PhoneNumber = phoneNumber;
         IsActive = isActive;

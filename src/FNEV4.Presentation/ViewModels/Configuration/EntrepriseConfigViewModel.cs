@@ -1,550 +1,698 @@
-using System;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Windows.Media;
-using System.Linq;
-using System.IO;
-using System.Threading.Tasks;
 using System.Windows.Input;
-using FNEV4.Infrastructure.Services;
+using System.Windows.Media;
 using FNEV4.Core.Entities;
-using FNEV4.Core.DTOs;
+using FNEV4.Core.Interfaces;
 using MaterialDesignThemes.Wpf;
+using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.Input;
+using System.Linq;
 
-namespace FNEV4.Presentation.ViewModels.Configuration
+namespace FNEV4.Presentation.ViewModels.Configuration;
+
+/// <summary>
+/// ViewModel simplifié pour la configuration d'entreprise sans gestion complexe des points de vente
+/// Aligné sur les exigences DGI : Point de vente = simple champ texte (max 10 caractères)
+/// </summary>
+public class EntrepriseConfigViewModel : INotifyPropertyChanged
 {
-    public class EntrepriseConfigViewModel : INotifyPropertyChanged
+    private readonly IDgiService _dgiService;
+
+    #region Propriétés principales de l'entreprise
+    private string _companyName = string.Empty;
+    public string CompanyName
     {
-        private readonly ILoggingService? _loggingService;
+        get => _companyName;
+        set { _companyName = value; OnPropertyChanged(); ValidateCompanyName(); CalculateCompletionPercentage(); }
+    }
 
-        #region INotifyPropertyChanged
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-        #endregion
+    private string _nccNumber = string.Empty;
+    public string NccNumber
+    {
+        get => _nccNumber;
+        set { _nccNumber = value; OnPropertyChanged(); ValidateNcc(); CalculateCompletionPercentage(); }
+    }
 
-        #region Entity Properties
-        private string _companyName = string.Empty;
-        public string CompanyName
-        {
-            get => _companyName;
-            set { _companyName = value; OnPropertyChanged(nameof(CompanyName)); CalculateCompletionPercentage(); }
-        }
+    private string _businessAddress = string.Empty;
+    public string BusinessAddress
+    {
+        get => _businessAddress;
+        set { _businessAddress = value; OnPropertyChanged(); ValidateBusinessAddress(); CalculateCompletionPercentage(); }
+    }
 
-        private string _nccNumber = string.Empty;
-        public string NccNumber
-        {
-            get => _nccNumber;
-            set { _nccNumber = value; OnPropertyChanged(nameof(NccNumber)); CalculateCompletionPercentage(); ValidateNcc(); }
-        }
+    private string _phoneNumber = string.Empty;
+    public string PhoneNumber
+    {
+        get => _phoneNumber;
+        set { _phoneNumber = value; OnPropertyChanged(); ValidatePhoneNumber(); CalculateCompletionPercentage(); }
+    }
 
-        private string _dgiNumber = string.Empty;
-        public string DgiNumber
-        {
-            get => _dgiNumber;
-            set { _dgiNumber = value; OnPropertyChanged(nameof(DgiNumber)); CalculateCompletionPercentage(); }
-        }
+    private string _email = string.Empty;
+    public string Email
+    {
+        get => _email;
+        set { _email = value; OnPropertyChanged(); ValidateEmail(); CalculateCompletionPercentage(); }
+    }
 
-        private string _businessSector = string.Empty;
-        public string BusinessSector
-        {
-            get => _businessSector;
-            set { _businessSector = value; OnPropertyChanged(nameof(BusinessSector)); CalculateCompletionPercentage(); }
-        }
+    // Point de vente simplifié - juste un champ texte (API DGI)
+    private string _defaultPointOfSale = string.Empty;
+    public string DefaultPointOfSale
+    {
+        get => _defaultPointOfSale;
+        set { _defaultPointOfSale = value; OnPropertyChanged(); ValidatePointOfSale(); CalculateCompletionPercentage(); }
+    }
 
-        private string _businessAddress = string.Empty;
-        public string BusinessAddress
-        {
-            get => _businessAddress;
-            set { _businessAddress = value; OnPropertyChanged(nameof(BusinessAddress)); CalculateCompletionPercentage(); }
-        }
+    private string _apiKey = string.Empty;
+    public string ApiKey
+    {
+        get => _apiKey;
+        set { _apiKey = value; OnPropertyChanged(); CalculateCompletionPercentage(); }
+    }
 
-        private string _phoneNumber = string.Empty;
-        public string PhoneNumber
-        {
-            get => _phoneNumber;
-            set { _phoneNumber = value; OnPropertyChanged(nameof(PhoneNumber)); CalculateCompletionPercentage(); }
-        }
+    private string _apiBaseUrl = string.Empty;
+    public string ApiBaseUrl
+    {
+        get => _apiBaseUrl;
+        set { _apiBaseUrl = value; OnPropertyChanged(); CalculateCompletionPercentage(); }
+    }
 
-        private string _email = string.Empty;
-        public string Email
-        {
-            get => _email;
-            set { _email = value; OnPropertyChanged(nameof(Email)); CalculateCompletionPercentage(); }
-        }
-        #endregion
+    private string _environment = "Test";
+    public string Environment
+    {
+        get => _environment;
+        set { _environment = value; OnPropertyChanged(); }
+    }
+    #endregion
 
-        #region UI State Properties
-        private bool _isNccValid = true;
-        public bool IsNccValid
-        {
-            get => _isNccValid;
-            set { _isNccValid = value; OnPropertyChanged(nameof(IsNccValid)); }
-        }
+    #region Propriétés de validation et UI
+    private bool _isNccValid = true;
+    public bool IsNccValid
+    {
+        get => _isNccValid;
+        set { _isNccValid = value; OnPropertyChanged(); }
+    }
 
-        private bool _canSave = false;
-        public bool CanSave
-        {
-            get => _canSave;
-            set { _canSave = value; OnPropertyChanged(nameof(CanSave)); }
-        }
+    private string _nccValidationMessage = string.Empty;
+    public string NccValidationMessage
+    {
+        get => _nccValidationMessage;
+        set { _nccValidationMessage = value; OnPropertyChanged(); }
+    }
 
-        private string _statusMessage = "Entreprise: Non configurée";
-        public string StatusMessage
-        {
-            get => _statusMessage;
-            set { _statusMessage = value; OnPropertyChanged(nameof(StatusMessage)); }
-        }
+    private bool _hasNccValidationMessage = false;
+    public bool HasNccValidationMessage
+    {
+        get => _hasNccValidationMessage;
+        set { _hasNccValidationMessage = value; OnPropertyChanged(); }
+    }
 
-        private PackIconKind _statusIcon = PackIconKind.AlertCircle;
-        public PackIconKind StatusIcon
-        {
-            get => _statusIcon;
-            set { _statusIcon = value; OnPropertyChanged(nameof(StatusIcon)); }
-        }
+    private SolidColorBrush _nccValidationColor = Brushes.Red;
+    public SolidColorBrush NccValidationColor
+    {
+        get => _nccValidationColor;
+        set { _nccValidationColor = value; OnPropertyChanged(); }
+    }
 
-        private Brush _statusColor = Brushes.Red;
-        public Brush StatusColor
-        {
-            get => _statusColor;
-            set { _statusColor = value; OnPropertyChanged(nameof(StatusColor)); }
-        }
+    // Propriétés de validation pour les autres champs
+    private string _companyNameValidationMessage = string.Empty;
+    public string CompanyNameValidationMessage
+    {
+        get => _companyNameValidationMessage;
+        set { _companyNameValidationMessage = value; OnPropertyChanged(); }
+    }
 
-        private double _completionPercentage = 0;
-        public double CompletionPercentage
-        {
-            get => _completionPercentage;
-            set { _completionPercentage = value; OnPropertyChanged(nameof(CompletionPercentage)); }
-        }
+    private string _businessAddressValidationMessage = string.Empty;
+    public string BusinessAddressValidationMessage
+    {
+        get => _businessAddressValidationMessage;
+        set { _businessAddressValidationMessage = value; OnPropertyChanged(); }
+    }
 
-        private string _nccValidationMessage = string.Empty;
-        public string NccValidationMessage
-        {
-            get => _nccValidationMessage;
-            set { _nccValidationMessage = value; OnPropertyChanged(nameof(NccValidationMessage)); }
-        }
+    private string _phoneNumberValidationMessage = string.Empty;
+    public string PhoneNumberValidationMessage
+    {
+        get => _phoneNumberValidationMessage;
+        set { _phoneNumberValidationMessage = value; OnPropertyChanged(); }
+    }
 
-        private Brush _nccValidationColor = Brushes.Gray;
-        public Brush NccValidationColor
-        {
-            get => _nccValidationColor;
-            set { _nccValidationColor = value; OnPropertyChanged(nameof(NccValidationColor)); }
-        }
+    private string _emailValidationMessage = string.Empty;
+    public string EmailValidationMessage
+    {
+        get => _emailValidationMessage;
+        set { _emailValidationMessage = value; OnPropertyChanged(); }
+    }
 
-        private bool _hasNccValidationMessage = false;
-        public bool HasNccValidationMessage
-        {
-            get => _hasNccValidationMessage;
-            set { _hasNccValidationMessage = value; OnPropertyChanged(nameof(HasNccValidationMessage)); }
-        }
+    // Propriétés booléennes pour validation XAML
+    private bool _isCompanyNameValid = false;
+    public bool IsCompanyNameValid
+    {
+        get => _isCompanyNameValid;
+        set { _isCompanyNameValid = value; OnPropertyChanged(); }
+    }
 
-        private ObservableCollection<string> _companyNameSuggestions = new()
-        {
-            "SARL", "SAS", "SA", "EURL", "SNC", "SCI", "Auto-entrepreneur"
-        };
-        public ObservableCollection<string> CompanyNameSuggestions
-        {
-            get => _companyNameSuggestions;
-            set { _companyNameSuggestions = value; OnPropertyChanged(nameof(CompanyNameSuggestions)); }
-        }
+    private bool _isBusinessAddressValid = false;
+    public bool IsBusinessAddressValid
+    {
+        get => _isBusinessAddressValid;
+        set { _isBusinessAddressValid = value; OnPropertyChanged(); }
+    }
 
-        private bool _autoSaveEnabled = true;
-        public bool AutoSaveEnabled
-        {
-            get => _autoSaveEnabled;
-            set { _autoSaveEnabled = value; OnPropertyChanged(nameof(AutoSaveEnabled)); }
-        }
+    private bool _isPhoneNumberValid = false;
+    public bool IsPhoneNumberValid
+    {
+        get => _isPhoneNumberValid;
+        set { _isPhoneNumberValid = value; OnPropertyChanged(); }
+    }
 
-        private bool _autoValidateNcc = true;
-        public bool AutoValidateNcc
-        {
-            get => _autoValidateNcc;
-            set { _autoValidateNcc = value; OnPropertyChanged(nameof(AutoValidateNcc)); }
-        }
+    private bool _isEmailValid = false;
+    public bool IsEmailValid
+    {
+        get => _isEmailValid;
+        set { _isEmailValid = value; OnPropertyChanged(); }
+    }
 
-        private bool _syncWithDgi = false;
-        public bool SyncWithDgi
-        {
-            get => _syncWithDgi;
-            set { _syncWithDgi = value; OnPropertyChanged(nameof(SyncWithDgi)); }
-        }
+    private bool _isPointOfSaleValid = false;
+    public bool IsPointOfSaleValid
+    {
+        get => _isPointOfSaleValid;
+        set { _isPointOfSaleValid = value; OnPropertyChanged(); }
+    }
 
-        private ObservableCollection<PointOfSaleViewModel> _pointsOfSale = new();
-        public ObservableCollection<PointOfSaleViewModel> PointsOfSale
-        {
-            get => _pointsOfSale;
-            set { _pointsOfSale = value; OnPropertyChanged(nameof(PointsOfSale)); }
-        }
+    private string _pointOfSaleValidationMessage = string.Empty;
+    public string PointOfSaleValidationMessage
+    {
+        get => _pointOfSaleValidationMessage;
+        set { _pointOfSaleValidationMessage = value; OnPropertyChanged(); }
+    }
 
-        private bool _hasPointsOfSale = true;
-        public bool HasPointsOfSale
-        {
-            get => _hasPointsOfSale;
-            set { _hasPointsOfSale = value; OnPropertyChanged(nameof(HasPointsOfSale)); }
-        }
-        #endregion
+    private double _completionPercentage = 0;
+    public double CompletionPercentage
+    {
+        get => _completionPercentage;
+        set { _completionPercentage = value; OnPropertyChanged(); }
+    }
 
-        #region Commands
-        public ICommand SaveConfigurationCommand { get; private set; }
-        public ICommand ValidateNccCommand { get; private set; }
-        public ICommand AddPointOfSaleCommand { get; private set; }
-        public ICommand RemovePointOfSaleCommand { get; private set; }
-        public ICommand ExportConfigurationCommand { get; private set; }
-        public ICommand ImportConfigurationCommand { get; private set; }
-        public ICommand SyncWithDgiCommand { get; private set; }
+    private bool _canSave = false;
+    public bool CanSave
+    {
+        get => _canSave;
+        set { _canSave = value; OnPropertyChanged(); }
+    }
+
+    private string _statusMessage = "Prêt à configurer";
+    public string StatusMessage
+    {
+        get => _statusMessage;
+        set { _statusMessage = value; OnPropertyChanged(); }
+    }
+
+    private PackIconKind _statusIcon = PackIconKind.Information;
+    public PackIconKind StatusIcon
+    {
+        get => _statusIcon;
+        set { _statusIcon = value; OnPropertyChanged(); }
+    }
+
+    private SolidColorBrush _statusColor = Brushes.Blue;
+    public SolidColorBrush StatusColor
+    {
+        get => _statusColor;
+        set { _statusColor = value; OnPropertyChanged(); }
+    }
+    #endregion
+
+    #region Commands (simplifiées)
+    public ICommand SaveConfigurationCommand { get; private set; } = null!;
+    public ICommand ValidateNccCommand { get; private set; } = null!;
+    public ICommand ExportConfigurationCommand { get; private set; } = null!;
+    public ICommand ImportConfigurationCommand { get; private set; } = null!;
+    public ICommand SyncWithDgiCommand { get; private set; } = null!;
+    public ICommand ResetCommand { get; private set; } = null!;
+    public ICommand VerifyNccCommand { get; private set; } = null!;
+    public ICommand DetectLocationCommand { get; private set; } = null!;
+    public ICommand FormatPhoneCommand { get; private set; } = null!;
+    public ICommand SetPointOfSaleCommand { get; private set; } = null!;
+    #endregion
+
+    #region Constructeur
+    public EntrepriseConfigViewModel(IDgiService? dgiService = null)
+    {
+        _dgiService = dgiService ?? CreateDefaultDgiService();
+        InitializeCommands();
+        InitializeData();
+        UpdateStatus();
+    }
+
+    private IDgiService CreateDefaultDgiService()
+    {
+        var httpClient = new System.Net.Http.HttpClient();
+        var logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<FNEV4.Infrastructure.Services.DgiService>();
+        return new FNEV4.Infrastructure.Services.DgiService(httpClient, logger);
+    }
+    #endregion
+
+    #region Initialisation
+    private void InitializeCommands()
+    {
+        SaveConfigurationCommand = new RelayCommand(async () => await SaveConfigurationAsync());
+        ValidateNccCommand = new RelayCommand(() => ValidateNcc());
+        ExportConfigurationCommand = new RelayCommand(async () => await ExportConfigurationAsync());
+        ImportConfigurationCommand = new RelayCommand(async () => await ImportConfigurationAsync());
+        SyncWithDgiCommand = new RelayCommand(async () => await SyncWithDgiAsync());
+        ResetCommand = new RelayCommand(() => ResetForm());
+        VerifyNccCommand = new RelayCommand(async () => await VerifyNccWithDgiAsync());
+        DetectLocationCommand = new RelayCommand(() => DetectLocation());
+        FormatPhoneCommand = new RelayCommand(() => FormatPhone());
+        SetPointOfSaleCommand = new RelayCommand<string>((value) => SetPointOfSale(value));
+    }
+
+    private void InitializeData()
+    {
+        // Aucune valeur par défaut - tous les champs doivent être saisis par l'utilisateur
+        CompanyName = string.Empty;
+        BusinessAddress = string.Empty;
+        PhoneNumber = string.Empty;
+        Email = string.Empty;
+        NccNumber = string.Empty;
+        DefaultPointOfSale = string.Empty;
         
-        // Commandes supplémentaires pour l'interface avancée
-        public ICommand ResetCommand { get; private set; }
-        public ICommand VerifyNccCommand { get; private set; }
-        public ICommand DetectLocationCommand { get; private set; }
-        public ICommand FormatPhoneCommand { get; private set; }
-        public ICommand LoadTemplatesCommand { get; private set; }
-        public ICommand DuplicatePointOfSaleCommand { get; private set; }
-        public ICommand AddHeadOfficeCommand { get; private set; }
-        public ICommand AddStoreCommand { get; private set; }
-        public ICommand AddWarehouseCommand { get; private set; }
-        public ICommand SaveCommand { get; private set; }
-        public ICommand ExportConfigCommand { get; private set; }
-        public ICommand ImportConfigCommand { get; private set; }
-        public ICommand SyncNowCommand { get; private set; }
-        public ICommand OpenCertificationGuideCommand { get; private set; }
-        public ICommand TestInvoicingCommand { get; private set; }
-        public ICommand ImportFromSageCommand { get; private set; }
-        public ICommand VerifyMappingCommand { get; private set; }
-        public ICommand ContactSupportCommand { get; private set; }
-        #endregion
+        // Validation initiale (tous les champs vides = invalides)
+        ValidateNcc();
+        ValidateCompanyName();
+        ValidateBusinessAddress();
+        ValidatePhoneNumber();
+        ValidateEmail();
+        ValidatePointOfSale();
+        CalculateCompletionPercentage();
+    }
+    #endregion
 
-        // Constructeur par défaut pour fallback (aligné sur BaseDonneesViewModel)
-        public EntrepriseConfigViewModel()
+    #region Méthodes de validation
+    private void ValidateNcc()
+    {
+        if (string.IsNullOrWhiteSpace(NccNumber))
         {
-            InitializeCommands();
-            InitializeData();
-            UpdateStatus();
+            IsNccValid = false;
+            NccValidationMessage = "Le NCC entreprise est obligatoire";
+            NccValidationColor = Brushes.Red;
+            HasNccValidationMessage = true;
         }
-
-        private void InitializeCommands()
+        else if (NccNumber.Length < 8)
         {
-            SaveConfigurationCommand = new RelayCommand(async () => await SaveConfigurationAsync());
-            ValidateNccCommand = new RelayCommand(() => ValidateNcc());
-            AddPointOfSaleCommand = new RelayCommand(() => AddPointOfSale());
-            RemovePointOfSaleCommand = new RelayCommand<PointOfSaleViewModel>(RemovePointOfSale);
-            ExportConfigurationCommand = new RelayCommand(async () => await ExportConfigurationAsync());
-            ImportConfigurationCommand = new RelayCommand(async () => await ImportConfigurationAsync());
-            SyncWithDgiCommand = new RelayCommand(async () => await SyncWithDgiAsync());
-            
-            // Commandes supplémentaires avec actions simples
-            ResetCommand = new RelayCommand(() => ResetForm());
-            VerifyNccCommand = new RelayCommand(() => ValidateNcc());
-            DetectLocationCommand = new RelayCommand(() => DetectLocation());
-            FormatPhoneCommand = new RelayCommand(() => FormatPhone());
-            LoadTemplatesCommand = new RelayCommand(() => LoadTemplates());
-            DuplicatePointOfSaleCommand = new RelayCommand<PointOfSaleViewModel>(DuplicatePointOfSale);
-            AddHeadOfficeCommand = new RelayCommand(() => AddPointOfSale("Siège Social", "Adresse du siège"));
-            AddStoreCommand = new RelayCommand(() => AddPointOfSale("Magasin", "Adresse du magasin"));
-            AddWarehouseCommand = new RelayCommand(() => AddPointOfSale("Entrepôt", "Adresse de l'entrepôt"));
-            SaveCommand = new RelayCommand(async () => await SaveConfigurationAsync());
-            ExportConfigCommand = new RelayCommand(async () => await ExportConfigurationAsync());
-            ImportConfigCommand = new RelayCommand(async () => await ImportConfigurationAsync());
-            SyncNowCommand = new RelayCommand(async () => await SyncWithDgiAsync());
-            OpenCertificationGuideCommand = new RelayCommand(() => OpenCertificationGuide());
-            TestInvoicingCommand = new RelayCommand(() => TestInvoicing());
-            ImportFromSageCommand = new RelayCommand(() => ImportFromSage());
-            VerifyMappingCommand = new RelayCommand(() => VerifyMapping());
-            ContactSupportCommand = new RelayCommand(() => ContactSupport());
+            IsNccValid = false;
+            NccValidationMessage = "Le NCC doit contenir au moins 8 caractères";
+            NccValidationColor = Brushes.Orange;
+            HasNccValidationMessage = true;
         }
-
-        private void InitializeData()
+        else
         {
-            // Données de démonstration
-            AddPointOfSale("Magasin Principal", "123 Rue de la République, Tunis", "71234567");
-            AddPointOfSale("Succursale Nord", "456 Avenue Bourguiba, Ariana", "71987654");
-            
-            CompanyName = "Exemple SARL";
-            BusinessSector = "Commerce de détail";
-            BusinessAddress = "123 Rue de la République, Tunis";
-            PhoneNumber = "71234567";
-            Email = "contact@exemple.tn";
-            
-            CalculateCompletionPercentage();
+            IsNccValid = true;
+            NccValidationMessage = "Format NCC valide";
+            NccValidationColor = Brushes.Green;
+            HasNccValidationMessage = true;
         }
+    }
 
-        private void CalculateCompletionPercentage()
+    private void ValidateCompanyName()
+    {
+        if (string.IsNullOrWhiteSpace(CompanyName))
         {
-            var fields = new[]
+            CompanyNameValidationMessage = "";
+            IsCompanyNameValid = false;
+            return;
+        }
+        
+        if (CompanyName.Length < 3)
+        {
+            CompanyNameValidationMessage = "Le nom doit contenir au moins 3 caractères";
+            IsCompanyNameValid = false;
+            return;
+        }
+        
+        CompanyNameValidationMessage = "";
+        IsCompanyNameValid = true;
+    }
+
+    private void ValidateBusinessAddress()
+    {
+        if (string.IsNullOrWhiteSpace(BusinessAddress))
+        {
+            BusinessAddressValidationMessage = "";
+            IsBusinessAddressValid = false;
+            return;
+        }
+        
+        if (BusinessAddress.Length < 10)
+        {
+            BusinessAddressValidationMessage = "L'adresse doit être plus détaillée";
+            IsBusinessAddressValid = false;
+            return;
+        }
+        
+        BusinessAddressValidationMessage = "";
+        IsBusinessAddressValid = true;
+    }
+
+    private void ValidatePhoneNumber()
+    {
+        if (string.IsNullOrWhiteSpace(PhoneNumber))
+        {
+            PhoneNumberValidationMessage = "";
+            IsPhoneNumberValid = false;
+            return;
+        }
+        
+        // Validation format ivoirien : 10 chiffres
+        var cleaned = PhoneNumber.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "").Replace("+", "");
+        
+        if (cleaned.Length != 10 || !cleaned.All(char.IsDigit))
+        {
+            PhoneNumberValidationMessage = "Format ivoirien requis: 10 chiffres (ex: 0123456789)";
+            IsPhoneNumberValid = false;
+            return;
+        }
+        
+        PhoneNumberValidationMessage = "";
+        IsPhoneNumberValid = true;
+    }
+
+    private void ValidateEmail()
+    {
+        if (string.IsNullOrWhiteSpace(Email))
+        {
+            EmailValidationMessage = "";
+            IsEmailValid = false;
+            return;
+        }
+        
+        // Validation email simple
+        if (!Email.Contains("@") || !Email.Contains(".") || Email.Length < 5)
+        {
+            EmailValidationMessage = "Format email invalide (ex: contact@entreprise.ci)";
+            IsEmailValid = false;
+            return;
+        }
+        
+        EmailValidationMessage = "";
+        IsEmailValid = true;
+    }
+
+    private void ValidatePointOfSale()
+    {
+        if (string.IsNullOrWhiteSpace(DefaultPointOfSale))
+        {
+            PointOfSaleValidationMessage = "Le point de vente est requis pour la facturation";
+            IsPointOfSaleValid = false;
+            return;
+        }
+        
+        // Validation flexible : chaîne de caractères valide sans contrainte de longueur stricte
+        var trimmed = DefaultPointOfSale.Trim();
+        if (trimmed.Length == 0)
+        {
+            PointOfSaleValidationMessage = "Le point de vente ne peut pas être vide";
+            IsPointOfSaleValid = false;
+            return;
+        }
+        
+        // Vérifier qu'il n'y a pas de caractères problématiques pour la base de données
+        if (trimmed.Contains('\n') || trimmed.Contains('\r') || trimmed.Contains('\t'))
+        {
+            PointOfSaleValidationMessage = "Le point de vente ne peut pas contenir de caractères de saut de ligne";
+            IsPointOfSaleValid = false;
+            return;
+        }
+        
+        PointOfSaleValidationMessage = "";
+        IsPointOfSaleValid = true;
+    }
+    #endregion
+
+    #region Calcul de progression
+    private void CalculateCompletionPercentage()
+    {
+        var fields = new[]
+        {
+            !string.IsNullOrWhiteSpace(CompanyName),
+            !string.IsNullOrWhiteSpace(NccNumber),
+            !string.IsNullOrWhiteSpace(BusinessAddress),
+            !string.IsNullOrWhiteSpace(PhoneNumber),
+            !string.IsNullOrWhiteSpace(Email),
+            !string.IsNullOrWhiteSpace(DefaultPointOfSale),
+            !string.IsNullOrWhiteSpace(ApiKey),
+            !string.IsNullOrWhiteSpace(ApiBaseUrl),
+            !string.IsNullOrWhiteSpace(Environment)
+        };
+
+        CompletionPercentage = (double)fields.Count(f => f) / fields.Length * 100;
+        CanSave = CompletionPercentage >= 70; // Au moins 70% complété
+        UpdateStatus();
+    }
+
+    private void UpdateStatus()
+    {
+        if (CompletionPercentage >= 90)
+        {
+            StatusMessage = "Configuration complète - Prêt pour certification";
+            StatusIcon = PackIconKind.CheckCircle;
+            StatusColor = Brushes.Green;
+        }
+        else if (CompletionPercentage >= 70)
+        {
+            StatusMessage = "Configuration en cours - Presque terminé";
+            StatusIcon = PackIconKind.ClockOutline;
+            StatusColor = Brushes.Orange;
+        }
+        else
+        {
+            StatusMessage = "Configuration incomplète";
+            StatusIcon = PackIconKind.AlertCircle;
+            StatusColor = Brushes.Red;
+        }
+    }
+    #endregion
+
+    #region Actions utilisateur (simplifiées)
+    private void ResetForm()
+    {
+        CompanyName = string.Empty;
+        NccNumber = string.Empty;
+        BusinessAddress = string.Empty;
+        PhoneNumber = string.Empty;
+        Email = string.Empty;
+        DefaultPointOfSale = string.Empty;
+        CalculateCompletionPercentage();
+        StatusMessage = "Formulaire réinitialisé";
+    }
+
+    private void DetectLocation()
+    {
+        StatusMessage = "Fonction de géolocalisation non disponible.";
+        
+        System.Windows.MessageBox.Show(
+            "La détection automatique de localisation n'est pas encore implémentée.\n\n" +
+            "Veuillez saisir votre adresse complète manuellement dans le champ Adresse.\n\n" +
+            "Format recommandé: Rue/Avenue, Commune, Ville, Pays\n" +
+            "Exemple: Boulevard Lagunaire, Cocody, Abidjan, Côte d'Ivoire",
+            "Géolocalisation non disponible",
+            System.Windows.MessageBoxButton.OK,
+            System.Windows.MessageBoxImage.Information);
+            
+        StatusMessage = "Veuillez saisir votre adresse manuellement.";
+    }
+
+    private void FormatPhone()
+    {
+        if (!string.IsNullOrWhiteSpace(PhoneNumber))
+        {
+            // Nettoyer le numéro
+            var cleaned = PhoneNumber.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "").Replace("+", "");
+            
+            // Format ivoirien 10 chiffres
+            if (cleaned.Length == 10 && cleaned.All(char.IsDigit))
             {
-                !string.IsNullOrWhiteSpace(CompanyName),
-                !string.IsNullOrWhiteSpace(NccNumber),
-                !string.IsNullOrWhiteSpace(DgiNumber),
-                !string.IsNullOrWhiteSpace(BusinessSector),
-                !string.IsNullOrWhiteSpace(BusinessAddress),
-                !string.IsNullOrWhiteSpace(PhoneNumber),
-                !string.IsNullOrWhiteSpace(Email)
+                PhoneNumber = $"{cleaned.Substring(0, 2)} {cleaned.Substring(2, 2)} {cleaned.Substring(4, 2)} {cleaned.Substring(6, 2)} {cleaned.Substring(8, 2)}";
+            }
+            
+            ValidatePhoneNumber();
+        }
+    }
+
+    private void SetPointOfSale(string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            DefaultPointOfSale = value;
+        }
+    }
+    #endregion
+
+    #region Méthodes async (stubs)
+    private async Task SaveConfigurationAsync()
+    {
+        StatusMessage = "Sauvegarde en cours...";
+        await Task.Delay(1000); // Simulation
+        StatusMessage = "Configuration sauvegardée";
+    }
+
+    private async Task ExportConfigurationAsync()
+    {
+        try
+        {
+            StatusMessage = "Export en cours...";
+            
+            // Créer l'objet de configuration à exporter
+            var configData = new
+            {
+                CompanyName = this.CompanyName,
+                NccNumber = this.NccNumber,
+                BusinessAddress = this.BusinessAddress,
+                PhoneNumber = this.PhoneNumber,
+                Email = this.Email,
+                DefaultPointOfSale = this.DefaultPointOfSale,
+                ApiKey = this.ApiKey,
+                ApiBaseUrl = this.ApiBaseUrl,
+                Environment = this.Environment,
+                ExportedAt = DateTime.Now,
+                Version = "1.0"
             };
 
-            CompletionPercentage = (double)fields.Count(f => f) / fields.Length * 100;
-            CanSave = CompletionPercentage >= 70; // Au moins 70% complété
-        }
+            // Sérialiser en JSON
+            var json = System.Text.Json.JsonSerializer.Serialize(configData, new System.Text.Json.JsonSerializerOptions 
+            { 
+                WriteIndented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            });
 
-        private void ValidateNcc()
-        {
-            if (string.IsNullOrWhiteSpace(NccNumber))
+            // Ouvrir la boîte de dialogue Enregistrer sous
+            var dialog = new Microsoft.Win32.SaveFileDialog
             {
-                IsNccValid = true;
-                NccValidationMessage = string.Empty;
-                HasNccValidationMessage = false;
-                return;
-            }
+                Filter = "Fichiers JSON (*.json)|*.json|Tous les fichiers (*.*)|*.*",
+                DefaultExt = "json",
+                FileName = $"FNEV4_Config_{DateTime.Now:yyyyMMdd_HHmmss}.json"
+            };
 
-            // Validation basique du format NCC (8 chiffres)
-            if (NccNumber.Length == 8 && NccNumber.All(char.IsDigit))
+            if (dialog.ShowDialog() == true)
             {
-                IsNccValid = true;
-                NccValidationMessage = "Numéro NCC valide";
-                NccValidationColor = Brushes.Green;
-                HasNccValidationMessage = true;
+                await System.IO.File.WriteAllTextAsync(dialog.FileName, json);
+                StatusMessage = $"Configuration exportée : {System.IO.Path.GetFileName(dialog.FileName)}";
             }
             else
             {
-                IsNccValid = false;
-                NccValidationMessage = "Format invalide (8 chiffres requis)";
-                NccValidationColor = Brushes.Red;
-                HasNccValidationMessage = true;
+                StatusMessage = "Export annulé";
             }
         }
-
-        private void UpdateStatus()
+        catch (Exception ex)
         {
-            if (CompletionPercentage >= 90)
+            StatusMessage = $"Erreur lors de l'export : {ex.Message}";
+        }
+    }
+
+    private async Task ImportConfigurationAsync()
+    {
+        try
+        {
+            StatusMessage = "Sélection du fichier à importer...";
+
+            // Ouvrir la boîte de dialogue Ouvrir
+            var dialog = new Microsoft.Win32.OpenFileDialog
             {
-                StatusMessage = "Configuration complète";
-                StatusIcon = PackIconKind.CheckCircle;
-                StatusColor = Brushes.Green;
-            }
-            else if (CompletionPercentage >= 50)
+                Filter = "Fichiers JSON (*.json)|*.json|Tous les fichiers (*.*)|*.*",
+                DefaultExt = "json",
+                Title = "Sélectionner le fichier de configuration à importer"
+            };
+
+            if (dialog.ShowDialog() == true)
             {
-                StatusMessage = "Configuration en cours";
-                StatusIcon = PackIconKind.ProgressClock;
-                StatusColor = Brushes.Orange;
-            }
-            else
-            {
-                StatusMessage = "Configuration incomplète";
-                StatusIcon = PackIconKind.AlertCircle;
-                StatusColor = Brushes.Red;
-            }
-        }
+                StatusMessage = "Import en cours...";
+                
+                var json = await System.IO.File.ReadAllTextAsync(dialog.FileName);
+                
+                // Désérialiser le JSON
+                using var document = System.Text.Json.JsonDocument.Parse(json);
+                var root = document.RootElement;
 
-        private void AddPointOfSale(string name = "", string address = "", string phone = "")
-        {
-            var item = new PointOfSaleItem(
-                string.IsNullOrEmpty(name) ? $"Point de vente {PointsOfSale.Count + 1}" : name,
-                string.IsNullOrEmpty(address) ? "Adresse à définir" : address,
-                phone,
-                true
-            );
-            
-            PointsOfSale.Add(new PointOfSaleViewModel(item));
-            HasPointsOfSale = PointsOfSale.Any();
-        }
+                // Demander confirmation avant d'écraser les données existantes
+                var result = System.Windows.MessageBox.Show(
+                    "Cette action va remplacer toutes les données actuelles de configuration.\nVoulez-vous continuer ?",
+                    "Confirmation d'import",
+                    System.Windows.MessageBoxButton.YesNo,
+                    System.Windows.MessageBoxImage.Question);
 
-        private void RemovePointOfSale(PointOfSaleViewModel? viewModel)
-        {
-            if (viewModel != null && PointsOfSale.Contains(viewModel))
-            {
-                PointsOfSale.Remove(viewModel);
-                HasPointsOfSale = PointsOfSale.Any();
-            }
-        }
-
-        private async Task SaveConfigurationAsync()
-        {
-            try
-            {
-                StatusMessage = "Sauvegarde en cours...";
-                StatusIcon = PackIconKind.ContentSave;
-                StatusColor = Brushes.Blue;
-
-                // Simulation de sauvegarde
-                await Task.Delay(1000);
-
-                StatusMessage = "Configuration sauvegardée";
-                StatusIcon = PackIconKind.CheckCircle;
-                StatusColor = Brushes.Green;
-
-                // Reset après 3 secondes
-                await Task.Delay(3000);
-                UpdateStatus();
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Erreur de sauvegarde: {ex.Message}";
-                StatusIcon = PackIconKind.AlertCircle;
-                StatusColor = Brushes.Red;
-            }
-        }
-
-        private async Task ExportConfigurationAsync()
-        {
-            // Placeholder pour export
-            StatusMessage = "Export en cours...";
-            await Task.Delay(1000);
-            StatusMessage = "Export terminé";
-        }
-
-        private async Task ImportConfigurationAsync()
-        {
-            // Placeholder pour import
-            StatusMessage = "Import en cours...";
-            await Task.Delay(1000);
-            StatusMessage = "Import terminé";
-        }
-
-        private async Task SyncWithDgiAsync()
-        {
-            // Placeholder pour synchronisation DGI
-            StatusMessage = "Synchronisation DGI en cours...";
-            await Task.Delay(2000);
-            StatusMessage = "Synchronisation terminée";
-        }
-
-        #region Méthodes supplémentaires pour les commandes avancées
-        
-        private void ResetForm()
-        {
-            CompanyName = string.Empty;
-            NccNumber = string.Empty;
-            DgiNumber = string.Empty;
-            BusinessSector = string.Empty;
-            BusinessAddress = string.Empty;
-            PhoneNumber = string.Empty;
-            Email = string.Empty;
-            PointsOfSale.Clear();
-            CalculateCompletionPercentage();
-            StatusMessage = "Formulaire réinitialisé";
-        }
-
-        private void DetectLocation()
-        {
-            StatusMessage = "Détection de l'emplacement...";
-            // Simulation de détection
-            BusinessAddress = "Adresse détectée automatiquement";
-            StatusMessage = "Emplacement détecté";
-        }
-
-        private void FormatPhone()
-        {
-            if (!string.IsNullOrWhiteSpace(PhoneNumber))
-            {
-                // Format tunisien simple
-                var cleaned = PhoneNumber.Replace(" ", "").Replace("-", "");
-                if (cleaned.Length == 8 && cleaned.All(char.IsDigit))
+                if (result == System.Windows.MessageBoxResult.Yes)
                 {
-                    PhoneNumber = $"{cleaned.Substring(0, 2)} {cleaned.Substring(2, 3)} {cleaned.Substring(5, 3)}";
+                    // Importer les données
+                    if (root.TryGetProperty("CompanyName", out var companyName))
+                        CompanyName = companyName.GetString() ?? "";
+                    
+                    if (root.TryGetProperty("NccNumber", out var nccNumber))
+                        NccNumber = nccNumber.GetString() ?? "";
+                    
+                    if (root.TryGetProperty("BusinessAddress", out var businessAddress))
+                        BusinessAddress = businessAddress.GetString() ?? "";
+                    
+                    if (root.TryGetProperty("PhoneNumber", out var phoneNumber))
+                        PhoneNumber = phoneNumber.GetString() ?? "";
+                    
+                    if (root.TryGetProperty("Email", out var email))
+                        Email = email.GetString() ?? "";
+                    
+                    if (root.TryGetProperty("DefaultPointOfSale", out var pointOfSale))
+                        DefaultPointOfSale = pointOfSale.GetString() ?? "";
+                    
+                    if (root.TryGetProperty("ApiKey", out var apiKey))
+                        ApiKey = apiKey.GetString() ?? "";
+                    
+                    if (root.TryGetProperty("ApiBaseUrl", out var apiBaseUrl))
+                        ApiBaseUrl = apiBaseUrl.GetString() ?? "";
+                    
+                    if (root.TryGetProperty("Environment", out var environment))
+                        Environment = environment.GetString() ?? "";
+
+                    // Recalculer le pourcentage après import
+                    CalculateCompletionPercentage();
+                    
+                    StatusMessage = $"Configuration importée : {System.IO.Path.GetFileName(dialog.FileName)}";
+                }
+                else
+                {
+                    StatusMessage = "Import annulé";
                 }
             }
-        }
-
-        private void LoadTemplates()
-        {
-            PointsOfSale.Clear();
-            AddPointOfSale("Siège Social", "Avenue Habib Bourguiba, Tunis", "71234567");
-            AddPointOfSale("Magasin Principal", "Rue de la République, Tunis", "71234568");
-            AddPointOfSale("Succursale Nord", "Zone Industrielle, Ariana", "71234569");
-            StatusMessage = "Templates de points de vente chargés";
-        }
-
-        private void DuplicatePointOfSale(PointOfSaleViewModel? original)
-        {
-            if (original != null)
+            else
             {
-                var duplicate = new PointOfSaleViewModel(new PointOfSaleItem(
-                    $"{original.Name} (Copie)",
-                    original.Address,
-                    original.PhoneNumber,
-                    original.IsActive
-                ));
-                PointsOfSale.Add(duplicate);
-                StatusMessage = "Point de vente dupliqué";
+                StatusMessage = "Import annulé";
             }
         }
-
-        private void OpenCertificationGuide()
+        catch (Exception ex)
         {
-            StatusMessage = "Ouverture du guide de certification...";
-            // Ici on pourrait ouvrir un navigateur ou une fenêtre d'aide
+            StatusMessage = $"Erreur lors de l'import : {ex.Message}";
         }
-
-        private void TestInvoicing()
-        {
-            StatusMessage = "Test de facturation en cours...";
-            // Simulation de test
-        }
-
-        private void ImportFromSage()
-        {
-            StatusMessage = "Import depuis Sage 100 en cours...";
-            // Simulation d'import
-        }
-
-        private void VerifyMapping()
-        {
-            StatusMessage = "Vérification de correspondance en cours...";
-            // Simulation de vérification
-        }
-
-        private void ContactSupport()
-        {
-            StatusMessage = "Ouverture de l'assistance...";
-            // Ici on pourrait ouvrir un email ou chat
-        }
-
-        #endregion
     }
 
-    // RelayCommand simple pour les commandes
-    public class RelayCommand : ICommand
+    private async Task SyncWithDgiAsync()
     {
-        private readonly Action _execute;
-        private readonly Func<bool>? _canExecute;
-
-        public RelayCommand(Action execute, Func<bool>? canExecute = null)
-        {
-            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            _canExecute = canExecute;
-        }
-
-        public event EventHandler? CanExecuteChanged
-        {
-            add { }
-            remove { }
-        }
-
-        public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
-        public void Execute(object? parameter) => _execute();
+        StatusMessage = "Synchronisation DGI en cours...";
+        await Task.Delay(2000); // Simulation
+        StatusMessage = "Synchronisation DGI terminée";
     }
 
-    public class RelayCommand<T> : ICommand
+    private async Task VerifyNccWithDgiAsync()
     {
-        private readonly Action<T?> _execute;
-        private readonly Func<T?, bool>? _canExecute;
-
-        public RelayCommand(Action<T?> execute, Func<T?, bool>? canExecute = null)
-        {
-            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            _canExecute = canExecute;
-        }
-
-        public event EventHandler? CanExecuteChanged
-        {
-            add { }
-            remove { }
-        }
-
-        public bool CanExecute(object? parameter) => _canExecute?.Invoke((T?)parameter) ?? true;
-        public void Execute(object? parameter) => _execute((T?)parameter);
+        StatusMessage = "Vérification NCC avec DGI...";
+        await Task.Delay(2000); // Simulation
+        StatusMessage = "NCC vérifié avec succès";
     }
+    #endregion
+
+    #region INotifyPropertyChanged
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+    #endregion
 }

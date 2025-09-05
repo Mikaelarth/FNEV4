@@ -25,6 +25,16 @@ public partial class PointOfSaleViewModel : ObservableObject
         }
     }
 
+    public string Code
+    {
+        get => _item.Code;
+        set
+        {
+            _item.Code = value;
+            OnPropertyChanged();
+        }
+    }
+
     public string Address
     {
         get => _item.Address;
