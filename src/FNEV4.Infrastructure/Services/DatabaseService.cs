@@ -3,6 +3,7 @@ using FNEV4.Infrastructure.Data;
 using FNEV4.Core.Entities;
 using System.Data;
 using Microsoft.Data.Sqlite;
+using System.IO;
 
 namespace FNEV4.Infrastructure.Services
 {
@@ -18,6 +19,9 @@ namespace FNEV4.Infrastructure.Services
         Task<bool> RestoreDatabaseAsync(string backupPath);
         Task<bool> OptimizeDatabaseAsync();
         Task<bool> CheckIntegrityAsync();
+        Task<bool> ReindexDatabaseAsync();
+        Task<bool> UpdateConnectionStringAsync(string newDatabasePath);
+        Task<bool> CreateAutomaticBackupAsync(string backupDirectory, bool compressBackup = false);
         Task<string> ExecuteQueryAsync(string query);
         Task<bool> ApplyMigrationsAsync();
         Task<bool> InitializeDatabaseAsync();
@@ -26,12 +30,17 @@ namespace FNEV4.Infrastructure.Services
         Task<bool> DeleteRecordAsync(string tableName, string id);
         Task<List<string>> GetTableColumnsAsync(string tableName);
         string GetConnectionString();
+        
+        // Méthodes de surveillance et alertes
+        Task<DatabaseMonitoringInfo> GetDatabaseMonitoringInfoAsync();
+        Task<bool> CheckDatabaseAlertsAsync(double maxSizeMB, int maxTableCount, bool emailAlertsEnabled, string alertEmailAddress);
+        Task<bool> SendEmailAlertAsync(string emailAddress, string subject, string message);
     }
 
     public class DatabaseService : IDatabaseService
     {
         private readonly FNEV4DbContext _context;
-        private readonly string _connectionString;
+        private string _connectionString;
 
         public DatabaseService(FNEV4DbContext context)
         {
@@ -286,7 +295,10 @@ namespace FNEV4.Infrastructure.Services
             {
                 var dbPath = GetDatabasePath();
                 if (!File.Exists(dbPath))
+                {
+                    System.Diagnostics.Debug.WriteLine($"Fichier de base de données non trouvé : {dbPath}");
                     return false;
+                }
 
                 // Créer le dossier de sauvegarde s'il n'existe pas
                 var backupDir = Path.GetDirectoryName(backupPath);
@@ -295,15 +307,42 @@ namespace FNEV4.Infrastructure.Services
                     Directory.CreateDirectory(backupDir);
                 }
 
-                // Copier le fichier de base de données de manière asynchrone
-                using var sourceStream = new FileStream(dbPath, FileMode.Open, FileAccess.Read);
-                using var destinationStream = new FileStream(backupPath, FileMode.Create, FileAccess.Write);
-                await sourceStream.CopyToAsync(destinationStream);
-                
-                return true;
+                // Méthode 1: Utilisation de SQLite VACUUM INTO (plus sûre)
+                try
+                {
+                    using var connection = new SqliteConnection(_connectionString);
+                    await connection.OpenAsync();
+                    
+                    // Utiliser VACUUM INTO pour créer une copie propre
+                    var command = new SqliteCommand($"VACUUM INTO '{backupPath.Replace("'", "''")}'", connection);
+                    await command.ExecuteNonQueryAsync();
+                    
+                    System.Diagnostics.Debug.WriteLine($"Sauvegarde créée avec VACUUM INTO : {backupPath}");
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"VACUUM INTO échoué : {ex.Message}");
+                    
+                    // Méthode 2: Copie de fichier classique en cas d'échec de VACUUM INTO
+                    // Forcer la fermeture des connexions
+                    _context.Database.CloseConnection();
+                    
+                    // Attendre un court instant
+                    await Task.Delay(100);
+                    
+                    // Copier le fichier
+                    using var sourceStream = new FileStream(dbPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    using var destinationStream = new FileStream(backupPath, FileMode.Create, FileAccess.Write);
+                    await sourceStream.CopyToAsync(destinationStream);
+                    
+                    System.Diagnostics.Debug.WriteLine($"Sauvegarde créée par copie de fichier : {backupPath}");
+                    return true;
+                }
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la sauvegarde : {ex.Message}");
                 return false;
             }
         }
@@ -358,6 +397,44 @@ namespace FNEV4.Infrastructure.Services
             }
             catch
             {
+                return false;
+            }
+        }
+
+        public async Task<bool> ReindexDatabaseAsync()
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                await connection.OpenAsync();
+                
+                // Obtenir toutes les tables
+                var tables = new List<string>();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'";
+                    using var reader = await command.ExecuteReaderAsync();
+                    while (await reader.ReadAsync())
+                    {
+                        tables.Add(reader.GetString(0));
+                    }
+                }
+                
+                // Réindexer chaque table
+                foreach (var table in tables)
+                {
+                    using var reindexCommand = connection.CreateCommand();
+                    reindexCommand.CommandText = $"REINDEX {table}";
+                    await reindexCommand.ExecuteNonQueryAsync();
+                    System.Diagnostics.Debug.WriteLine($"Table réindexée : {table}");
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"Réindexation terminée pour {tables.Count} tables");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la réindexation : {ex.Message}");
                 return false;
             }
         }
@@ -619,9 +696,279 @@ namespace FNEV4.Infrastructure.Services
             return columns;
         }
 
+        public async Task<bool> UpdateConnectionStringAsync(string newDatabasePath)
+        {
+            try
+            {
+                // Valider le chemin
+                if (string.IsNullOrWhiteSpace(newDatabasePath))
+                {
+                    throw new ArgumentException("Le chemin de la base de données ne peut pas être vide.", nameof(newDatabasePath));
+                }
+
+                // Créer le répertoire s'il n'existe pas
+                var directory = Path.GetDirectoryName(newDatabasePath);
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                // Construire la nouvelle chaîne de connexion
+                var newConnectionString = $"Data Source={newDatabasePath}";
+                
+                // Mettre à jour la chaîne de connexion interne
+                _connectionString = newConnectionString;
+                
+                // Mettre à jour la chaîne de connexion dans le contexte Entity Framework
+                _context.Database.SetConnectionString(newConnectionString);
+                
+                // S'assurer que la base de données est créée et migrée
+                await _context.Database.EnsureCreatedAsync();
+                
+                System.Diagnostics.Debug.WriteLine($"Connexion mise à jour vers : {newDatabasePath}");
+                System.Diagnostics.Debug.WriteLine($"Nouvelle chaîne de connexion : {newConnectionString}");
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la mise à jour de la connexion : {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> CreateAutomaticBackupAsync(string backupDirectory, bool compressBackup = false)
+        {
+            try
+            {
+                // Générer un nom de fichier avec timestamp
+                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var backupFileName = $"FNEV4_AutoBackup_{timestamp}.db";
+                var backupPath = Path.Combine(backupDirectory, backupFileName);
+
+                // Créer le répertoire s'il n'existe pas
+                if (!Directory.Exists(backupDirectory))
+                {
+                    Directory.CreateDirectory(backupDirectory);
+                }
+
+                // Créer la sauvegarde
+                var backupSuccess = await BackupDatabaseAsync(backupPath);
+                
+                if (backupSuccess && compressBackup)
+                {
+                    // Compresser la sauvegarde (implémentation future si nécessaire)
+                    // Pour l'instant, juste marquer comme non compressé
+                    System.Diagnostics.Debug.WriteLine($"Compression demandée mais non implémentée pour : {backupPath}");
+                }
+
+                if (backupSuccess)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Sauvegarde automatique créée : {backupPath}");
+                    
+                    // Nettoyer les anciennes sauvegardes (garder seulement les 10 plus récentes)
+                    await CleanupOldBackups(backupDirectory, 10);
+                }
+
+                return backupSuccess;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la sauvegarde automatique : {ex.Message}");
+                return false;
+            }
+        }
+
+        private async Task CleanupOldBackups(string backupDirectory, int maxBackups)
+        {
+            try
+            {
+                if (!Directory.Exists(backupDirectory))
+                    return;
+
+                var backupFiles = Directory.GetFiles(backupDirectory, "FNEV4_AutoBackup_*.db")
+                    .Select(f => new FileInfo(f))
+                    .OrderByDescending(f => f.CreationTime)
+                    .ToList();
+
+                // Supprimer les anciens fichiers si on dépasse la limite
+                if (backupFiles.Count > maxBackups)
+                {
+                    var filesToDelete = backupFiles.Skip(maxBackups);
+                    foreach (var file in filesToDelete)
+                    {
+                        try
+                        {
+                            file.Delete();
+                            System.Diagnostics.Debug.WriteLine($"Ancienne sauvegarde supprimée : {file.Name}");
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Erreur lors de la suppression de {file.Name} : {ex.Message}");
+                        }
+                    }
+                }
+
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur lors du nettoyage des sauvegardes : {ex.Message}");
+            }
+        }
+
         public string GetConnectionString()
         {
             return _connectionString;
+        }
+
+        public async Task<DatabaseMonitoringInfo> GetDatabaseMonitoringInfoAsync()
+        {
+            try
+            {
+                var dbPath = GetDatabasePath();
+                var fileInfo = new FileInfo(dbPath);
+                var sizeMB = fileInfo.Exists ? Math.Round(fileInfo.Length / (1024.0 * 1024.0), 2) : 0;
+
+                var tableCount = await GetTableCountAsync();
+
+                return new DatabaseMonitoringInfo
+                {
+                    SizeMB = sizeMB,
+                    TableCount = tableCount,
+                    LastCheck = DateTime.Now,
+                    SizeAlertTriggered = false,
+                    TableCountAlertTriggered = false,
+                    AlertMessages = new List<string>()
+                };
+            }
+            catch (Exception ex)
+            {
+                return new DatabaseMonitoringInfo
+                {
+                    SizeMB = 0,
+                    TableCount = 0,
+                    LastCheck = DateTime.Now,
+                    SizeAlertTriggered = false,
+                    TableCountAlertTriggered = false,
+                    AlertMessages = new List<string> { $"Erreur lors de la surveillance: {ex.Message}" }
+                };
+            }
+        }
+
+        public async Task<bool> CheckDatabaseAlertsAsync(double maxSizeMB, int maxTableCount, bool emailAlertsEnabled, string alertEmailAddress)
+        {
+            try
+            {
+                var monitoringInfo = await GetDatabaseMonitoringInfoAsync();
+                var alertMessages = new List<string>();
+
+                // Vérification de la taille
+                if (monitoringInfo.SizeMB > maxSizeMB)
+                {
+                    monitoringInfo.SizeAlertTriggered = true;
+                    alertMessages.Add($"🚨 ALERTE: La base de données ({monitoringInfo.SizeMB:F2} MB) dépasse la taille maximale autorisée ({maxSizeMB} MB)");
+                }
+
+                // Vérification du nombre de tables
+                if (monitoringInfo.TableCount > maxTableCount)
+                {
+                    monitoringInfo.TableCountAlertTriggered = true;
+                    alertMessages.Add($"🚨 ALERTE: Le nombre de tables ({monitoringInfo.TableCount}) dépasse le maximum autorisé ({maxTableCount})");
+                }
+
+                monitoringInfo.AlertMessages = alertMessages;
+
+                // Envoi d'email si activé et alertes détectées
+                if (emailAlertsEnabled && !string.IsNullOrWhiteSpace(alertEmailAddress) && alertMessages.Any())
+                {
+                    var subject = $"FNEV4 - Alertes Base de Données - {DateTime.Now:dd/MM/yyyy HH:mm}";
+                    var message = $"Alertes détectées sur la base de données FNEV4:\n\n" +
+                                 string.Join("\n", alertMessages) + "\n\n" +
+                                 $"Vérification effectuée le: {monitoringInfo.LastCheck:dd/MM/yyyy HH:mm:ss}\n" +
+                                 $"Chemin de la base: {GetDatabasePath()}";
+
+                    await SendEmailAlertAsync(alertEmailAddress, subject, message);
+                }
+
+                return alertMessages.Any();
+            }
+            catch (Exception ex)
+            {
+                // Log l'erreur mais ne pas faire échouer l'application
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la vérification des alertes: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> SendEmailAlertAsync(string emailAddress, string subject, string message)
+        {
+            try
+            {
+                // Pour une implémentation réelle, vous devriez utiliser un service d'email comme SendGrid, SMTP, etc.
+                // Ici, nous simulons l'envoi en sauvegardant dans un fichier log
+                var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "email-alerts.log");
+                var logDir = Path.GetDirectoryName(logPath);
+                
+                if (!Directory.Exists(logDir))
+                {
+                    Directory.CreateDirectory(logDir!);
+                }
+
+                var logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] EMAIL ALERT\n" +
+                              $"To: {emailAddress}\n" +
+                              $"Subject: {subject}\n" +
+                              $"Message:\n{message}\n" +
+                              new string('-', 80) + "\n\n";
+
+                await File.AppendAllTextAsync(logPath, logEntry);
+
+                // Dans un vrai système, vous implementeriez ici l'envoi réel:
+                /*
+                using (var smtpClient = new SmtpClient("smtp.gmail.com", 587))
+                {
+                    smtpClient.EnableSsl = true;
+                    smtpClient.Credentials = new NetworkCredential("votre-email@gmail.com", "votre-mot-de-passe");
+                    
+                    var mailMessage = new MailMessage
+                    {
+                        From = new MailAddress("votre-email@gmail.com"),
+                        Subject = subject,
+                        Body = message,
+                        IsBodyHtml = false
+                    };
+                    mailMessage.To.Add(emailAddress);
+                    
+                    await smtpClient.SendMailAsync(mailMessage);
+                }
+                */
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de l'envoi d'email: {ex.Message}");
+                return false;
+            }
+        }
+
+        private async Task<int> GetTableCountAsync()
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                await connection.OpenAsync();
+                
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'";
+                
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToInt32(result);
+            }
+            catch
+            {
+                return 0;
+            }
         }
     }
 
@@ -633,6 +980,16 @@ namespace FNEV4.Infrastructure.Services
         public string ConnectionStatus { get; set; } = "Déconnectée";
         public DateTime? LastModified { get; set; }
         public int TableCount { get; set; }
+    }
+
+    public class DatabaseMonitoringInfo
+    {
+        public double SizeMB { get; set; }
+        public int TableCount { get; set; }
+        public DateTime LastCheck { get; set; }
+        public bool SizeAlertTriggered { get; set; }
+        public bool TableCountAlertTriggered { get; set; }
+        public List<string> AlertMessages { get; set; } = new List<string>();
     }
 
     public class TableInfo

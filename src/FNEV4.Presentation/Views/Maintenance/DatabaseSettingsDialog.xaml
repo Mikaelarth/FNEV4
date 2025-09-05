@@ -51,10 +51,34 @@
                         
                         <GroupBox Header="Configuration de la connexion">
                             <StackPanel>
-                                <TextBox materialDesign:HintAssist.Hint="Chemin de la base de données"
-                                        Text="{Binding DatabasePath}"
-                                        Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                        Margin="0,8"/>
+                                <Grid Margin="0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBox Grid.Column="0"
+                                            materialDesign:HintAssist.Hint="Chemin de la base de données"
+                                            Text="{Binding DatabasePath}"
+                                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                            Margin="0,0,8,0"/>
+                                    
+                                    <Button Grid.Column="1"
+                                           Content="Parcourir..."
+                                           Style="{StaticResource MaterialDesignOutlinedButton}"
+                                           Command="{Binding BrowseDatabasePathCommand}"
+                                           VerticalAlignment="Bottom"
+                                           Height="40"
+                                           Margin="0,0,4,0"/>
+                                    
+                                    <Button Grid.Column="2"
+                                           Content="Défaut"
+                                           Style="{StaticResource MaterialDesignOutlinedButton}"
+                                           Command="{Binding ResetDatabasePathCommand}"
+                                           VerticalAlignment="Bottom"
+                                           Height="40"/>
+                                </Grid>
                                 
                                 <Grid Margin="0,8">
                                     <Grid.ColumnDefinitions>
@@ -140,10 +164,25 @@
                                                           Style="{StaticResource MaterialDesignOutlinedTimePicker}"
                                                           Margin="0,8"/>
                                 
-                                <TextBox materialDesign:HintAssist.Hint="Répertoire de sauvegarde"
-                                        Text="{Binding BackupDirectory}"
-                                        Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                        Margin="0,8"/>
+                                <Grid Margin="0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBox Grid.Column="0"
+                                            materialDesign:HintAssist.Hint="Répertoire de sauvegarde"
+                                            Text="{Binding BackupDirectory}"
+                                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                            Margin="0,0,8,0"/>
+                                    
+                                    <Button Grid.Column="1"
+                                           Content="Parcourir..."
+                                           Style="{StaticResource MaterialDesignOutlinedButton}"
+                                           Command="{Binding BrowseBackupDirectoryCommand}"
+                                           VerticalAlignment="Bottom"
+                                           Height="40"/>
+                                </Grid>
                                 
                                 <Grid Margin="0,8">
                                     <Grid.ColumnDefinitions>
@@ -180,6 +219,20 @@
                                     <ComboBoxItem Content="Normal" Tag="Normal"/>
                                     <ComboBoxItem Content="Maximum" Tag="Maximum"/>
                                 </ComboBox>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Header="Test de sauvegarde">
+                            <StackPanel>
+                                <TextBlock Text="Testez la configuration de sauvegarde automatique" 
+                                          Style="{StaticResource MaterialDesignCaptionTextBlock}" 
+                                          Opacity="0.7"
+                                          Margin="0,0,0,8"/>
+                                
+                                <Button Content="Créer une sauvegarde de test"
+                                       Style="{StaticResource MaterialDesignOutlinedButton}"
+                                       Command="{Binding TestBackupCommand}"
+                                       Margin="0,8"/>
                             </StackPanel>
                         </GroupBox>
                         
@@ -241,6 +294,25 @@
                                         Margin="0,8"/>
                             </StackPanel>
                         </GroupBox>
+
+                        <GroupBox Header="Test de surveillance">
+                            <StackPanel>
+                                <TextBlock Text="Testez le système d'alertes et de surveillance en temps réel" 
+                                          Style="{StaticResource MaterialDesignCaptionTextBlock}" 
+                                          Opacity="0.7"
+                                          Margin="0,0,0,8"/>
+                                
+                                <Button Content="Tester la configuration des alertes"
+                                       Style="{StaticResource MaterialDesignOutlinedButton}"
+                                       Command="{Binding TestAlertsCommand}"
+                                       Margin="0,8"/>
+                                
+                                <Button Content="Vérifier les seuils maintenant"
+                                       Style="{StaticResource MaterialDesignRaisedButton}"
+                                       Command="{Binding CheckAlertsNowCommand}"
+                                       Margin="0,8"/>
+                            </StackPanel>
+                        </GroupBox>
                         
                     </StackPanel>
                 </ScrollViewer>
@@ -280,6 +352,55 @@
                                 <CheckBox Content="Actualisation automatique toutes les 30 secondes"
                                          IsChecked="{Binding AutoRefreshEnabled}"
                                          Margin="0,8"/>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Header="Aperçu et test des formats">
+                            <StackPanel>
+                                <TextBlock Text="Testez les formats d'affichage avec des exemples en temps réel" 
+                                          Style="{StaticResource MaterialDesignCaptionTextBlock}" 
+                                          Opacity="0.7"
+                                          Margin="0,0,0,8"/>
+                                
+                                <Grid Margin="0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBlock Grid.Column="0" Text="Date actuelle :" VerticalAlignment="Center" Width="120" FontWeight="Medium"/>
+                                    <TextBlock Grid.Column="1" 
+                                              Text="{Binding CurrentDatePreview}" 
+                                              VerticalAlignment="Center" 
+                                              FontFamily="Consolas"
+                                              Background="{DynamicResource MaterialDesignTextFieldBoxBackground}"
+                                              Padding="8,4"/>
+                                </Grid>
+                                
+                                <Grid Margin="0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBlock Grid.Column="0" Text="Taille exemple :" VerticalAlignment="Center" Width="120" FontWeight="Medium"/>
+                                    <TextBlock Grid.Column="1" 
+                                              Text="{Binding SizePreview}" 
+                                              VerticalAlignment="Center" 
+                                              FontFamily="Consolas"
+                                              Background="{DynamicResource MaterialDesignTextFieldBoxBackground}"
+                                              Padding="8,4"/>
+                                </Grid>
+                                
+                                <Button Content="Actualiser l'aperçu"
+                                       Style="{StaticResource MaterialDesignOutlinedButton}"
+                                       Command="{Binding RefreshPreviewCommand}"
+                                       Margin="0,8"/>
+                                
+                                <Button Content="Tester l'actualisation automatique"
+                                       Style="{StaticResource MaterialDesignRaisedButton}"
+                                       Command="{Binding TestAutoRefreshCommand}"
+                                       Margin="0,8"/>
                             </StackPanel>
                         </GroupBox>
                         

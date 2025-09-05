@@ -125,21 +125,20 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
 
         #region Commandes
 
-        public ICommand RefreshCommand { get; private set; }
-        public ICommand SettingsCommand { get; private set; }
-        public ICommand RefreshTablesCommand { get; private set; }
-        public ICommand ViewTableDataCommand { get; private set; }
-        public ICommand ViewTableStructureCommand { get; private set; }
-        public ICommand BackupDatabaseCommand { get; private set; }
-        public ICommand RestoreDatabaseCommand { get; private set; }
-        public ICommand OptimizeDatabaseCommand { get; private set; }
-        public ICommand ReindexDatabaseCommand { get; private set; }
-        public ICommand CheckIntegrityCommand { get; private set; }
-        public ICommand ApplyMigrationsCommand { get; private set; }
-        public ICommand InitializeDatabaseCommand { get; private set; }
-        public ICommand ExecuteSqlCommand { get; private set; }
-        public ICommand ClearSqlCommand { get; private set; }
-        public ICommand TestCommand { get; private set; }
+        public ICommand RefreshCommand { get; private set; } = null!;
+        public ICommand SettingsCommand { get; private set; } = null!;
+        public ICommand RefreshTablesCommand { get; private set; } = null!;
+        public ICommand ViewTableDataCommand { get; private set; } = null!;
+        public ICommand ViewTableStructureCommand { get; private set; } = null!;
+        public ICommand BackupDatabaseCommand { get; private set; } = null!;
+        public ICommand RestoreDatabaseCommand { get; private set; } = null!;
+        public ICommand OptimizeDatabaseCommand { get; private set; } = null!;
+        public ICommand ReindexDatabaseCommand { get; private set; } = null!;
+        public ICommand CheckIntegrityCommand { get; private set; } = null!;
+        public ICommand ApplyMigrationsCommand { get; private set; } = null!;
+        public ICommand InitializeDatabaseCommand { get; private set; } = null!;
+        public ICommand ExecuteSqlCommand { get; private set; } = null!;
+        public ICommand ClearSqlCommand { get; private set; } = null!;
 
         #endregion
 
@@ -162,12 +161,16 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
                 _databaseService = null!;
             }
 
+            SqlResults = "🔧 Interface de maintenance - Prêt pour les opérations...";
             InitializeCommands();
         }
 
         public BaseDonneesViewModel(IDatabaseService databaseService)
         {
             _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
+            SqlResults = "🔧 Interface de maintenance - Prêt pour les opérations...";
+            // Initialiser la Console SQL avec un message d'accueil
+            ClearSqlQuery();
             InitializeCommands();
         }
 
@@ -187,13 +190,24 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             InitializeDatabaseCommand = new RelayCommand(async () => await InitializeDatabaseAsync());
             ExecuteSqlCommand = new RelayCommand(async () => await ExecuteSqlQueryAsync());
             ClearSqlCommand = new RelayCommand(ClearSqlQuery);
-            TestCommand = new RelayCommand(TestMethod);
 
             // Chargement initial des données
             _ = Task.Run(async () => await LoadDataAsync());
         }
 
         #region Méthodes privées
+
+        /// <summary>
+        /// Affiche un résultat d'opération dans un popup avec icône appropriée
+        /// </summary>
+        private void ShowOperationResult(string title, string message, bool isSuccess)
+        {
+            var icon = isSuccess ? MessageBoxImage.Information : MessageBoxImage.Warning;
+            MessageBox.Show(message, title, MessageBoxButton.OK, icon);
+            
+            // Mettre aussi à jour la zone de résultats pour traçabilité
+            SqlResults = $"[{DateTime.Now:HH:mm:ss}] {message}";
+        }
 
         private async Task LoadDataAsync()
         {
@@ -223,10 +237,21 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
                 // Actualiser aussi la liste des tables pour une actualisation complète
                 await RefreshTablesAsync();
 
-                SqlResults = $"Actualisation complète terminée.\n" +
-                           $"✓ Informations de la base de données mises à jour\n" +
-                           $"✓ Liste des tables actualisée ({TableCount} tables)\n" +
-                           $"✓ Statistiques des tables rafraîchies";
+                // Message temporaire qui s'effacera automatiquement
+                SqlResults = $"✓ Actualisation terminée - {TableCount} tables trouvées";
+                
+                // Effacer le message après 3 secondes
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(3000);
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        if (SqlResults?.Contains("Actualisation terminée") == true)
+                        {
+                            SqlResults = "Prêt pour les opérations de maintenance...";
+                        }
+                    });
+                });
             }
             catch (Exception ex)
             {
@@ -236,12 +261,12 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             }
         }
 
-        private void OpenDatabaseSettings()
+        private async void OpenDatabaseSettings()
         {
             try
             {
                 var settingsDialog = new Views.Maintenance.DatabaseSettingsDialog();
-                var settingsViewModel = new DatabaseSettingsViewModel();
+                var settingsViewModel = new DatabaseSettingsViewModel(_databaseService);
                 
                 settingsDialog.DataContext = settingsViewModel;
                 settingsViewModel.SetDialogWindow(settingsDialog);
@@ -250,9 +275,10 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
                 
                 if (result == true)
                 {
-                    // Les paramètres ont été appliqués, actualiser l'affichage
-                    _ = RefreshDatabaseInfoAsync();
-                    SqlResults = "✓ Paramètres de base de données mis à jour avec succès.";
+                    // Les paramètres ont été appliqués, actualiser complètement l'affichage
+                    await RefreshDatabaseInfoAsync();
+                    await RefreshTablesAsync();
+                    SqlResults = "✓ Paramètres de base de données mis à jour avec succès. Interface actualisée.";
                 }
                 else
                 {
@@ -361,81 +387,224 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
         {
             try
             {
-                var backupPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-                    $"FNEV4_backup_{DateTime.Now:yyyyMMdd_HHmmss}.db");
-
-                var success = await _databaseService.BackupDatabaseAsync(backupPath);
-                
-                if (success)
+                var dialog = new Microsoft.Win32.SaveFileDialog
                 {
-                    SqlResults = $"Sauvegarde créée avec succès :\n{backupPath}";
-                    LastBackupDate = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+                    Filter = "Fichiers de base de données SQLite (*.db)|*.db|Tous les fichiers (*.*)|*.*",
+                    DefaultExt = "db",
+                    FileName = $"FNEV4_backup_{DateTime.Now:yyyyMMdd_HHmmss}.db",
+                    Title = "Sauvegarder la base de données"
+                };
+
+                if (dialog.ShowDialog() == true)
+                {
+                    SqlResults = "Sauvegarde en cours...";
+                    
+                    System.Diagnostics.Debug.WriteLine($"Début de sauvegarde vers : {dialog.FileName}");
+                    
+                    var success = await _databaseService.BackupDatabaseAsync(dialog.FileName);
+                    
+                    System.Diagnostics.Debug.WriteLine($"Résultat de sauvegarde : {success}");
+                    
+                    if (success)
+                    {
+                        // Vérifier que le fichier existe vraiment
+                        if (File.Exists(dialog.FileName))
+                        {
+                            var fileInfo = new FileInfo(dialog.FileName);
+                            var sizeKB = Math.Round(fileInfo.Length / 1024.0, 2);
+                            LastBackupDate = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+                            
+                            // Actualiser les informations de la base
+                            await RefreshDatabaseInfoAsync();
+                            
+                            ShowOperationResult(
+                                "Sauvegarde réussie", 
+                                $"✅ Sauvegarde créée avec succès !\n\nFichier : {dialog.FileName}\nTaille : {sizeKB} KB", 
+                                true);
+                        }
+                        else
+                        {
+                            ShowOperationResult(
+                                "Erreur de sauvegarde", 
+                                $"❌ Le fichier de sauvegarde n'a pas été créé.\nChemin : {dialog.FileName}", 
+                                false);
+                        }
+                    }
+                    else
+                    {
+                        ShowOperationResult(
+                            "Erreur de sauvegarde", 
+                            "❌ Erreur lors de la création de la sauvegarde.", 
+                            false);
+                    }
                 }
                 else
                 {
-                    SqlResults = "Erreur lors de la création de la sauvegarde.";
+                    SqlResults = "Sauvegarde annulée par l'utilisateur.";
                 }
             }
             catch (Exception ex)
             {
-                SqlResults = $"Erreur lors de la sauvegarde: {ex.Message}";
+                ShowOperationResult(
+                    "Erreur de sauvegarde", 
+                    $"❌ Erreur lors de la sauvegarde: {ex.Message}", 
+                    false);
             }
         }
 
         private async Task RestoreDatabaseAsync()
         {
-            SqlResults = "Sélection du fichier de restauration à implémenter...";
-            await Task.CompletedTask;
+            try
+            {
+                var dialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    Filter = "Fichiers de base de données SQLite (*.db)|*.db|Tous les fichiers (*.*)|*.*",
+                    Title = "Sélectionner une sauvegarde à restaurer",
+                    CheckFileExists = true
+                };
+
+                if (dialog.ShowDialog() == true)
+                {
+                    var result = System.Windows.MessageBox.Show(
+                        $"⚠️ ATTENTION ⚠️\n\n" +
+                        $"Cette opération va remplacer complètement la base de données actuelle par :\n" +
+                        $"{dialog.FileName}\n\n" +
+                        $"Toutes les données non sauvegardées seront PERDUES.\n\n" +
+                        $"Voulez-vous continuer ?",
+                        "Confirmation de restauration",
+                        System.Windows.MessageBoxButton.YesNo,
+                        System.Windows.MessageBoxImage.Warning);
+
+                    if (result == System.Windows.MessageBoxResult.Yes)
+                    {
+                        SqlResults = "Restauration en cours...";
+                        
+                        var success = await _databaseService.RestoreDatabaseAsync(dialog.FileName);
+                        
+                        if (success)
+                        {
+                            SqlResults = $"✅ Base de données restaurée avec succès depuis :\n{dialog.FileName}";
+                            
+                            // Actualiser toutes les informations après restauration
+                            await RefreshDatabaseInfoAsync();
+                            await RefreshTablesAsync();
+                        }
+                        else
+                        {
+                            SqlResults = "❌ Erreur lors de la restauration de la base de données.";
+                        }
+                    }
+                    else
+                    {
+                        SqlResults = "Restauration annulée par l'utilisateur.";
+                    }
+                }
+                else
+                {
+                    SqlResults = "Aucun fichier de sauvegarde sélectionné.";
+                }
+            }
+            catch (Exception ex)
+            {
+                SqlResults = $"❌ Erreur lors de la restauration: {ex.Message}";
+            }
         }
 
         private async Task OptimizeDatabaseAsync()
         {
             try
             {
+                SqlResults = "Optimisation en cours (VACUUM + ANALYZE)...";
+                
                 var success = await _databaseService.OptimizeDatabaseAsync();
                 
                 if (success)
                 {
-                    SqlResults = "Optimisation de la base de données terminée avec succès.";
                     await RefreshDatabaseInfoAsync();
+                    ShowOperationResult(
+                        "Optimisation réussie", 
+                        "✅ Optimisation terminée avec succès.\n✅ Espace disque récupéré et statistiques mises à jour.", 
+                        true);
                 }
                 else
                 {
-                    SqlResults = "Erreur lors de l'optimisation de la base de données.";
+                    ShowOperationResult(
+                        "Erreur d'optimisation", 
+                        "❌ Erreur lors de l'optimisation de la base de données.", 
+                        false);
                 }
             }
             catch (Exception ex)
             {
-                SqlResults = $"Erreur lors de l'optimisation: {ex.Message}";
+                ShowOperationResult(
+                    "Erreur d'optimisation", 
+                    $"❌ Erreur lors de l'optimisation: {ex.Message}", 
+                    false);
             }
         }
 
         private async Task ReindexDatabaseAsync()
         {
-            SqlResults = "Réindexation terminée (fonctionnalité simulée).";
-            await Task.CompletedTask;
+            try
+            {
+                SqlResults = "Réindexation en cours (REINDEX sur toutes les tables)...";
+                
+                var success = await _databaseService.ReindexDatabaseAsync();
+                
+                if (success)
+                {
+                    await RefreshTablesAsync();
+                    ShowOperationResult(
+                        "Réindexation réussie", 
+                        "✅ Réindexation terminée avec succès.\n✅ Tous les index ont été reconstruits.", 
+                        true);
+                }
+                else
+                {
+                    ShowOperationResult(
+                        "Erreur de réindexation", 
+                        "❌ Erreur lors de la réindexation de la base de données.", 
+                        false);
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowOperationResult(
+                    "Erreur de réindexation", 
+                    $"❌ Erreur lors de la réindexation: {ex.Message}", 
+                    false);
+            }
         }
 
         private async Task CheckDatabaseIntegrityAsync()
         {
             try
             {
+                SqlResults = "Analyse d'intégrité en cours (PRAGMA integrity_check)...";
+                
                 var isIntegrityOk = await _databaseService.CheckIntegrityAsync();
                 
                 if (isIntegrityOk)
                 {
-                    SqlResults = "✓ Vérification d'intégrité terminée avec succès.\n" +
-                               "✓ Aucune corruption détectée.";
+                    ShowOperationResult(
+                        "Analyse d'intégrité réussie", 
+                        "✅ Analyse terminée : Base de données intègre.\n✅ Aucune corruption détectée.", 
+                        true);
                 }
                 else
                 {
-                    SqlResults = "⚠️ Problèmes d'intégrité détectés dans la base de données.";
+                    ShowOperationResult(
+                        "Problèmes d'intégrité détectés", 
+                        "⚠️ Analyse terminée : Problèmes d'intégrité détectés.\n❌ Vérifiez les logs ou contactez l'administrateur.", 
+                        false);
                 }
             }
             catch (Exception ex)
             {
-                SqlResults = $"Erreur lors de la vérification d'intégrité: {ex.Message}";
+                ShowOperationResult(
+                    "Erreur d'analyse", 
+                    $"❌ Erreur lors de l'analyse: {ex.Message}", 
+                    false);
             }
         }
 
@@ -443,22 +612,33 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
         {
             try
             {
+                SqlResults = "Application des migrations en cours...";
+                
                 var success = await _databaseService.ApplyMigrationsAsync();
                 
                 if (success)
                 {
-                    SqlResults = "Migrations appliquées avec succès.";
                     await RefreshDatabaseInfoAsync();
                     await RefreshTablesAsync();
+                    ShowOperationResult(
+                        "Migrations appliquées", 
+                        "✅ Migrations appliquées avec succès.\n✅ Structure de la base de données mise à jour.", 
+                        true);
                 }
                 else
                 {
-                    SqlResults = "Erreur lors de l'application des migrations.";
+                    ShowOperationResult(
+                        "Aucune migration", 
+                        "❌ Aucune migration en attente ou échec de l'opération.", 
+                        false);
                 }
             }
             catch (Exception ex)
             {
-                SqlResults = $"Erreur lors de l'application des migrations: {ex.Message}";
+                ShowOperationResult(
+                    "Erreur de migration", 
+                    $"❌ Erreur lors de l'application des migrations: {ex.Message}", 
+                    false);
             }
         }
 
@@ -466,25 +646,51 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
         {
             try
             {
-                SqlResults = "⚠️ ATTENTION: Cette opération va supprimer toutes les données!\n" +
-                           "Initialisation en cours...";
+                // Demander confirmation avant la réinitialisation
+                var result = MessageBox.Show(
+                    "⚠️ ATTENTION : Cette opération va supprimer TOUTES les données existantes !\n\n" +
+                    "La base de données sera complètement réinitialisée.\n" +
+                    "Cette action est IRRÉVERSIBLE.\n\n" +
+                    "Voulez-vous vraiment continuer ?",
+                    "Confirmation de réinitialisation",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning,
+                    MessageBoxResult.No);
+
+                if (result != MessageBoxResult.Yes)
+                {
+                    SqlResults = "❌ Réinitialisation annulée par l'utilisateur.";
+                    return;
+                }
+
+                SqlResults = "⚠️ RÉINITIALISATION EN COURS...\n" +
+                           "🔥 Suppression de toutes les données...";
                 
                 var success = await _databaseService.InitializeDatabaseAsync();
                 
                 if (success)
                 {
-                    SqlResults += "\n✓ Base de données initialisée avec succès.";
                     await RefreshDatabaseInfoAsync();
                     await RefreshTablesAsync();
+                    ShowOperationResult(
+                        "Réinitialisation réussie", 
+                        "✅ Réinitialisation terminée avec succès.\n✅ Base de données vide créée.\n✅ Structure initiale restaurée.", 
+                        true);
                 }
                 else
                 {
-                    SqlResults += "\n❌ Erreur lors de l'initialisation.";
+                    ShowOperationResult(
+                        "Erreur de réinitialisation", 
+                        "❌ Erreur lors de la réinitialisation.\n❌ La base de données pourrait être corrompue.", 
+                        false);
                 }
             }
             catch (Exception ex)
             {
-                SqlResults = $"Erreur lors de l'initialisation: {ex.Message}";
+                ShowOperationResult(
+                    "Erreur critique", 
+                    $"❌ Erreur critique lors de la réinitialisation: {ex.Message}", 
+                    false);
             }
         }
 
@@ -492,35 +698,47 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
         {
             if (string.IsNullOrWhiteSpace(SqlQuery))
             {
-                SqlResults = "Veuillez saisir une requête SQL.";
+                SqlResults = "⚠️ Veuillez saisir une requête SQL.";
                 return;
             }
 
             try
             {
+                SqlResults = $"⏳ Exécution en cours...\nRequête : {SqlQuery.Trim()}\n" + new string('─', 50);
+                
+                var startTime = DateTime.Now;
                 var result = await _databaseService.ExecuteQueryAsync(SqlQuery);
-                SqlResults = result;
+                var endTime = DateTime.Now;
+                var duration = (endTime - startTime).TotalMilliseconds;
+                
+                // Formatage professionnel des résultats
+                SqlResults = $"✅ Exécution réussie ({duration:F2} ms)\n" +
+                           $"📝 Requête : {SqlQuery.Trim()}\n" +
+                           $"📅 Exécutée le : {DateTime.Now:dd/MM/yyyy HH:mm:ss}\n" +
+                           new string('─', 60) + "\n" +
+                           "📊 RÉSULTATS :\n" +
+                           new string('─', 60) + "\n" +
+                           result;
             }
             catch (Exception ex)
             {
-                SqlResults = $"Erreur lors de l'exécution de la requête: {ex.Message}";
+                SqlResults = $"❌ ERREUR SQL\n" +
+                           $"📝 Requête : {SqlQuery.Trim()}\n" +
+                           $"📅 Tentative le : {DateTime.Now:dd/MM/yyyy HH:mm:ss}\n" +
+                           new string('─', 60) + "\n" +
+                           $"🚫 Message d'erreur :\n{ex.Message}";
             }
         }
 
         private void ClearSqlQuery()
         {
             SqlQuery = string.Empty;
-            SqlResults = string.Empty;
-        }
-
-        private void TestMethod()
-        {
-            SqlResults = $"🔥 TEST BUTTON CLICKED! 🔥\n" +
-                        $"Timestamp: {DateTime.Now:HH:mm:ss}\n" +
-                        $"DatabaseService: {(_databaseService != null ? "✓ OK" : "❌ NULL")}\n" +
-                        $"DataContext working!";
-            
-            System.Windows.MessageBox.Show("Test button clicked!", "Debug", System.Windows.MessageBoxButton.OK);
+            SqlResults = "🔧 Console SQL - Prêt pour vos requêtes...\n\n" +
+                        "💡 Exemples de requêtes :\n" +
+                        "  • SELECT * FROM sqlite_master WHERE type='table';\n" +
+                        "  • SELECT name FROM sqlite_master WHERE type='table';\n" +
+                        "  • PRAGMA table_info(nom_table);\n" +
+                        "  • SELECT COUNT(*) FROM nom_table;";
         }
 
         #endregion

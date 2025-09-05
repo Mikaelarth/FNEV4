@@ -382,13 +382,6 @@
                                                Margin="8,0,0,0"/>
                                     </Grid>
                                     
-                                    <!-- BOUTON TEST TEMPORAIRE -->
-                                    <Button Content="🔥 TEST DATACONTEXT 🔥"
-                                           Background="Red"
-                                           Foreground="White"
-                                           Command="{Binding TestCommand}"
-                                           Margin="0,8"/>
-                                    
                                     <TextBlock Text="⚠️ Attention : La réinitialisation supprimera toutes les données existantes" 
                                               Foreground="Orange" 
                                               FontStyle="Italic" 
@@ -399,9 +392,9 @@
                     </Expander>
                 </materialDesign:Card>
 
-                <!-- Exécution de requêtes SQL -->
+                <!-- Console SQL avancée -->
                 <materialDesign:Card>
-                    <Expander Header="Console SQL">
+                    <Expander Header="Console SQL" IsExpanded="False">
                         <Expander.HeaderTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
@@ -409,6 +402,11 @@
                                                            VerticalAlignment="Center" 
                                                            Margin="0,0,8,0"/>
                                     <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                    <TextBlock Text=" - Exécution de requêtes personnalisées" 
+                                              VerticalAlignment="Center" 
+                                              FontStyle="Italic" 
+                                              Opacity="0.7"
+                                              Margin="8,0,0,0"/>
                                 </StackPanel>
                             </DataTemplate>
                         </Expander.HeaderTemplate>
@@ -421,47 +419,78 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             
-                            <!-- Zone de saisie SQL -->
-                            <TextBlock Grid.Row="0" 
-                                      Text="Requête SQL :" 
-                                      FontWeight="Bold" 
-                                      Margin="0,0,0,8"/>
+                            <!-- En-tête avec aide -->
+                            <Border Grid.Row="0" 
+                                   Background="{DynamicResource MaterialDesignCardBackground}"
+                                   BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                   BorderThickness="1"
+                                   CornerRadius="4"
+                                   Padding="12"
+                                   Margin="0,0,0,8">
+                                <StackPanel>
+                                    <TextBlock Text="💻 Console SQL - Exécution de requêtes" 
+                                              FontWeight="Bold" 
+                                              FontSize="14"/>
+                                    <TextBlock Text="Saisissez votre requête SQL ci-dessous. Soyez prudent avec les requêtes de modification (UPDATE, DELETE, DROP)." 
+                                              TextWrapping="Wrap" 
+                                              Opacity="0.8"
+                                              Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
                             
-                            <TextBox Grid.Row="1"
-                                    Text="{Binding SqlQuery, UpdateSourceTrigger=PropertyChanged}"
-                                    AcceptsReturn="True"
-                                    TextWrapping="Wrap"
-                                    VerticalScrollBarVisibility="Auto"
-                                    FontFamily="Consolas"
-                                    materialDesign:HintAssist.Hint="SELECT * FROM ..."
-                                    Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            <!-- Zone de saisie SQL améliorée -->
+                            <Border Grid.Row="1"
+                                   BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                   BorderThickness="2"
+                                   CornerRadius="4">
+                                <TextBox Text="{Binding SqlQuery, UpdateSourceTrigger=PropertyChanged}"
+                                        AcceptsReturn="True"
+                                        TextWrapping="Wrap"
+                                        VerticalScrollBarVisibility="Auto"
+                                        FontFamily="Consolas"
+                                        FontSize="13"
+                                        Padding="8"
+                                        Background="{DynamicResource MaterialDesignTextFieldBoxBackground}"
+                                        materialDesign:HintAssist.Hint="Tapez votre requête SQL ici... (Ex: SELECT * FROM sqlite_master;)"
+                                        materialDesign:HintAssist.IsFloating="True"/>
+                            </Border>
                             
-                            <!-- Boutons d'action -->
+                            <!-- Boutons d'action améliorés -->
                             <StackPanel Grid.Row="2" 
                                        Orientation="Horizontal" 
                                        HorizontalAlignment="Right" 
-                                       Margin="0,8">
-                                <Button Content="Exécuter"
+                                       Margin="0,12,0,8">
+                                <Button Content="▶ Exécuter"
                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                       Background="#4CAF50"
                                        Command="{Binding ExecuteSqlCommand}"
+                                       ToolTip="Exécuter la requête SQL"
                                        Margin="0,0,8,0"/>
-                                <Button Content="Effacer"
+                                <Button Content="🗑 Effacer"
                                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                                       Command="{Binding ClearSqlCommand}"/>
+                                       Command="{Binding ClearSqlCommand}"
+                                       ToolTip="Effacer la requête et les résultats"/>
                             </StackPanel>
                             
-                            <!-- Résultats -->
-                            <ScrollViewer Grid.Row="3" 
-                                         VerticalScrollBarVisibility="Auto" 
-                                         MaxHeight="300">
-                                <TextBox Text="{Binding SqlResults}"
-                                        IsReadOnly="True"
-                                        FontFamily="Consolas"
-                                        FontSize="12"
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        TextWrapping="Wrap"/>
-                            </ScrollViewer>
+                            <!-- Zone de résultats améliorée -->
+                            <Border Grid.Row="3"
+                                   BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                   BorderThickness="1"
+                                   CornerRadius="4"
+                                   Background="{DynamicResource MaterialDesignCardBackground}">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                                             MaxHeight="400"
+                                             Padding="8">
+                                    <TextBox Text="{Binding SqlResults}"
+                                            IsReadOnly="True"
+                                            FontFamily="Consolas"
+                                            FontSize="12"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            TextWrapping="Wrap"
+                                            Foreground="{DynamicResource MaterialDesignBody}"/>
+                                </ScrollViewer>
+                            </Border>
                         </Grid>
                     </Expander>
                 </materialDesign:Card>
