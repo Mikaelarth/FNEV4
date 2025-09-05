@@ -190,12 +190,12 @@ Développer une **application desktop Windows WPF** permettant aux entreprises d
 |-------|---------|---------|---------|-------------|
 | 3 | A3 | Numéro de facture | String(50) | ✅ |
 | 5 | A5 | Code client | String(50) | ✅ |
-| 6 | A6 | NCC entreprise | String(20) | ✅ |
+| 6 | A6 | NCC client normal | String(20) | ❌ (si code ≠ 1999) |
 | 8 | A8 | Date facture | Date (YYYY-MM-DD) | ✅ |
 | 10 | A10 | Point de vente | String(10) | ✅ |
-| 11 | A11 | Intitulé client | String(200) | ❌ |
-| 13 | A13 | Nom client | String(200) | ❌ |
-| 15 | A15 | NCC client | String(20) | ❌ |
+| 11 | A11 | Intitulé client | String(200) | ❌ (si code = 1999) |
+| 13 | A13 | Nom réel client divers | String(200) | ❌ (si code = 1999) |
+| 15 | A15 | NCC client divers | String(20) | ❌ (si code = 1999) |
 | 17 | A17 | Facture avoir | String(50) | ❌ |
 
 #### 5.1.3 Lignes produits (Ligne 20+)
@@ -208,6 +208,24 @@ Développer une **application desktop Windows WPF** permettant aux entreprises d
 | F | Unité/Emballage | String(50) | ❌ |
 | G | Type TVA | Enum(TVA,TVAB,TVAC,TVAD) | ✅ |
 | H | Montant HT | Decimal(15,2) | ✅ |
+
+#### 5.1.4 Logique conditionnelle clients
+**IMPORTANT** : La structure Excel suit une logique conditionnelle selon le code client :
+
+- **Si Code Client = 1999 (Client Divers) :**
+  - A6 : NCC générique client divers
+  - A11 : Intitulé générique (ex: "DIVERS CLIENTS CARBURANTS")
+  - A13 : **Nom réel du client** (ex: "ARTHUR LE GRAND")
+  - A15 : **NCC spécifique du client divers**
+
+- **Si Code Client ≠ 1999 (Client Normal) :**
+  - A6 : **NCC du client normal**
+  - A11, A13, A15 : Non utilisés (nom depuis base de données)
+
+- **NCC Entreprise Émettrice :**
+  - **N'apparaît PAS dans l'Excel Sage 100**
+  - **DOIT être configuré dans FNEV4**
+  - **Utilisé pour la certification FNE**
 
 ### 5.2 Base de données locale
 

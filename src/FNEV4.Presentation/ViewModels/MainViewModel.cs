@@ -199,6 +199,7 @@ namespace FNEV4.Presentation.ViewModels
         private void NavigateToEntrepriseConfig()
         {
             CurrentModuleName = "Configuration - Entreprise";
+            CurrentView = new Views.Configuration.EntrepriseConfigView();
         }
 
         [RelayCommand]

@@ -1,0 +1,21 @@
+{
+  "DatabasePath": "C:\\Users\\HP\\Downloads\\test.db",
+  "BackupSettings": {
+    "AutoBackupEnabled": true,
+    "BackupFrequency": "Daily",
+    "BackupRetentionDays": 30,
+    "BackupLocation": "C:\\Backups\\FNEV4"
+  },
+  "AlertSettings": {
+    "AlertsEnabled": true,
+    "AlertThresholds": {
+      "HighUsage": 90,
+      "VeryHighUsage": 95
+    }
+  },
+  "DisplaySettings": {
+    "DateFormat": "dd/MM/yyyy",
+    "NumberFormat": "fr-FR",
+    "PageSize": 50
+  }
+}

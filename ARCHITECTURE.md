@@ -89,14 +89,14 @@ Créer une **application desktop Windows WPF** qui permet aux entreprises ivoiri
 #### EN-TÊTE DE FACTURE (Colonne A fixe)
 | Ligne | Cellule | Contenu | Exemple | Obligatoire |
 |-------|---------|---------|---------|-------------|
-| **3** | A3 | Numéro de facture | FAC001 |  |
-| **5** | A5 | Code client | 1999 (client divers) |  |
-| **6** | A6 | NCC entreprise | 9606123E |  |
-| **8** | A8 | Date facture | 2025-01-15 |  |
-| **10** | A10 | Point de vente | 01 |  |
-| **11** | A11 | Intitulé client divers | SARL TechnoPlus |  |
-| **13** | A13 | Nom client divers | Monsieur Martin |  |
-| **15** | A15 | NCC client divers | 9502363N |  |
+| **3** | A3 | Numéro de facture | 702442 |  |
+| **5** | A5 | Code client | 1999 (divers) ou autre (normal) |  |
+| **6** | A6 | NCC client normal | 2354552Q (si code ≠ 1999) |  |
+| **8** | A8 | Date facture | 45880 → 11/08/2025 |  |
+| **10** | A10 | Point de vente | Gestoci |  |
+| **11** | A11 | Intitulé client | DIVERS CLIENTS CARBURANTS |  |
+| **13** | A13 | Nom réel client divers | ARTHUR LE GRAND (si code = 1999) |  |
+| **15** | A15 | NCC client divers | 1205425Z (si code = 1999) |  |
 | **17** | A17 | Numéro facture avoir | FAC000 (si avoir) |  |
 
 #### LIGNES DE PRODUITS (à partir de la ligne 20)

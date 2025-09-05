@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using FNEV4.Infrastructure.Data;
 using FNEV4.Infrastructure.Services;
 using FNEV4.Presentation.ViewModels.Maintenance;
+using FNEV4.Presentation.ViewModels.Configuration;
 using FNEV4.Presentation.Services;
 
 namespace FNEV4.Presentation
@@ -100,6 +101,7 @@ namespace FNEV4.Presentation
                     // ViewModels avec injection
                     services.AddTransient<BaseDonneesViewModel>();
                     services.AddTransient<LogsDiagnosticsViewModel>();
+                    services.AddTransient<EntrepriseConfigViewModel>();
 
                     // Service locator pour les ViewModels
                     services.AddSingleton<ViewModelLocator>();

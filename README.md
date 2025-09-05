@@ -87,14 +87,14 @@ Le projet suit une **Clean Architecture** avec séparation stricte des couches :
 ### En-tête facture (Colonne A)
 | Ligne | Contenu | Exemple | Obligatoire |
 |-------|---------|---------|-------------|
-| A3 | Numéro de facture | FAC001 | ✅ |
-| A5 | Code client | 1999 | ✅ |
-| A6 | NCC entreprise | 9606123E | ✅ |
-| A8 | Date facture | 2025-01-15 | ✅ |
-| A10 | Point de vente | 01 | ✅ |
-| A11 | Intitulé client | SARL TechnoPlus | ❌ |
-| A13 | Nom client | Monsieur Martin | ❌ |
-| A15 | NCC client | 9502363N | ❌ |
+| A3 | Numéro de facture | 702442 | ✅ |
+| A5 | Code client | 1999 (divers) ou autre | ✅ |
+| A6 | NCC client normal | 2354552Q (si code ≠ 1999) | ❌ |
+| A8 | Date facture | 45880 → 11/08/2025 | ✅ |
+| A10 | Point de vente | Gestoci | ✅ |
+| A11 | Intitulé client | DIVERS CLIENTS CARBURANTS | ❌ |
+| A13 | Nom réel client divers | ARTHUR LE GRAND | ❌ |
+| A15 | NCC client divers | 1205425Z (si code = 1999) | ❌ |
 | A17 | Facture avoir | FAC000 | ❌ |
 
 ### Lignes produits (Ligne 20+)
