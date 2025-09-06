@@ -74,6 +74,11 @@ namespace FNEV4.Core.Entities
         public bool LogRotationEnabled { get; set; } = true;
 
         /// <summary>
+        /// Indique si le logging hybride est activé (Error/Warning → DB+Files, Info/Debug/Trace → Files uniquement).
+        /// </summary>
+        public bool HybridLoggingEnabled { get; set; } = true;
+
+        /// <summary>
         /// Indique si la sauvegarde automatique est activée.
         /// </summary>
         public bool BackupAutoEnabled { get; set; } = true;

@@ -497,6 +497,11 @@
                                         IsChecked="{Binding LogRotationEnabled}"
                                         Margin="12,0,0,0"
                                         VerticalAlignment="Center"/>
+                                <CheckBox Content="Mode hybride" 
+                                        IsChecked="{Binding HybridLoggingEnabled}"
+                                        Margin="12,0,0,0"
+                                        VerticalAlignment="Center"
+                                        ToolTip="Error/Warning → DB+Files, Info/Debug/Trace → Files uniquement"/>
                             </StackPanel>
                             
                             <Grid Grid.Row="1" Grid.Column="0">

@@ -7,6 +7,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System;
 using FNEV4.Core.Interfaces;
+using CoreLogging = FNEV4.Core.Interfaces.ILoggingService;
 
 namespace FNEV4.Presentation.ViewModels.Maintenance
 {
@@ -18,7 +19,7 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
     {
         #region Services
         private readonly IDiagnosticService _diagnosticService;
-        private readonly ILoggingService _loggingService;
+        private readonly CoreLogging _loggingService;
         private readonly IPathConfigurationService _pathConfigurationService;
         #endregion
 
@@ -87,7 +88,7 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
 
         #region Constructor
 
-        public OutilsTechniquesViewModel(IDiagnosticService diagnosticService, ILoggingService loggingService, IPathConfigurationService pathConfigurationService = null)
+        public OutilsTechniquesViewModel(IDiagnosticService diagnosticService, CoreLogging loggingService, IPathConfigurationService pathConfigurationService = null)
         {
             _diagnosticService = diagnosticService ?? throw new ArgumentNullException(nameof(diagnosticService));
             _loggingService = loggingService ?? throw new ArgumentNullException(nameof(loggingService));
@@ -144,7 +145,7 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             }
             catch (Exception ex)
             {
-                await _loggingService.LogErrorAsync($"Erreur lors du chargement des informations système: {ex.Message}", "OutilsTechniques", ex);
+                await _loggingService.LogErrorAsync($"Erreur lors du chargement des informations système: {ex.Message}", ex, "OutilsTechniques");
             }
         }
 
@@ -167,13 +168,13 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             IsLoading = true;
             try
             {
-                await _loggingService.LogInfoAsync("Début du test de connectivité API FNE", "TestAPI");
+                await _loggingService.LogInformationAsync("Début du test de connectivité API FNE", "TestAPI");
                 
                 var result = await _diagnosticService.TestApiConnectivityAsync();
                 
                 if (result.Success)
                 {
-                    await _loggingService.LogInfoAsync($"Test API FNE réussi: {result.Message} ({result.Duration.TotalMilliseconds:F0}ms)", "TestAPI");
+                    await _loggingService.LogInformationAsync($"Test API FNE réussi: {result.Message} ({result.Duration.TotalMilliseconds:F0}ms)", "TestAPI");
                 }
                 else
                 {
@@ -182,7 +183,7 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             }
             catch (Exception ex)
             {
-                await _loggingService.LogErrorAsync($"Erreur lors du test API FNE: {ex.Message}", "TestAPI", ex);
+                await _loggingService.LogErrorAsync($"Erreur lors du test API FNE: {ex.Message}", ex, "TestAPI");
             }
             finally
             {
@@ -195,13 +196,13 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             IsLoading = true;
             try
             {
-                await _loggingService.LogInfoAsync("Début du test de connectivité réseau", "TestNetwork");
+                await _loggingService.LogInformationAsync("Début du test de connectivité réseau", "TestNetwork");
                 
                 var result = await _diagnosticService.TestNetworkConnectivityAsync();
                 
                 if (result.Success)
                 {
-                    await _loggingService.LogInfoAsync($"Test réseau réussi: {result.Message} ({result.Duration.TotalMilliseconds:F0}ms)", "TestNetwork");
+                    await _loggingService.LogInformationAsync($"Test réseau réussi: {result.Message} ({result.Duration.TotalMilliseconds:F0}ms)", "TestNetwork");
                 }
                 else
                 {
@@ -210,7 +211,7 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             }
             catch (Exception ex)
             {
-                await _loggingService.LogErrorAsync($"Erreur lors du test réseau: {ex.Message}", "TestNetwork", ex);
+                await _loggingService.LogErrorAsync($"Erreur lors du test réseau: {ex.Message}", ex, "TestNetwork");
             }
             finally
             {
@@ -223,7 +224,7 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             IsLoading = true;
             try
             {
-                await _loggingService.LogInfoAsync("Début du diagnostic complet du système", "DiagnosticComplet");
+                await _loggingService.LogInformationAsync("Début du diagnostic complet du système", "DiagnosticComplet");
                 
                 var diagnostic = await _diagnosticService.RunCompleteDiagnosticAsync();
                 
@@ -231,14 +232,14 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
                     ? $"Diagnostic complet terminé - Système OK ({diagnostic.TotalDuration.TotalSeconds:F1}s)"
                     : $"Diagnostic complet terminé - {diagnostic.IssuesFound} problème(s) détecté(s) ({diagnostic.TotalDuration.TotalSeconds:F1}s)";
 
-                await _loggingService.LogInfoAsync(status, "DiagnosticComplet");
+                await _loggingService.LogInformationAsync(status, "DiagnosticComplet");
                 
                 // Afficher un résumé
                 ShowCompleteDiagnosticSummary(diagnostic);
             }
             catch (Exception ex)
             {
-                await _loggingService.LogErrorAsync($"Erreur lors du diagnostic complet: {ex.Message}", "DiagnosticComplet", ex);
+                await _loggingService.LogErrorAsync($"Erreur lors du diagnostic complet: {ex.Message}", ex, "DiagnosticComplet");
             }
             finally
             {
@@ -251,34 +252,34 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             IsLoading = true;
             try
             {
-                await _loggingService.LogInfoAsync("Début du test de performance", "TestPerformance");
+                await _loggingService.LogInformationAsync("Début du test de performance", "TestPerformance");
                 
                 // Test de performance CPU
                 var stopwatch = Stopwatch.StartNew();
                 var cpuTest = await TestCpuPerformanceAsync();
                 stopwatch.Stop();
                 
-                await _loggingService.LogInfoAsync($"Test CPU terminé: {cpuTest} opérations en {stopwatch.ElapsedMilliseconds}ms", "TestPerformance");
+                await _loggingService.LogInformationAsync($"Test CPU terminé: {cpuTest} opérations en {stopwatch.ElapsedMilliseconds}ms", "TestPerformance");
                 
                 // Test de performance mémoire
                 stopwatch.Restart();
                 var memoryTest = TestMemoryPerformance();
                 stopwatch.Stop();
                 
-                await _loggingService.LogInfoAsync($"Test mémoire terminé: {memoryTest:F2} MB alloués en {stopwatch.ElapsedMilliseconds}ms", "TestPerformance");
+                await _loggingService.LogInformationAsync($"Test mémoire terminé: {memoryTest:F2} MB alloués en {stopwatch.ElapsedMilliseconds}ms", "TestPerformance");
                 
                 // Test de performance I/O
                 stopwatch.Restart();
                 var ioTest = await TestIOPerformanceAsync();
                 stopwatch.Stop();
                 
-                await _loggingService.LogInfoAsync($"Test I/O terminé: {ioTest} octets en {stopwatch.ElapsedMilliseconds}ms", "TestPerformance");
+                await _loggingService.LogInformationAsync($"Test I/O terminé: {ioTest} octets en {stopwatch.ElapsedMilliseconds}ms", "TestPerformance");
                 
-                await _loggingService.LogInfoAsync("Tests de performance terminés", "TestPerformance");
+                await _loggingService.LogInformationAsync("Tests de performance terminés", "TestPerformance");
             }
             catch (Exception ex)
             {
-                await _loggingService.LogErrorAsync($"Erreur lors du test de performance: {ex.Message}", "TestPerformance", ex);
+                await _loggingService.LogErrorAsync($"Erreur lors du test de performance: {ex.Message}", ex, "TestPerformance");
             }
             finally
             {
@@ -349,7 +350,7 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             if (!string.IsNullOrEmpty(path))
             {
                 System.Windows.Clipboard.SetText(path);
-                _ = Task.Run(async () => await _loggingService.LogInfoAsync($"Chemin copié: {path}", "OutilsTechniques"));
+                _ = Task.Run(async () => await _loggingService.LogInformationAsync($"Chemin copié: {path}", "OutilsTechniques"));
             }
         }
 

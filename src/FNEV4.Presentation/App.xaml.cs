@@ -8,9 +8,12 @@ using FNEV4.Presentation.ViewModels.Maintenance;
 using FNEV4.Presentation.ViewModels.Configuration;
 using FNEV4.Presentation.Services;
 using FNEV4.Core.Interfaces;
+using FNEV4.Core.Services;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
 using Microsoft.Extensions.Configuration;
+using CoreLogging = FNEV4.Core.Interfaces.ILoggingService;
+using InfraLogging = FNEV4.Infrastructure.Services.ILoggingService;
 
 namespace FNEV4.Presentation
 {
@@ -121,8 +124,10 @@ namespace FNEV4.Presentation
 
                     // Services Infrastructure
                     services.AddScoped<IDatabaseService, DatabaseService>();
-                    services.AddScoped<ILoggingService, LoggingService>();
+                    services.AddScoped<ILoggingConfigurationService, LoggingConfigurationService>();
+                    services.AddScoped<InfraLogging, LoggingService>();
                     services.AddScoped<IDiagnosticService, DiagnosticService>();
+                    services.AddScoped<IBackupService, BackupService>();
                     
                     // Services externes
                     services.AddSingleton<HttpClient>();

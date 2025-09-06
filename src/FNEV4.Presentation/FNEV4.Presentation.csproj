@@ -55,4 +55,12 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Data folder and its contents -->
+    <Content Include="Data\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

@@ -14,7 +14,10 @@ using Microsoft.Win32;
 using System.Diagnostics;
 using FNEV4.Core.Interfaces;
 using FNEV4.Core.Entities;
+using FNEV4.Core.Services;
+using CoreLogging = FNEV4.Core.Interfaces.ILoggingService;
 using FNEV4.Infrastructure.Services;
+using InfraLogging = FNEV4.Infrastructure.Services.ILoggingService;
 
 namespace FNEV4.Presentation.ViewModels.Configuration
 {
@@ -31,8 +34,9 @@ namespace FNEV4.Presentation.ViewModels.Configuration
         // Services temporairement désactivés pour debug
         // private readonly IFolderConfigurationService _folderService;
         // private readonly IFileWatcherService _watcherService;
-        // private readonly IBackupService _backupService;
-        // private readonly ILoggingService _loggingService;
+        private readonly IBackupService _backupService;
+        private readonly InfraLogging _loggingService;
+        private readonly ILoggingConfigurationService _loggingConfigService;
         // private readonly INotificationService _notificationService;
 
         // Timers pour la surveillance
@@ -99,8 +103,35 @@ namespace FNEV4.Presentation.ViewModels.Configuration
         [ObservableProperty]
         private bool archiveAutoEnabled = false;
 
-        [ObservableProperty]
         private bool logRotationEnabled = true;
+        /// <summary>
+        /// Indique si la rotation automatique des logs est activée
+        /// </summary>
+        public bool LogRotationEnabled
+        {
+            get => logRotationEnabled;
+            set
+            {
+                if (SetProperty(ref logRotationEnabled, value))
+                {
+                    _ = Task.Run(async () => await OnLogRotationEnabledChangedAsync(value));
+                }
+            }
+        }
+
+        private bool hybridLoggingEnabled = true;
+
+        public bool HybridLoggingEnabled
+        {
+            get => hybridLoggingEnabled;
+            set
+            {
+                if (SetProperty(ref hybridLoggingEnabled, value))
+                {
+                    _ = Task.Run(async () => await OnHybridLoggingEnabledChangedAsync(value));
+                }
+            }
+        }
 
         [ObservableProperty]
         private bool backupAutoEnabled = true;
@@ -158,6 +189,15 @@ namespace FNEV4.Presentation.ViewModels.Configuration
         [ObservableProperty]
         private string namingPreview = string.Empty;
 
+        [ObservableProperty]
+        private int logsFileCount = 0;
+
+        [ObservableProperty]
+        private long logsFolderSize = 0;
+
+        [ObservableProperty]
+        private string logsFolderSizeFormatted = "0 B";
+
         #endregion
 
         #region Observable Properties - Collections
@@ -180,8 +220,21 @@ namespace FNEV4.Presentation.ViewModels.Configuration
         [ObservableProperty]
         private string selectedArchivePeriod = "30 jours";
 
-        [ObservableProperty]
         private string selectedLogLevel = "Information";
+        /// <summary>
+        /// Niveau de log sélectionné
+        /// </summary>
+        public string SelectedLogLevel
+        {
+            get => selectedLogLevel;
+            set
+            {
+                if (SetProperty(ref selectedLogLevel, value))
+                {
+                    _ = Task.Run(async () => await OnSelectedLogLevelChangedAsync(value));
+                }
+            }
+        }
 
         [ObservableProperty]
         private string selectedBackupFrequency = "Quotidien";
@@ -215,12 +268,20 @@ namespace FNEV4.Presentation.ViewModels.Configuration
 
         #region Constructor
 
-        public CheminsDossiersConfigViewModel(IPathConfigurationService pathConfigurationService = null)
+        public CheminsDossiersConfigViewModel(IPathConfigurationService pathConfigurationService = null, InfraLogging loggingService = null, ILoggingConfigurationService loggingConfigService = null, IBackupService backupService = null)
         {
             _pathConfigurationService = pathConfigurationService ?? App.GetService<IPathConfigurationService>();
+            _loggingService = loggingService ?? App.GetService<InfraLogging>();
+            _loggingConfigService = loggingConfigService ?? App.GetService<ILoggingConfigurationService>();
+            _backupService = backupService ?? App.GetService<IBackupService>();
+            
+            // Initialiser les timers pour éviter les warnings
+            _statusUpdateTimer = new System.Timers.Timer();
+            _spaceCalculationTimer = new System.Timers.Timer();
             
             InitializeCollections();
             InitializePathsFromService();
+            InitializeLoggingSettings();
             
             // Initialisation asynchrone pour mettre à jour les statuts au chargement
             _ = Task.Run(async () => await InitializeStatusAsync());
@@ -285,6 +346,9 @@ namespace FNEV4.Presentation.ViewModels.Configuration
                 LogsFolderPath = _pathConfigurationService.LogsFolderPath;
                 BackupFolderPath = _pathConfigurationService.BackupFolderPath;
 
+                // Initialiser les paramètres de logging depuis le service de configuration
+                InitializeLoggingSettings();
+
                 UpdateNamingPreview();
             }
             catch (Exception ex)
@@ -305,6 +369,45 @@ namespace FNEV4.Presentation.ViewModels.Configuration
             BackupFolderPath = @"Data\Backup";
 
             UpdateNamingPreview();
+        }
+
+        /// <summary>
+        /// Initialise les paramètres de logging depuis le service de configuration
+        /// </summary>
+        private void InitializeLoggingSettings()
+        {
+            try
+            {
+                if (_loggingConfigService != null)
+                {
+                    // Récupérer les valeurs actuelles sans déclencher les événements
+                    var currentLevel = _loggingConfigService.FormatLogLevel(_loggingConfigService.MinimumLogLevel);
+                    var currentRotation = _loggingConfigService.RotationEnabled;
+                    var currentHybrid = _loggingConfigService.HybridLoggingEnabled;
+
+                    // Mettre à jour les propriétés privées directement pour éviter les événements
+                    selectedLogLevel = currentLevel;
+                    logRotationEnabled = currentRotation;
+                    hybridLoggingEnabled = currentHybrid;
+
+                    // Notifier le changement des propriétés
+                    OnPropertyChanged(nameof(SelectedLogLevel));
+                    OnPropertyChanged(nameof(LogRotationEnabled));
+                    OnPropertyChanged(nameof(HybridLoggingEnabled));
+                }
+            }
+            catch (Exception ex)
+            {
+                // En cas d'erreur, utiliser les valeurs par défaut
+                selectedLogLevel = "Information";
+                logRotationEnabled = true;
+                hybridLoggingEnabled = true;
+                OnPropertyChanged(nameof(SelectedLogLevel));
+                OnPropertyChanged(nameof(LogRotationEnabled));
+                OnPropertyChanged(nameof(HybridLoggingEnabled));
+                
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de l'initialisation des paramètres de logging: {ex.Message}");
+            }
         }
 
         private void ResetOptionsToDefaults()
@@ -553,16 +656,48 @@ namespace FNEV4.Presentation.ViewModels.Configuration
             {
                 await ShowNotificationAsync("🧹 Nettoyage des anciens logs...", "DeleteSweep", Brushes.Orange);
 
-                // Utiliser la méthode disponible dans l'interface existante
-                // var cutoffDate = DateTime.Now.AddDays(-30);
-                // await _loggingService.ClearOldLogsAsync(cutoffDate);
+                // Implémentation temporaire directe du nettoyage des logs
+                var logsFolderPath = _pathConfigurationService.LogsFolderPath;
+                var retentionDays = 30; // Garder les logs des 30 derniers jours
                 
-                await ShowNotificationAsync("✅ Anciens logs nettoyés", "CheckCircle", Brushes.Green);
+                long cleanedSize = 0;
+                
+                if (Directory.Exists(logsFolderPath))
+                {
+                    var cutoffDate = DateTime.Now.AddDays(-retentionDays);
+                    var logFiles = Directory.GetFiles(logsFolderPath, "*.log");
+                    
+                    foreach (var logFile in logFiles)
+                    {
+                        var fileInfo = new FileInfo(logFile);
+                        
+                        // Supprimer les fichiers plus anciens que la période de rétention
+                        if (fileInfo.CreationTime < cutoffDate)
+                        {
+                            cleanedSize += fileInfo.Length;
+                            File.Delete(logFile);
+                            
+                            await _loggingService.LogInfoAsync($"Fichier log supprimé: {Path.GetFileName(logFile)} ({FormatBytes(fileInfo.Length)})", "Maintenance");
+                        }
+                    }
+                }
+                
+                if (cleanedSize > 0)
+                {
+                    await ShowNotificationAsync($"✅ Anciens logs nettoyés: {FormatBytes(cleanedSize)} libérés", "CheckCircle", Brushes.Green);
+                    await _loggingService.LogInfoAsync($"Nettoyage terminé: {FormatBytes(cleanedSize)} libérés, {retentionDays} jours de rétention", "Maintenance");
+                }
+                else
+                {
+                    await ShowNotificationAsync("ℹ️ Aucun ancien log à nettoyer", "Information", Brushes.Blue);
+                }
+                
                 await UpdateLogsFolderInfoAsync();
             }
             catch (Exception ex)
             {
                 await ShowNotificationAsync($"❌ Erreur nettoyage logs: {ex.Message}", "Alert", Brushes.Red);
+                await _loggingService.LogErrorAsync($"Erreur nettoyage logs: {ex.Message}", "Maintenance", ex);
             }
         }
 
@@ -603,8 +738,8 @@ namespace FNEV4.Presentation.ViewModels.Configuration
             {
                 await ShowNotificationAsync("💾 Création de la sauvegarde...", "DatabaseExport", Brushes.Blue);
 
-                // var backupPath = await _backupService.CreateBackupAsync(BackupFolderPath);
-                var backupPath = "temp_backup.bak"; // Temporaire
+                // Créer une sauvegarde manuelle avec le service
+                var backupPath = await _backupService.CreateBackupAsync(BackupFolderPath, $"manual_backup_{DateTime.Now:yyyyMMdd_HHmmss}");
                 
                 await ShowNotificationAsync($"✅ Sauvegarde créée: {Path.GetFileName(backupPath)}", "CheckCircle", Brushes.Green);
                 await UpdateBackupFolderInfoAsync();
@@ -1041,7 +1176,12 @@ namespace FNEV4.Presentation.ViewModels.Configuration
                 var dirInfo = new DirectoryInfo(LogsFolderPath);
                 var size = await CalculateDirectorySizeAsync(dirInfo);
                 
-                LogsFolderInfo = $"📋 {logFiles.Length} fichier(s) log • {FormatBytes(size)}";
+                // Mettre à jour les nouvelles propriétés
+                LogsFileCount = logFiles.Length;
+                LogsFolderSize = size;
+                LogsFolderSizeFormatted = FormatBytes(size);
+                
+                LogsFolderInfo = $"📋 {LogsFileCount} fichier(s) log • {LogsFolderSizeFormatted}";
                 
                 var latestLog = logFiles.OrderByDescending(f => File.GetLastWriteTime(f)).FirstOrDefault();
                 if (latestLog != null)
@@ -1052,6 +1192,9 @@ namespace FNEV4.Presentation.ViewModels.Configuration
             }
             else
             {
+                LogsFileCount = 0;
+                LogsFolderSize = 0;
+                LogsFolderSizeFormatted = "0 B";
                 LogsFolderInfo = "❌ Dossier de logs non trouvé";
                 LogsStatistics = string.Empty;
             }
@@ -1059,29 +1202,40 @@ namespace FNEV4.Presentation.ViewModels.Configuration
 
         private async Task UpdateBackupFolderInfoAsync()
         {
-            if (Directory.Exists(BackupFolderPath))
+            try
             {
-                var backupFiles = Directory.GetFiles(BackupFolderPath, "*.bak");
-                var dirInfo = new DirectoryInfo(BackupFolderPath);
-                var size = await CalculateDirectorySizeAsync(dirInfo);
-                
-                BackupFolderInfo = $"💾 {backupFiles.Length} sauvegarde(s) • {FormatBytes(size)}";
-                
-                var latestBackup = backupFiles.OrderByDescending(f => File.GetLastWriteTime(f)).FirstOrDefault();
-                if (latestBackup != null)
+                if (Directory.Exists(BackupFolderPath))
                 {
-                    var lastModified = File.GetLastWriteTime(latestBackup);
-                    LastBackupInfo = $"{Path.GetFileName(latestBackup)} • {lastModified:dd/MM/yyyy HH:mm}";
+                    // Utiliser le service de sauvegarde pour obtenir les statistiques
+                    var statistics = await _backupService.GetBackupStatisticsAsync(BackupFolderPath);
+                    var lastBackup = await _backupService.GetLastBackupInfoAsync(BackupFolderPath);
+                    
+                    BackupFolderInfo = $"💾 {statistics.TotalBackups} sauvegarde(s) • {FormatBytes(statistics.TotalSize)}";
+                    
+                    if (lastBackup != null)
+                    {
+                        LastBackupInfo = $"{lastBackup.FileName} • {lastBackup.CreatedAt:dd/MM/yyyy HH:mm}";
+                        BackupFolderStatus = "✅ Opérationnel";
+                    }
+                    else
+                    {
+                        LastBackupInfo = "Aucune sauvegarde trouvée";
+                        BackupFolderStatus = "⚠️ Aucune sauvegarde";
+                    }
                 }
                 else
                 {
-                    LastBackupInfo = "Aucune sauvegarde trouvée";
+                    BackupFolderInfo = "❌ Dossier de sauvegarde non trouvé";
+                    BackupFolderStatus = "❌ Dossier manquant";
+                    LastBackupInfo = string.Empty;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                BackupFolderInfo = "❌ Dossier de sauvegarde non trouvé";
-                LastBackupInfo = string.Empty;
+                BackupFolderInfo = "❌ Erreur lors de la vérification";
+                BackupFolderStatus = "❌ Erreur";
+                LastBackupInfo = $"Erreur: {ex.Message}";
+                await _loggingService.LogErrorAsync($"Erreur mise à jour info sauvegardes: {ex.Message}", "Backup", ex);
             }
         }
 
@@ -1206,6 +1360,7 @@ namespace FNEV4.Presentation.ViewModels.Configuration
                 ExportAutoOrganizeEnabled = ExportAutoOrganizeEnabled,
                 ArchiveAutoEnabled = ArchiveAutoEnabled,
                 LogRotationEnabled = LogRotationEnabled,
+                HybridLoggingEnabled = HybridLoggingEnabled,
                 BackupAutoEnabled = BackupAutoEnabled,
                 SelectedArchivePeriod = SelectedArchivePeriod,
                 SelectedLogLevel = SelectedLogLevel,
@@ -1226,6 +1381,7 @@ namespace FNEV4.Presentation.ViewModels.Configuration
             ExportAutoOrganizeEnabled = config.ExportAutoOrganizeEnabled;
             ArchiveAutoEnabled = config.ArchiveAutoEnabled;
             LogRotationEnabled = config.LogRotationEnabled;
+            HybridLoggingEnabled = config.HybridLoggingEnabled;
             BackupAutoEnabled = config.BackupAutoEnabled;
             SelectedArchivePeriod = config.SelectedArchivePeriod;
             SelectedLogLevel = config.SelectedLogLevel;
@@ -1343,6 +1499,245 @@ namespace FNEV4.Presentation.ViewModels.Configuration
         partial void OnSelectedArchiveOrganizationChanged(string value)
         {
             UpdateNamingPreview();
+        }
+
+        /// <summary>
+        /// Gestionnaire de changement du niveau de log sélectionné
+        /// </summary>
+        private async Task OnSelectedLogLevelChangedAsync(string newLevel)
+        {
+            try
+            {
+                if (_loggingConfigService != null)
+                {
+                    var logLevel = _loggingConfigService.ParseLogLevel(newLevel);
+                    await _loggingConfigService.SetMinimumLogLevelAsync(logLevel);
+                    
+                    // Logger le changement
+                    if (_loggingService != null)
+                    {
+                        await _loggingService.LogInfoAsync($"Niveau de log configuré à : {newLevel}", "Configuration");
+                    }
+                    
+                    // Notification à l'utilisateur
+                    await ShowNotificationAsync($"✅ Niveau de log configuré : {newLevel}", "Settings", Brushes.Green);
+                }
+            }
+            catch (Exception ex)
+            {
+                await ShowNotificationAsync($"❌ Erreur configuration log : {ex.Message}", "Alert", Brushes.Red);
+            }
+        }
+
+        /// <summary>
+        /// Gestionnaire de changement de l'état de rotation des logs
+        /// </summary>
+        private async Task OnLogRotationEnabledChangedAsync(bool enabled)
+        {
+            try
+            {
+                if (_loggingConfigService != null)
+                {
+                    await _loggingConfigService.SetRotationEnabledAsync(enabled);
+                    
+                    // Logger le changement
+                    if (_loggingService != null)
+                    {
+                        await _loggingService.LogInfoAsync($"Rotation automatique des logs : {(enabled ? "activée" : "désactivée")}", "Configuration");
+                    }
+                    
+                    // Notification à l'utilisateur
+                    var status = enabled ? "activée" : "désactivée";
+                    await ShowNotificationAsync($"✅ Rotation automatique {status}", "Sync", Brushes.Green);
+                }
+            }
+            catch (Exception ex)
+            {
+                await ShowNotificationAsync($"❌ Erreur configuration rotation : {ex.Message}", "Alert", Brushes.Red);
+            }
+        }
+
+        /// <summary>
+        /// Gestionnaire de changement du mode de logging hybride
+        /// </summary>
+        private async Task OnHybridLoggingEnabledChangedAsync(bool enabled)
+        {
+            try
+            {
+                if (_loggingConfigService != null)
+                {
+                    await _loggingConfigService.SetHybridLoggingEnabledAsync(enabled);
+                    
+                    // Logger le changement
+                    if (_loggingService != null)
+                    {
+                        var mode = enabled ? "hybride (Error/Warning → DB+Files, Info/Debug/Trace → Files)" : "complet (tout → DB)";
+                        await _loggingService.LogInfoAsync($"Mode de logging configuré : {mode}", "Configuration");
+                    }
+                    
+                    // Notification à l'utilisateur
+                    var modeText = enabled ? "hybride activé" : "complet (DB) activé";
+                    await ShowNotificationAsync($"✅ Logging {modeText}", "Settings", Brushes.Green);
+                }
+            }
+            catch (Exception ex)
+            {
+                await ShowNotificationAsync($"❌ Erreur configuration logging : {ex.Message}", "Alert", Brushes.Red);
+            }
+        }
+
+        #endregion
+
+        #region Gestion des Sauvegardes
+
+        /// <summary>
+        /// Nettoie les anciennes sauvegardes selon la politique de rétention
+        /// </summary>
+        [RelayCommand]
+        private async Task CleanOldBackupsAsync()
+        {
+            try
+            {
+                await ShowNotificationAsync("🧹 Nettoyage des anciennes sauvegardes...", "DeleteSweep", Brushes.Orange);
+
+                var retentionPolicy = new BackupRetentionPolicy
+                {
+                    KeepDailyBackups = 30,  // 30 jours
+                    KeepWeeklyBackups = 12, // 12 semaines  
+                    KeepMonthlyBackups = 12, // 12 mois
+                    MaxTotalSize = 2L * 1024 * 1024 * 1024 // 2 GB
+                };
+
+                var deletedCount = await _backupService.CleanupOldBackupsAsync(BackupFolderPath, retentionPolicy);
+                
+                if (deletedCount > 0)
+                {
+                    await ShowNotificationAsync($"✅ {deletedCount} ancienne(s) sauvegarde(s) supprimée(s)", "CheckCircle", Brushes.Green);
+                }
+                else
+                {
+                    await ShowNotificationAsync("ℹ️ Aucune ancienne sauvegarde à nettoyer", "Information", Brushes.Blue);
+                }
+                
+                await UpdateBackupFolderInfoAsync();
+            }
+            catch (Exception ex)
+            {
+                await ShowNotificationAsync($"❌ Erreur nettoyage: {ex.Message}", "Alert", Brushes.Red);
+            }
+        }
+
+        /// <summary>
+        /// Configure et active/désactive la sauvegarde automatique
+        /// </summary>
+        [RelayCommand]
+        private async Task EnableAutoBackupAsync()
+        {
+            try
+            {
+                if (BackupAutoEnabled)
+                {
+                    // Configurer la sauvegarde automatique
+                    var frequency = SelectedBackupFrequency switch
+                    {
+                        "Toutes les heures" => BackupFrequency.Hourly,
+                        "Quotidien" => BackupFrequency.Daily,
+                        "Hebdomadaire" => BackupFrequency.Weekly,
+                        "Manuel" => BackupFrequency.Manual,
+                        _ => BackupFrequency.Daily
+                    };
+
+                    var configuration = new BackupConfiguration
+                    {
+                        BackupFolderPath = BackupFolderPath,
+                        Frequency = frequency,
+                        EnableCompression = true,
+                        EnableAutoCleanup = true,
+                        RetentionPolicy = new BackupRetentionPolicy
+                        {
+                            KeepDailyBackups = 30,
+                            KeepWeeklyBackups = 12,
+                            KeepMonthlyBackups = 12,
+                            MaxTotalSize = 2L * 1024 * 1024 * 1024 // 2 GB
+                        }
+                    };
+
+                    await _backupService.ConfigureAutoBackupAsync(configuration);
+                    await _backupService.StartAutoBackupServiceAsync();
+                    
+                    await ShowNotificationAsync("✅ Sauvegarde automatique activée", "CheckCircle", Brushes.Green);
+                }
+                else
+                {
+                    await _backupService.StopAutoBackupServiceAsync();
+                    await ShowNotificationAsync("ℹ️ Sauvegarde automatique désactivée", "Information", Brushes.Blue);
+                }
+            }
+            catch (Exception ex)
+            {
+                await ShowNotificationAsync($"❌ Erreur configuration auto-backup: {ex.Message}", "Alert", Brushes.Red);
+            }
+        }
+
+        /// <summary>
+        /// Ouvre le gestionnaire de sauvegardes
+        /// </summary>
+        [RelayCommand]
+        private void OpenBackupManager()
+        {
+            // TODO: Implémenter le gestionnaire de sauvegardes avec fenêtre dédiée
+            ShowNotificationAsync("🛠️ Gestionnaire de sauvegardes en développement", "Information", Brushes.Blue);
+        }
+
+        /// <summary>
+        /// Valide une sauvegarde sélectionnée
+        /// </summary>
+        [RelayCommand]
+        private async Task ValidateBackupAsync()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(BackupFolderPath) || !Directory.Exists(BackupFolderPath))
+                {
+                    await ShowNotificationAsync("❌ Aucun dossier de sauvegarde configuré", "Alert", Brushes.Red);
+                    return;
+                }
+
+                await ShowNotificationAsync("🔍 Validation des sauvegardes...", "Search", Brushes.Orange);
+
+                var backups = await _backupService.GetAvailableBackupsAsync(BackupFolderPath);
+                var validBackups = 0;
+                var invalidBackups = 0;
+
+                foreach (var backup in backups)
+                {
+                    try
+                    {
+                        var validationResult = await _backupService.ValidateBackupAsync(backup.FilePath);
+                        if (validationResult.IsValid)
+                            validBackups++;
+                        else
+                            invalidBackups++;
+                    }
+                    catch
+                    {
+                        invalidBackups++;
+                    }
+                }
+
+                if (invalidBackups > 0)
+                {
+                    await ShowNotificationAsync($"⚠️ {validBackups} valides, {invalidBackups} corrompues", "Warning", Brushes.Orange);
+                }
+                else
+                {
+                    await ShowNotificationAsync($"✅ Toutes les sauvegardes sont valides ({validBackups})", "CheckCircle", Brushes.Green);
+                }
+            }
+            catch (Exception ex)
+            {
+                await ShowNotificationAsync($"❌ Erreur validation: {ex.Message}", "Alert", Brushes.Red);
+            }
         }
 
         #endregion

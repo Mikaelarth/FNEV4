@@ -4,12 +4,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FNEV4.Infrastructure.Data;
 using FNEV4.Core.Entities;
 using FNEV4.Infrastructure.Services;
+using FNEV4.Core.Services;
+using FNEV4.Core.Interfaces;
 using AppLogLevel = FNEV4.Core.Entities.LogLevel;
 using MsLogLevel = Microsoft.Extensions.Logging.LogLevel;
 
@@ -22,13 +25,21 @@ namespace FNEV4.Infrastructure.Services
     {
         private readonly FNEV4DbContext _context;
         private readonly ILogger<LoggingService> _logger;
+        private readonly ILoggingConfigurationService? _configService;
+        private readonly IPathConfigurationService _pathConfigurationService;
 
         public event EventHandler<LogEntry>? LogAdded;
 
-        public LoggingService(FNEV4DbContext context, ILogger<LoggingService> logger)
+        public LoggingService(
+            FNEV4DbContext context, 
+            ILogger<LoggingService> logger, 
+            IPathConfigurationService pathConfigurationService,
+            ILoggingConfigurationService? configService = null)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _pathConfigurationService = pathConfigurationService ?? throw new ArgumentNullException(nameof(pathConfigurationService));
+            _configService = configService; // Peut être null pour éviter la dépendance circulaire
             
             // Initialiser la base de données et créer des logs système réels au démarrage
             _ = Task.Run(InitializeSystemLogsAsync);
@@ -68,6 +79,12 @@ namespace FNEV4.Infrastructure.Services
 
         public async Task LogAsync(AppLogLevel level, string message, string category = "Application", Exception? exception = null)
         {
+            // Vérifier si le niveau de log est suffisant
+            if (_configService != null && level < _configService.MinimumLogLevel)
+            {
+                return; // Ne pas logger si le niveau est inférieur au minimum configuré
+            }
+
             var logEntry = new LogEntry
             {
                 Timestamp = DateTime.Now,
@@ -83,8 +100,22 @@ namespace FNEV4.Infrastructure.Services
 
             try
             {
-                _context.LogEntries.Add(logEntry);
-                await _context.SaveChangesAsync();
+                // Stratégie hybride intelligente
+                bool shouldLogToDatabase = ShouldLogToDatabase(level);
+                bool shouldLogToFile = true; // Toujours logger dans les fichiers
+
+                // Sauvegarder dans la base de données si nécessaire
+                if (shouldLogToDatabase)
+                {
+                    _context.LogEntries.Add(logEntry);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Toujours écrire dans un fichier de log
+                if (shouldLogToFile)
+                {
+                    await WriteLogToFileAsync(logEntry);
+                }
 
                 // Déclencher l'événement pour notification en temps réel
                 LogAdded?.Invoke(this, logEntry);
@@ -340,6 +371,133 @@ namespace FNEV4.Infrastructure.Services
                 // Fallback vers la méthode classique si RuntimeInformation échoue
                 return Environment.OSVersion.ToString();
             }
+        }
+
+        /// <summary>
+        /// Détermine si un log doit être sauvegardé en base de données selon la stratégie hybride
+        /// </summary>
+        /// <param name="level">Niveau du log</param>
+        /// <returns>True si le log doit être sauvegardé en DB</returns>
+        private bool ShouldLogToDatabase(AppLogLevel level)
+        {
+            // Si le mode hybride n'est pas activé, tout va en DB
+            if (_configService?.HybridLoggingEnabled != true)
+            {
+                return true;
+            }
+
+            // Mode hybride : seuls Error et Warning vont en DB
+            return level == AppLogLevel.Error || level == AppLogLevel.Warning;
+        }
+
+        /// <summary>
+        /// Écrit une entrée de log dans un fichier de log
+        /// </summary>
+        private async Task WriteLogToFileAsync(LogEntry logEntry)
+        {
+            try
+            {
+                // Utiliser le service de configuration des chemins
+                var logsFolderPath = _pathConfigurationService.LogsFolderPath;
+
+                // Créer le dossier s'il n'existe pas
+                Directory.CreateDirectory(logsFolderPath);
+
+                // Nom du fichier de log avec la date actuelle
+                var logFileName = $"FNEV4_{DateTime.Now:yyyyMMdd}.log";
+                var logFilePath = Path.Combine(logsFolderPath, logFileName);
+
+                // Formater l'entrée de log
+                var logLine = FormatLogEntry(logEntry);
+
+                // Écrire dans le fichier de manière thread-safe
+                await File.AppendAllTextAsync(logFilePath, logLine + Environment.NewLine);
+            }
+            catch (Exception ex)
+            {
+                // Log dans le logger système si l'écriture fichier échoue
+                _logger.LogError(ex, "Erreur lors de l'écriture du log dans le fichier");
+            }
+        }
+
+        /// <summary>
+        /// Formate une entrée de log pour l'écriture dans un fichier
+        /// </summary>
+        private string FormatLogEntry(LogEntry logEntry)
+        {
+            var levelString = logEntry.Level.ToString().ToUpper().PadRight(7);
+            var timestamp = logEntry.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            var category = logEntry.Category.PadRight(15);
+            
+            var logLine = $"[{timestamp}] [{levelString}] [{category}] {logEntry.Message}";
+            
+            if (!string.IsNullOrEmpty(logEntry.ExceptionDetails))
+            {
+                logLine += Environment.NewLine + "Exception: " + logEntry.ExceptionDetails;
+            }
+            
+            return logLine;
+        }
+
+        /// <summary>
+        /// Nettoie les anciens fichiers de logs selon la période de rétention
+        /// </summary>
+        public async Task<long> CleanOldLogsAsync(string logsFolderPath, int retentionDays)
+        {
+            long cleanedSize = 0;
+            
+            try
+            {
+                if (!Directory.Exists(logsFolderPath))
+                {
+                    return 0;
+                }
+
+                var cutoffDate = DateTime.Now.AddDays(-retentionDays);
+                var logFiles = Directory.GetFiles(logsFolderPath, "*.log");
+                
+                foreach (var logFile in logFiles)
+                {
+                    var fileInfo = new FileInfo(logFile);
+                    
+                    // Supprimer les fichiers plus anciens que la période de rétention
+                    if (fileInfo.CreationTime < cutoffDate)
+                    {
+                        cleanedSize += fileInfo.Length;
+                        File.Delete(logFile);
+                        
+                        await LogInfoAsync($"Fichier log supprimé: {Path.GetFileName(logFile)} ({FormatBytes(fileInfo.Length)})", "Maintenance");
+                    }
+                }
+                
+                if (cleanedSize > 0)
+                {
+                    await LogInfoAsync($"Nettoyage terminé: {FormatBytes(cleanedSize)} libérés, {retentionDays} jours de rétention", "Maintenance");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur lors du nettoyage des fichiers de logs");
+                await LogErrorAsync($"Erreur nettoyage logs: {ex.Message}", "Maintenance");
+            }
+            
+            return cleanedSize;
+        }
+
+        /// <summary>
+        /// Formate la taille en bytes en format lisible
+        /// </summary>
+        private string FormatBytes(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB" };
+            double len = bytes;
+            int order = 0;
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len = len / 1024;
+            }
+            return $"{len:0.##} {sizes[order]}";
         }
 
     }
