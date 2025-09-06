@@ -1,0 +1,24 @@
+using System.Windows.Controls;
+using Microsoft.Extensions.DependencyInjection;
+using FNEV4.Presentation.Services;
+
+namespace FNEV4.Presentation.Views.GestionClients
+{
+    /// <summary>
+    /// Logique d'interaction pour RechercheAvanceeClientView.xaml
+    /// </summary>
+    public partial class RechercheAvanceeClientView : UserControl
+    {
+        public RechercheAvanceeClientView()
+        {
+            InitializeComponent();
+            
+            // Configuration du DataContext via le ViewModelLocator
+            if (App.ServiceProvider != null)
+            {
+                var locator = App.ServiceProvider.GetService(typeof(ViewModelLocator)) as ViewModelLocator;
+                DataContext = locator?.RechercheAvanceeClientViewModel;
+            }
+        }
+    }
+}

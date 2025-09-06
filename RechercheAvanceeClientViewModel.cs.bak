@@ -1,0 +1,394 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Data;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
+using FNEV4.Core.DTOs;
+using FNEV4.Core.Enums;
+using FNEV4.Application.UseCases.GestionClients;
+
+namespace FNEV4.Presentation.ViewModels.GestionClients
+{
+    /// <summary>
+    /// ViewModel pour la recherche avancée des clients
+    /// Permet des recherches complexes avec multiples critères
+    /// </summary>
+    public partial class RechercheAvanceeClientViewModel : ObservableObject
+    {
+        #region Private Fields
+
+        private readonly ListeClientsUseCase _listeClientsUseCase;
+        private readonly ILogger<RechercheAvanceeClientViewModel> _logger;
+
+        #endregion
+
+        #region Properties
+
+        [ObservableProperty]
+        private AdvancedSearchCriteria _searchCriteria = new();
+
+        [ObservableProperty]
+        private ObservableCollection<ClientDto> _searchResults = new();
+
+        [ObservableProperty]
+        private ClientDto? _selectedClient;
+
+        [ObservableProperty]
+        private bool _isSearching;
+
+        [ObservableProperty]
+        private bool _hasResults;
+
+        [ObservableProperty]
+        private bool _showNoSearchMessage = true;
+
+        [ObservableProperty]
+        private string _activeCriteriaInfo = "Aucun critère configuré";
+
+        [ObservableProperty]
+        private string _lastSearchInfo = "";
+
+        [ObservableProperty]
+        private int _resultCount;
+
+        [ObservableProperty]
+        private bool _hasError;
+
+        [ObservableProperty]
+        private string _errorMessage = "";
+
+        /// <summary>
+        /// Types de clients disponibles
+        /// </summary>
+        public List<string> ClientTypes => Enum.GetNames<ClientType>().ToList();
+
+        /// <summary>
+        /// Options de tri disponibles
+        /// </summary>
+        public List<string> SortOptions => new()
+        {
+            "Nom",
+            "Code client",
+            "Date de création",
+            "Date de modification",
+            "NCC",
+            "Type de client",
+            "Ville"
+        };
+
+        #endregion
+
+        #region Commands
+
+        [RelayCommand]
+        private async Task PreviewSearch()
+        {
+            try
+            {
+                IsSearching = true;
+                HasError = false;
+
+                _logger.LogInformation("Démarrage de l'aperçu de recherche avancée");
+
+                // Limiter l'aperçu à 50 résultats
+                var originalMaxResults = SearchCriteria.MaxResults;
+                SearchCriteria.MaxResults = 50;
+
+                var results = await _listeClientsUseCase.GetClientsAdvancedAsync(SearchCriteria);
+
+                // Restaurer la limite originale
+                SearchCriteria.MaxResults = originalMaxResults;
+
+                SearchResults.Clear();
+                foreach (var client in results)
+                {
+                    SearchResults.Add(client);
+                }
+
+                HasResults = SearchResults.Any();
+                ShowNoSearchMessage = !HasResults;
+                ResultCount = SearchResults.Count;
+
+                UpdateSearchInfo($"Aperçu: {ResultCount} résultats (max 50 affichés)");
+
+                _logger.LogInformation("Aperçu terminé avec {Count} résultats", ResultCount);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur lors de l'aperçu de recherche");
+                HasError = true;
+                ErrorMessage = "Erreur lors de l'aperçu de recherche: " + ex.Message;
+            }
+            finally
+            {
+                IsSearching = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ExecuteSearch()
+        {
+            try
+            {
+                IsSearching = true;
+                HasError = false;
+
+                _logger.LogInformation("Démarrage de la recherche avancée complète");
+
+                var results = await _listeClientsUseCase.GetClientsAdvancedAsync(SearchCriteria);
+
+                SearchResults.Clear();
+                foreach (var client in results)
+                {
+                    SearchResults.Add(client);
+                }
+
+                HasResults = SearchResults.Any();
+                ShowNoSearchMessage = !HasResults;
+                ResultCount = SearchResults.Count;
+
+                UpdateSearchInfo($"Recherche complète: {ResultCount} résultats");
+
+                _logger.LogInformation("Recherche terminée avec {Count} résultats", ResultCount);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur lors de la recherche avancée");
+                HasError = true;
+                ErrorMessage = "Erreur lors de la recherche: " + ex.Message;
+            }
+            finally
+            {
+                IsSearching = false;
+            }
+        }
+
+        [RelayCommand]
+        private void ClearAll()
+        {
+            SearchCriteria = new AdvancedSearchCriteria();
+            SearchResults.Clear();
+            HasResults = false;
+            ShowNoSearchMessage = true;
+            ActiveCriteriaInfo = "Aucun critère configuré";
+            LastSearchInfo = "";
+            HasError = false;
+            ErrorMessage = "";
+
+            _logger.LogInformation("Tous les critères de recherche ont été effacés");
+        }
+
+        [RelayCommand]
+        private async Task SaveSearch()
+        {
+            // TODO: Implémenter la sauvegarde des critères de recherche
+            _logger.LogInformation("Sauvegarde de la recherche demandée");
+        }
+
+        [RelayCommand]
+        private async Task LoadSearch()
+        {
+            // TODO: Implémenter le chargement des critères de recherche
+            _logger.LogInformation("Chargement de recherche demandé");
+        }
+
+        [RelayCommand]
+        private async Task ExportResults()
+        {
+            try
+            {
+                if (!HasResults)
+                    return;
+
+                _logger.LogInformation("Export des résultats de recherche vers Excel");
+
+                // TODO: Implémenter l'export Excel
+                // var exportService = _serviceProvider.GetService<IExcelExportService>();
+                // await exportService.ExportClientsToExcelAsync(SearchResults.ToList());
+
+                _logger.LogInformation("Export terminé avec succès");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur lors de l'export");
+                HasError = true;
+                ErrorMessage = "Erreur lors de l'export: " + ex.Message;
+            }
+        }
+
+        [RelayCommand]
+        private void ViewClientDetails(ClientDto client)
+        {
+            if (client == null) return;
+
+            _logger.LogInformation("Affichage des détails du client {ClientCode}", client.ClientCode);
+            // TODO: Naviguer vers la vue détails
+        }
+
+        [RelayCommand]
+        private void EditClient(ClientDto client)
+        {
+            if (client == null) return;
+
+            _logger.LogInformation("Édition du client {ClientCode}", client.ClientCode);
+            // TODO: Naviguer vers la vue édition
+        }
+
+        #endregion
+
+        #region Constructor
+
+        public RechercheAvanceeClientViewModel(
+            ListeClientsUseCase listeClientsUseCase,
+            ILogger<RechercheAvanceeClientViewModel> logger)
+        {
+            _listeClientsUseCase = listeClientsUseCase ?? throw new ArgumentNullException(nameof(listeClientsUseCase));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            // Configuration initiale
+            SearchCriteria.MaxResults = 1000; // Limite par défaut
+            SearchCriteria.SortBy = "Nom";
+            SearchCriteria.SortDescending = false;
+
+            // Écouter les changements des critères
+            SearchCriteria.PropertyChanged += OnSearchCriteriaChanged;
+
+            _logger.LogInformation("RechercheAvanceeClientViewModel initialisé");
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private void OnSearchCriteriaChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            UpdateActiveCriteriaInfo();
+        }
+
+        private void UpdateActiveCriteriaInfo()
+        {
+            var criteria = new List<string>();
+
+            if (!string.IsNullOrEmpty(SearchCriteria.ClientCode))
+                criteria.Add($"Code: {SearchCriteria.ClientCode}");
+
+            if (!string.IsNullOrEmpty(SearchCriteria.Name))
+                criteria.Add($"Nom: {SearchCriteria.Name}");
+
+            if (!string.IsNullOrEmpty(SearchCriteria.Ncc))
+                criteria.Add($"NCC: {SearchCriteria.Ncc}");
+
+            if (SearchCriteria.ClientType.HasValue)
+                criteria.Add($"Type: {SearchCriteria.ClientType}");
+
+            if (SearchCriteria.IsActive.HasValue)
+                criteria.Add($"Statut: {(SearchCriteria.IsActive.Value ? "Actif" : "Inactif")}");
+
+            if (!string.IsNullOrEmpty(SearchCriteria.Email))
+                criteria.Add($"Email: {SearchCriteria.Email}");
+
+            if (!string.IsNullOrEmpty(SearchCriteria.Phone))
+                criteria.Add($"Téléphone: {SearchCriteria.Phone}");
+
+            if (!string.IsNullOrEmpty(SearchCriteria.City))
+                criteria.Add($"Ville: {SearchCriteria.City}");
+
+            if (SearchCriteria.CreatedAfter.HasValue)
+                criteria.Add($"Créé après: {SearchCriteria.CreatedAfter:dd/MM/yyyy}");
+
+            if (SearchCriteria.CreatedBefore.HasValue)
+                criteria.Add($"Créé avant: {SearchCriteria.CreatedBefore:dd/MM/yyyy}");
+
+            if (SearchCriteria.HasNccOnly)
+                criteria.Add("Avec NCC uniquement");
+
+            if (SearchCriteria.ExactMatch)
+                criteria.Add("Recherche exacte");
+
+            ActiveCriteriaInfo = criteria.Any() 
+                ? $"{criteria.Count} critère(s): {string.Join(", ", criteria.Take(3))}{(criteria.Count > 3 ? "..." : "")}"
+                : "Aucun critère configuré";
+        }
+
+        private void UpdateSearchInfo(string info)
+        {
+            LastSearchInfo = $"{info} - {DateTime.Now:HH:mm:ss}";
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Critères de recherche avancée
+    /// </summary>
+    public partial class AdvancedSearchCriteria : ObservableObject
+    {
+        [ObservableProperty]
+        private string _clientCode = "";
+
+        [ObservableProperty]
+        private string _name = "";
+
+        [ObservableProperty]
+        private string _ncc = "";
+
+        [ObservableProperty]
+        private ClientType? _clientType;
+
+        [ObservableProperty]
+        private bool? _isActive;
+
+        [ObservableProperty]
+        private string _email = "";
+
+        [ObservableProperty]
+        private string _phone = "";
+
+        [ObservableProperty]
+        private string _address = "";
+
+        [ObservableProperty]
+        private string _city = "";
+
+        [ObservableProperty]
+        private string _postalCode = "";
+
+        [ObservableProperty]
+        private DateTime? _createdAfter;
+
+        [ObservableProperty]
+        private DateTime? _createdBefore;
+
+        [ObservableProperty]
+        private DateTime? _updatedAfter;
+
+        [ObservableProperty]
+        private DateTime? _updatedBefore;
+
+        [ObservableProperty]
+        private bool _hasNccOnly;
+
+        [ObservableProperty]
+        private bool _exactMatch;
+
+        [ObservableProperty]
+        private bool _caseSensitive;
+
+        [ObservableProperty]
+        private bool _includeInactive;
+
+        [ObservableProperty]
+        private string _sortBy = "Nom";
+
+        [ObservableProperty]
+        private bool _sortDescending;
+
+        [ObservableProperty]
+        private int _maxResults = 1000;
+    }
+}

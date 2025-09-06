@@ -11,8 +11,8 @@ false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\App.xaml
 21738446575
-42078701180
-461736558173
+11413424753
+49-931498826
 2702069296420
 Controls\CollapsibleMenuItem.xaml;Resources\Styles\ButtonStyles.xaml;Resources\Styles\CardStyles.xaml;Resources\Styles\MenuItemStyles.xaml;Resources\Styles\MenuStyles.xaml;Styles\MenuStyles.xaml;Views\Configuration\ApiFneConfigView.xaml;Views\Configuration\CheminsDossiersConfigView.xaml;Views\Configuration\EntrepriseConfigView.xaml;Views\GestionClients\AjoutModificationClientView.xaml;Views\GestionClients\ImportClientsWindow.xaml;Views\GestionClients\ListeClientsView.xaml;Views\Maintenance\BaseDonneesView.xaml;Views\Maintenance\DatabaseSettingsDialog.xaml;Views\Maintenance\LogsDiagnosticsView.xaml;Views\Maintenance\OutilsTechniquesView.xaml;Views\Maintenance\RecordEditDialog.xaml;Views\Maintenance\SynchronisationView.xaml;Views\Maintenance\TableDataDialog.xaml;Views\Maintenance\TableStructureDialog.xaml;Views\MainWindow.xaml;
 

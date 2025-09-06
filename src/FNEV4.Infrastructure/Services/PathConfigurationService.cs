@@ -37,44 +37,59 @@ namespace FNEV4.Infrastructure.Services
 
         private void InitializeDefaultPaths()
         {
-            // Configuration des chemins de base : utiliser un point central
+            // Configuration des chemins de base : CHEMIN FIXE POUR ÉVITER LA DISPERSION
             var usePortableMode = bool.Parse(_configuration["PathSettings:UsePortableMode"] ?? "true");
             
-            if (usePortableMode)
-            {
-                // Mode portable : relatif à l'application
-                var appPath = AppDomain.CurrentDomain.BaseDirectory;
-                _dataRootPath = Path.Combine(appPath, "Data");
-            }
-            else
-            {
-                // Mode installation : données dans ProgramData
-                _dataRootPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), 
-                    "FNEV4");
-            }
+            // SOLUTION: Toujours utiliser le répertoire racine du projet
+            // Cela évite la création de bases multiples selon le répertoire de travail
+            var projectRoot = GetProjectRootPath();
+            _dataRootPath = Path.Combine(projectRoot, "data");
 
-            // Configuration des sous-dossiers
-            _importFolderPath = _configuration["PathSettings:ImportFolder"] ?? 
-                Path.Combine(_dataRootPath, "Import");
-            
-            _exportFolderPath = _configuration["PathSettings:ExportFolder"] ?? 
-                Path.Combine(_dataRootPath, "Export");
-            
-            _archiveFolderPath = _configuration["PathSettings:ArchiveFolder"] ?? 
-                Path.Combine(_dataRootPath, "Archive");
-            
-            _logsFolderPath = _configuration["PathSettings:LogsFolder"] ?? 
-                Path.Combine(_dataRootPath, "Logs");
-            
-            _backupFolderPath = _configuration["PathSettings:BackupFolder"] ?? 
-                Path.Combine(_dataRootPath, "Backup");
+            // Configuration des sous-dossiers (relatifs au data fixe)
+            _importFolderPath = Path.Combine(_dataRootPath, "Import");
+            _exportFolderPath = Path.Combine(_dataRootPath, "Export"); 
+            _archiveFolderPath = Path.Combine(_dataRootPath, "Archive");
+            _logsFolderPath = Path.Combine(_dataRootPath, "Logs");
+            _backupFolderPath = Path.Combine(_dataRootPath, "Backup");
 
-            // Configuration de la base de données
-            _databasePath = _configuration.GetConnectionString("DefaultConnection") ?? 
-                           Path.Combine(_dataRootPath, "fnev4.db");
-            
+            // Configuration de la base de données : CHEMIN ABSOLU FIXE
+            _databasePath = Path.Combine(_dataRootPath, "FNEV4.db");
             _databaseConfigPath = Path.Combine(_dataRootPath, "database-config.json");
+        }
+
+        /// <summary>
+        /// Trouve le répertoire racine du projet en remontant l'arborescence
+        /// </summary>
+        private string GetProjectRootPath()
+        {
+            // Chercher le dossier contenant FNEV4.sln
+            var currentDir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+            
+            while (currentDir != null)
+            {
+                if (File.Exists(Path.Combine(currentDir.FullName, "FNEV4.sln")))
+                {
+                    return currentDir.FullName;
+                }
+                currentDir = currentDir.Parent;
+            }
+            
+            // Méthode 1: Variable d'environnement personnalisée
+            var customPath = Environment.GetEnvironmentVariable("FNEV4_ROOT");
+            if (!string.IsNullOrEmpty(customPath) && Directory.Exists(customPath))
+            {
+                return customPath;
+            }
+            
+            // Méthode 2: Chemin fixe local de développement
+            var devPath = @"C:\wamp64\www\FNEV4";
+            if (Directory.Exists(devPath))
+            {
+                return devPath;
+            }
+            
+            // Méthode 3: Dernier recours - répertoire courant
+            return AppDomain.CurrentDomain.BaseDirectory;
         }
 
         public void EnsureDirectoriesExist()
@@ -102,8 +117,7 @@ namespace FNEV4.Infrastructure.Services
             if (!string.IsNullOrWhiteSpace(logsPath)) _logsFolderPath = logsPath;
             if (!string.IsNullOrWhiteSpace(backupPath)) _backupFolderPath = backupPath;
 
-            // Sauvegarder la configuration mise à jour
-            SaveConfiguration();
+            EnsureDirectoriesExist();
         }
 
         public bool ValidatePath(string path)
@@ -160,25 +174,26 @@ namespace FNEV4.Infrastructure.Services
         {
             long size = 0;
 
-            // Taille des fichiers dans ce dossier
-            foreach (var file in directory.GetFiles())
+            try
             {
-                size += file.Length;
-            }
+                // Taille des fichiers dans ce dossier
+                foreach (var file in directory.GetFiles())
+                {
+                    size += file.Length;
+                }
 
-            // Taille des sous-dossiers
-            foreach (var subdirectory in directory.GetDirectories())
+                // Taille des sous-dossiers
+                foreach (var subdirectory in directory.GetDirectories())
+                {
+                    size += CalculateDirectorySizeRecursive(subdirectory);
+                }
+            }
+            catch
             {
-                size += CalculateDirectorySizeRecursive(subdirectory);
+                // Ignorer les erreurs d'accès
             }
 
             return size;
-        }
-
-        private void SaveConfiguration()
-        {
-            // TODO: Implémenter la sauvegarde des chemins personnalisés
-            // Cela pourrait être dans un fichier JSON local ou dans la base de données
         }
     }
 }

@@ -1,0 +1,420 @@
+<UserControl x:Class="FNEV4.Presentation.Views.GestionClients.RechercheAvanceeClientView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1000">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        
+        <Style x:Key="SearchGroupStyle" TargetType="GroupBox" BasedOn="{StaticResource MaterialDesignCardGroupBox}">
+            <Setter Property="Margin" Value="0,0,0,16"/>
+            <Setter Property="Padding" Value="16"/>
+        </Style>
+
+        <Style x:Key="SearchFieldStyle" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+            <Setter Property="Margin" Value="0,0,8,8"/>
+            <Setter Property="MinWidth" Value="200"/>
+        </Style>
+
+        <Style x:Key="SearchComboStyle" TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignOutlinedComboBox}">
+            <Setter Property="Margin" Value="0,0,8,8"/>
+            <Setter Property="MinWidth" Value="150"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="*"/>    <!-- Critères de recherche -->
+            <RowDefinition Height="Auto"/> <!-- Actions -->
+            <RowDefinition Height="*"/>    <!-- Résultats -->
+        </Grid.RowDefinitions>
+
+        <!-- HEADER -->
+        <materialDesign:Card Grid.Row="0" Margin="0,0,0,16" Padding="24">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="🔍 Recherche avancée des clients" 
+                               Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                               Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                    <TextBlock Text="Recherche multicritères avec filtres personnalisés" 
+                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                               Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Command="{Binding SaveSearchCommand}"
+                            ToolTip="Sauvegarder cette recherche">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ContentSave" VerticalAlignment="Center"/>
+                            <TextBlock Text="Sauvegarder" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Margin="8,0"
+                            Command="{Binding LoadSearchCommand}"
+                            ToolTip="Charger une recherche sauvegardée">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FolderOpen" VerticalAlignment="Center"/>
+                            <TextBlock Text="Charger" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                            Command="{Binding ClearAllCommand}"
+                            Background="{DynamicResource ValidationErrorBrush}"
+                            ToolTip="Effacer tous les critères">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Eraser" VerticalAlignment="Center"/>
+                            <TextBlock Text="Tout effacer" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- CRITÈRES DE RECHERCHE -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,16">
+            <StackPanel>
+                
+                <!-- Informations générales -->
+                <GroupBox Header="Informations générales" Style="{StaticResource SearchGroupStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Ligne 1 -->
+                        <TextBox Grid.Row="0" Grid.Column="0"
+                                 Style="{StaticResource SearchFieldStyle}"
+                                 materialDesign:HintAssist.Hint="Code client"
+                                 Text="{Binding SearchCriteria.ClientCode, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBox Grid.Row="0" Grid.Column="1"
+                                 Style="{StaticResource SearchFieldStyle}"
+                                 materialDesign:HintAssist.Hint="Nom/Raison sociale"
+                                 Text="{Binding SearchCriteria.Name, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBox Grid.Row="0" Grid.Column="2"
+                                 Style="{StaticResource SearchFieldStyle}"
+                                 materialDesign:HintAssist.Hint="NCC"
+                                 Text="{Binding SearchCriteria.Ncc, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <!-- Ligne 2 -->
+                        <ComboBox Grid.Row="1" Grid.Column="0"
+                                  Style="{StaticResource SearchComboStyle}"
+                                  materialDesign:HintAssist.Hint="Type de client"
+                                  ItemsSource="{Binding ClientTypes}"
+                                  SelectedItem="{Binding SearchCriteria.ClientType}"/>
+
+                        <ComboBox Grid.Row="1" Grid.Column="1"
+                                  Style="{StaticResource SearchComboStyle}"
+                                  materialDesign:HintAssist.Hint="Statut"
+                                  SelectedValue="{Binding SearchCriteria.IsActive}">
+                            <ComboBoxItem Content="Tous" Tag="{x:Null}"/>
+                            <ComboBoxItem Content="Actif" Tag="True"/>
+                            <ComboBoxItem Content="Inactif" Tag="False"/>
+                        </ComboBox>
+
+                        <CheckBox Grid.Row="1" Grid.Column="2"
+                                  Content="Avec NCC uniquement"
+                                  IsChecked="{Binding SearchCriteria.HasNccOnly}"
+                                  VerticalAlignment="Center"
+                                  Margin="0,8"/>
+
+                        <!-- Ligne 3 -->
+                        <TextBox Grid.Row="2" Grid.Column="0"
+                                 Style="{StaticResource SearchFieldStyle}"
+                                 materialDesign:HintAssist.Hint="Email"
+                                 Text="{Binding SearchCriteria.Email, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBox Grid.Row="2" Grid.Column="1"
+                                 Style="{StaticResource SearchFieldStyle}"
+                                 materialDesign:HintAssist.Hint="Téléphone"
+                                 Text="{Binding SearchCriteria.Phone, UpdateSourceTrigger=PropertyChanged}"/>
+                    </Grid>
+                </GroupBox>
+
+                <!-- Localisation -->
+                <GroupBox Header="Localisation" Style="{StaticResource SearchGroupStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Column="0"
+                                 Style="{StaticResource SearchFieldStyle}"
+                                 materialDesign:HintAssist.Hint="Adresse"
+                                 Text="{Binding SearchCriteria.Address, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBox Grid.Column="1"
+                                 Style="{StaticResource SearchFieldStyle}"
+                                 materialDesign:HintAssist.Hint="Ville"
+                                 Text="{Binding SearchCriteria.City, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBox Grid.Column="2"
+                                 Style="{StaticResource SearchFieldStyle}"
+                                 materialDesign:HintAssist.Hint="Code postal"
+                                 Text="{Binding SearchCriteria.PostalCode, UpdateSourceTrigger=PropertyChanged}"/>
+                    </Grid>
+                </GroupBox>
+
+                <!-- Dates -->
+                <GroupBox Header="Dates" Style="{StaticResource SearchGroupStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <DatePicker Grid.Column="0"
+                                    materialDesign:HintAssist.Hint="Créé après le"
+                                    SelectedDate="{Binding SearchCriteria.CreatedAfter}"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                    Margin="0,0,8,8"/>
+
+                        <DatePicker Grid.Column="1"
+                                    materialDesign:HintAssist.Hint="Créé avant le"
+                                    SelectedDate="{Binding SearchCriteria.CreatedBefore}"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                    Margin="0,0,8,8"/>
+
+                        <Separator Grid.Column="2" 
+                                   Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"
+                                   Margin="8,0"/>
+
+                        <DatePicker Grid.Column="3"
+                                    materialDesign:HintAssist.Hint="Modifié après le"
+                                    SelectedDate="{Binding SearchCriteria.UpdatedAfter}"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                    Margin="0,0,8,8"/>
+
+                        <DatePicker Grid.Column="4"
+                                    materialDesign:HintAssist.Hint="Modifié avant le"
+                                    SelectedDate="{Binding SearchCriteria.UpdatedBefore}"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                    Margin="0,0,8,8"/>
+                    </Grid>
+                </GroupBox>
+
+                <!-- Options avancées -->
+                <GroupBox Header="Options avancées" Style="{StaticResource SearchGroupStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Ligne 1 -->
+                        <CheckBox Grid.Row="0" Grid.Column="0"
+                                  Content="Recherche exacte"
+                                  IsChecked="{Binding SearchCriteria.ExactMatch}"
+                                  ToolTip="Recherche exacte (sans jokers)"/>
+
+                        <CheckBox Grid.Row="0" Grid.Column="1"
+                                  Content="Sensible à la casse"
+                                  IsChecked="{Binding SearchCriteria.CaseSensitive}"
+                                  ToolTip="Distinguer majuscules/minuscules"/>
+
+                        <CheckBox Grid.Row="0" Grid.Column="2"
+                                  Content="Inclure inactifs"
+                                  IsChecked="{Binding SearchCriteria.IncludeInactive}"
+                                  ToolTip="Inclure les clients inactifs"/>
+
+                        <!-- Ligne 2 -->
+                        <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Tri par:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox ItemsSource="{Binding SortOptions}"
+                                      SelectedItem="{Binding SearchCriteria.SortBy}"
+                                      Width="150"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Limite:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox Text="{Binding SearchCriteria.MaxResults}"
+                                     Width="100"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        </StackPanel>
+
+                        <CheckBox Grid.Row="1" Grid.Column="2"
+                                  Content="Tri décroissant"
+                                  IsChecked="{Binding SearchCriteria.SortDescending}"
+                                  VerticalAlignment="Center"/>
+                    </Grid>
+                </GroupBox>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ACTIONS -->
+        <materialDesign:Card Grid.Row="2" Margin="0,0,0,16" Padding="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Informations sur les critères -->
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding ActiveCriteriaInfo}"
+                               Style="{StaticResource MaterialDesignBody2TextBlock}"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    <TextBlock Text="{Binding LastSearchInfo}"
+                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}"
+                               Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <!-- Boutons d'action -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Command="{Binding PreviewSearchCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            ToolTip="Aperçu des résultats (max 50)"
+                            Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Eye" VerticalAlignment="Center"/>
+                            <TextBlock Text="Aperçu" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding ExecuteSearchCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Background="{DynamicResource PrimaryHueMidBrush}"
+                            ToolTip="Exécuter la recherche complète">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Magnify" VerticalAlignment="Center"/>
+                            <TextBlock Text="Rechercher" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding ExportResultsCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            IsEnabled="{Binding HasResults}"
+                            Margin="8,0,0,0"
+                            ToolTip="Exporter les résultats vers Excel">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FileExport" VerticalAlignment="Center"/>
+                            <TextBlock Text="Exporter" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- RÉSULTATS -->
+        <materialDesign:Card Grid.Row="3">
+            <Grid>
+                <!-- Progress bar pendant la recherche -->
+                <ProgressBar IsIndeterminate="True"
+                             Visibility="{Binding IsSearching, Converter={StaticResource BooleanToVisibilityConverter}}"
+                             VerticalAlignment="Top"/>
+
+                <!-- Message quand aucune recherche -->
+                <StackPanel VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            Visibility="{Binding ShowNoSearchMessage, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <materialDesign:PackIcon Kind="MagnifyPlus" 
+                                             Width="64" Height="64"
+                                             Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    <TextBlock Text="Configurez vos critères et lancez une recherche"
+                               Style="{StaticResource MaterialDesignBody1TextBlock}"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}"
+                               HorizontalAlignment="Center"
+                               Margin="0,16,0,0"/>
+                </StackPanel>
+
+                <!-- Résultats de recherche -->
+                <DataGrid ItemsSource="{Binding SearchResults}"
+                          SelectedItem="{Binding SelectedClient}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          IsReadOnly="True"
+                          materialDesign:DataGridAssist.CellPadding="8"
+                          materialDesign:DataGridAssist.ColumnHeaderPadding="8"
+                          GridLinesVisibility="Horizontal"
+                          HeadersVisibility="Column"
+                          Visibility="{Binding HasResults, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+                    <DataGrid.Columns>
+                        <!-- Actions -->
+                        <DataGridTemplateColumn Header="Actions" Width="100" CanUserSort="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Command="{Binding DataContext.ViewClientDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                                ToolTip="Voir détails"
+                                                Width="24" Height="24">
+                                            <materialDesign:PackIcon Kind="Eye" Width="16" Height="16"/>
+                                        </Button>
+                                        
+                                        <Button Command="{Binding DataContext.EditClientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                                ToolTip="Modifier"
+                                                Width="24" Height="24">
+                                            <materialDesign:PackIcon Kind="Pencil" Width="16" Height="16"/>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Code -->
+                        <DataGridTextColumn Header="Code" Binding="{Binding ClientCode}" Width="80"/>
+                        
+                        <!-- Nom -->
+                        <DataGridTextColumn Header="Nom/Raison sociale" Binding="{Binding Name}" Width="200"/>
+                        
+                        <!-- NCC -->
+                        <DataGridTextColumn Header="NCC" Binding="{Binding ClientNcc}" Width="120"/>
+                        
+                        <!-- Type -->
+                        <DataGridTextColumn Header="Type" Binding="{Binding ClientType}" Width="100"/>
+                        
+                        <!-- Email -->
+                        <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="180"/>
+                        
+                        <!-- Ville -->
+                        <DataGridTextColumn Header="Ville" Binding="{Binding City}" Width="120"/>
+                        
+                        <!-- Date création -->
+                        <DataGridTextColumn Header="Créé le" 
+                                            Binding="{Binding CreatedDate, StringFormat='{}{0:dd/MM/yyyy}'}" 
+                                            Width="100"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </materialDesign:Card>
+    </Grid>
+</UserControl>

@@ -1,0 +1,5 @@
+Code Client,Nom/Raison Sociale,Template,NCC,Nom Commercial,Adresse,Ville,Code Postal,Pays,Téléphone,Email,Représentant,N° Fiscal,Devise,Actif,Notes
+CLI001,ARTHUR LE GRAND SARL,B2B,9502363N,Arthur Le Grand,123 Boulevard de la Paix,Abidjan,01001,Côte d'Ivoire,+225 01 02 03 04,arthur@legrand.ci,Jean KOUAME,TIN123456,XOF,Oui,Client VIP entreprise
+CLI002,MARIE KOUASSI,B2C,,Marie Kouassi Boutique,45 Rue du Commerce,Bouaké,02001,Côte d'Ivoire,+225 05 06 07 08,marie.kouassi@gmail.com,Paul DIALLO,,XOF,Oui,Client particulier
+CLI003,MINISTERE SANTE,B2G,9606123E,Min. Santé et Hygiène,Plateau Tour C,Abidjan,01000,Côte d'Ivoire,+225 20 21 22 23,contact@sante.gouv.ci,Dr. BAMBA,GOV789,XOF,Oui,Client gouvernemental
+CLI004,EXPORT TRADING CORP,B2F,FR12345678,Export Trading Corporation,15 Avenue des Champs,Paris,75001,France,+33 1 42 00 00 00,contact@exporttrading.fr,Michel BERNARD,EU987654321,EUR,Oui,Client international

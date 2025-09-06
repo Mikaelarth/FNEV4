@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.Win32;
 using System.Linq;
 using FNEV4.Presentation.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace FNEV4.Presentation.ViewModels.Maintenance
 {
@@ -283,7 +284,10 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
         {
             try
             {
-                var connectionString = "Data Source=Data/FNEV4.db";
+                // Utiliser le PathConfigurationService pour obtenir le chemin fixe de la base
+                var pathService = new PathConfigurationService(new ConfigurationBuilder().Build());
+                pathService.EnsureDirectoriesExist();
+                var connectionString = $"Data Source={pathService.DatabasePath}";
                 var options = new DbContextOptionsBuilder<FNEV4DbContext>()
                     .UseSqlite(connectionString)
                     .Options;

@@ -3,396 +3,454 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:converters="clr-namespace:FNEV4.Presentation.Converters"
              mc:Ignorable="d" 
-             d:DesignHeight="800" d:DesignWidth="1200">
+             d:DesignHeight="600" d:DesignWidth="1400">
 
     <UserControl.Resources>
         <!-- Convertisseurs -->
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-        <converters:BooleanToStatusConverter x:Key="BooleanToStatusConverter"/>
-        <converters:BooleanToBrushConverter x:Key="BooleanToBrushConverter"/>
         
-        <!-- Style pour les cartes de statistiques -->
-        <Style x:Key="StatisticCardStyle" TargetType="materialDesign:Card">
-            <Setter Property="Margin" Value="8"/>
-            <Setter Property="Padding" Value="16"/>
-            <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth1"/>
+        <!-- Styles pour DataGrid amélioré -->
+        <Style x:Key="ModernDataGridStyle" TargetType="DataGrid">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="#F5F5F5"/>
+            <Setter Property="RowHeight" Value="45"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="AlternatingRowBackground" Value="#F8F9FA"/>
+        </Style>
+        
+        <!-- Style pour les en-têtes de colonnes -->
+        <Style x:Key="ColumnHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#E3F2FD"/>
+            <Setter Property="Foreground" Value="#1976D2"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="BorderBrush" Value="#BBDEFB"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+        </Style>
+        
+        <!-- Style pour les cellules -->
+        <Style x:Key="CellStyle" TargetType="DataGridCell">
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#E3F2FD"/>
+                    <Setter Property="Foreground" Value="#1976D2"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
         
         <!-- Style pour les boutons d'action -->
-        <Style x:Key="ActionButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignIconForegroundButton}">
-            <Setter Property="Margin" Value="4,0"/>
-            <Setter Property="Width" Value="32"/>
-            <Setter Property="Height" Value="32"/>
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="38"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Margin" Value="3"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F0F8FF"/>
+                    <Setter Property="BorderBrush" Value="#1976D2"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
     </UserControl.Resources>
 
-    <Grid>
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- Header -->
-            <RowDefinition Height="Auto"/> <!-- Statistiques -->
             <RowDefinition Height="Auto"/> <!-- Filtres -->
             <RowDefinition Height="*"/>    <!-- Liste -->
             <RowDefinition Height="Auto"/> <!-- Pagination -->
         </Grid.RowDefinitions>
 
         <!-- HEADER -->
-        <materialDesign:Card Grid.Row="0" Margin="0,0,0,16" Padding="24">
+        <Border Grid.Row="0" 
+                Background="#F8F9FA" 
+                BorderBrush="#E0E0E0" 
+                BorderThickness="1" 
+                CornerRadius="8" 
+                Padding="20" 
+                Margin="0,0,0,20">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
-                <StackPanel Grid.Column="0">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
                     <TextBlock Text="📋 Liste des clients" 
-                               Style="{StaticResource MaterialDesignHeadline5TextBlock}"
-                               Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                               FontSize="24" 
+                               FontWeight="SemiBold"
+                               Foreground="#1976D2"/>
                     <TextBlock Text="Référentiel clients avec NCC et classification DGI" 
-                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                               FontSize="14" 
+                               Foreground="#666666"
                                Margin="0,4,0,0"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="🔄 Actualiser"
                             Command="{Binding RefreshCommand}"
-                            ToolTip="Actualiser la liste">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Refresh" VerticalAlignment="Center"/>
-                            <TextBlock Text="Actualiser" Margin="8,0,0,0"/>
-                        </StackPanel>
-                    </Button>
+                            Background="#E3F2FD"
+                            Foreground="#1976D2"
+                            Padding="16,10"
+                            Margin="0,0,10,0"
+                            BorderThickness="1"
+                            BorderBrush="#BBDEFB"
+                            FontSize="13"
+                            MinWidth="120"/>
                     
-                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Margin="8,0"
+                    <Button Content="📥 Import Excel"
                             Command="{Binding ImportClientsCommand}"
-                            Background="{DynamicResource PrimaryHueDarkBrush}"
-                            ToolTip="Importer des clients depuis Excel">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Import" VerticalAlignment="Center"/>
-                            <TextBlock Text="Import Excel" Margin="8,0,0,0"/>
-                        </StackPanel>
-                    </Button>
+                            Background="#1976D2"
+                            Foreground="White"
+                            Padding="16,10"
+                            Margin="0,0,10,0"
+                            BorderThickness="0"
+                            FontSize="13"
+                            MinWidth="130"/>
                     
-                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                    <Button Content="➕ Nouveau client"
                             Command="{Binding AddClientCommand}"
-                            Background="{DynamicResource SecondaryHueMidBrush}"
-                            ToolTip="Ajouter un nouveau client">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Plus" VerticalAlignment="Center"/>
-                            <TextBlock Text="Nouveau client" Margin="8,0,0,0"/>
-                        </StackPanel>
-                    </Button>
+                            Background="#4CAF50"
+                            Foreground="White"
+                            Padding="16,10"
+                            BorderThickness="0"
+                            FontSize="13"
+                            MinWidth="140"/>
                 </StackPanel>
             </Grid>
-        </materialDesign:Card>
-
-        <!-- STATISTIQUES -->
-        <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,16"
-                     Visibility="{Binding Statistics, Converter={StaticResource BooleanToVisibilityConverter}}">
-            
-            <!-- Total clients -->
-            <materialDesign:Card Style="{StaticResource StatisticCardStyle}">
-                <StackPanel>
-                    <TextBlock Text="{Binding Statistics.TotalClients}" 
-                               Style="{StaticResource MaterialDesignHeadline4TextBlock}"
-                               Foreground="{DynamicResource PrimaryHueMidBrush}"
-                               HorizontalAlignment="Center"/>
-                    <TextBlock Text="Total clients" 
-                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                               HorizontalAlignment="Center"/>
-                </StackPanel>
-            </materialDesign:Card>
-
-            <!-- Clients actifs -->
-            <materialDesign:Card Style="{StaticResource StatisticCardStyle}">
-                <StackPanel>
-                    <TextBlock Text="{Binding Statistics.ActiveClients}" 
-                               Style="{StaticResource MaterialDesignHeadline4TextBlock}"
-                               Foreground="{DynamicResource SecondaryHueMidBrush}"
-                               HorizontalAlignment="Center"/>
-                    <TextBlock Text="Clients actifs" 
-                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                               HorizontalAlignment="Center"/>
-                </StackPanel>
-            </materialDesign:Card>
-
-            <!-- Clients avec NCC -->
-            <materialDesign:Card Style="{StaticResource StatisticCardStyle}">
-                <StackPanel>
-                    <TextBlock Text="{Binding Statistics.ClientsWithNcc}" 
-                               Style="{StaticResource MaterialDesignHeadline4TextBlock}"
-                               Foreground="{DynamicResource PrimaryHueDarkBrush}"
-                               HorizontalAlignment="Center"/>
-                    <TextBlock Text="Avec NCC" 
-                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                               HorizontalAlignment="Center"/>
-                </StackPanel>
-            </materialDesign:Card>
-
-            <!-- Entreprises -->
-            <materialDesign:Card Style="{StaticResource StatisticCardStyle}">
-                <StackPanel>
-                    <TextBlock Text="{Binding Statistics.CompanyClients}" 
-                               Style="{StaticResource MaterialDesignHeadline4TextBlock}"
-                               Foreground="{DynamicResource SecondaryHueDarkBrush}"
-                               HorizontalAlignment="Center"/>
-                    <TextBlock Text="Entreprises" 
-                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                               HorizontalAlignment="Center"/>
-                </StackPanel>
-            </materialDesign:Card>
-        </UniformGrid>
+        </Border>
 
         <!-- FILTRES ET RECHERCHE -->
-        <materialDesign:Card Grid.Row="2" Margin="0,0,0,16" Padding="16">
+        <Border Grid.Row="1" 
+                Background="White" 
+                BorderBrush="#E0E0E0" 
+                BorderThickness="1" 
+                CornerRadius="8" 
+                Padding="20" 
+                Margin="0,0,0,20">
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="250"/>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-                <!-- Ligne 1: Recherche et filtres principaux -->
-                <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="200"/>
-                        <ColumnDefinition Width="150"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                <!-- Recherche -->
+                <TextBox Grid.Column="0"
+                         Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                         FontSize="14"
+                         Padding="12,10"
+                         Margin="0,0,12,0"
+                         BorderBrush="#E0E0E0"
+                         BorderThickness="1">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="TextBox">
+                                        <Border Background="White" 
+                                                BorderBrush="#E0E0E0" 
+                                                BorderThickness="1" 
+                                                CornerRadius="4">
+                                            <Grid>
+                                                <TextBlock Text="🔍 Rechercher par nom, code, NCC, email..." 
+                                                           Foreground="#999999" 
+                                                           Margin="12,10"
+                                                           Visibility="{Binding Text.IsEmpty, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                <ScrollViewer x:Name="PART_ContentHost" Margin="12,10"/>
+                                            </Grid>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
 
-                    <!-- Recherche -->
-                    <TextBox Grid.Column="0"
-                             materialDesign:HintAssist.Hint="Rechercher par nom, code, NCC, email..."
-                             Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                             Margin="0,0,16,0">
-                        <TextBox.InputBindings>
-                            <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
-                        </TextBox.InputBindings>
-                    </TextBox>
+                <!-- Type de client -->
+                <ComboBox Grid.Column="1"
+                          Margin="0,0,12,0"
+                          FontSize="14"
+                          Padding="8,8"
+                          BorderBrush="#E0E0E0"
+                          MinWidth="200">
+                    <ComboBoxItem Content="📋 Tous les types" IsSelected="True"/>
+                    <ComboBoxItem Content="👤 B2C - Particulier"/>
+                    <ComboBoxItem Content="🏢 B2B - Entreprise"/>
+                    <ComboBoxItem Content="🏛️ B2G - Gouvernement"/>
+                    <ComboBoxItem Content="💼 B2F - Financier"/>
+                </ComboBox>
 
-                    <!-- Type de client -->
-                    <ComboBox Grid.Column="1"
-                              materialDesign:HintAssist.Hint="Type de client"
-                              ItemsSource="{Binding ClientTypes}"
-                              SelectedItem="{Binding SelectedClientType}"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                              Margin="0,0,16,0">
-                    </ComboBox>
+                <!-- Statut -->
+                <ComboBox Grid.Column="2"
+                          Margin="0,0,12,0"
+                          FontSize="14"
+                          Padding="8,8"
+                          BorderBrush="#E0E0E0"
+                          MinWidth="150">
+                    <ComboBoxItem Content="📊 Tous les statuts" IsSelected="True"/>
+                    <ComboBoxItem Content="✅ Clients actifs"/>
+                    <ComboBoxItem Content="❌ Clients inactifs"/>
+                </ComboBox>
 
-                    <!-- Statut -->
-                    <ComboBox Grid.Column="2"
-                              materialDesign:HintAssist.Hint="Statut"
-                              SelectedValue="{Binding IsActiveFilter}"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                              Margin="0,0,16,0">
-                        <ComboBoxItem Content="Tous" Tag="{x:Null}"/>
-                        <ComboBoxItem Content="Actif" Tag="True"/>
-                        <ComboBoxItem Content="Inactif" Tag="False"/>
-                    </ComboBox>
-
-                    <!-- Boutons d'action -->
-                    <StackPanel Grid.Column="3" Orientation="Horizontal">
-                        <Button Command="{Binding SearchCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                ToolTip="Rechercher">
-                            <materialDesign:PackIcon Kind="Magnify"/>
-                        </Button>
-                        
-                        <Button Command="{Binding ClearFiltersCommand}"
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Margin="8,0,0,0"
-                                ToolTip="Effacer les filtres">
-                            <materialDesign:PackIcon Kind="FilterRemove"/>
-                        </Button>
-                    </StackPanel>
-                </Grid>
-
-                <!-- Ligne 2: Informations sur les filtres actifs -->
-                <TextBlock Grid.Row="1" 
-                           Text="{Binding ActiveFiltersInfo}"
-                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                           Margin="0,8,0,0"
-                           Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                <!-- Boutons d'action -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="🔍"
+                            Command="{Binding SearchCommand}"
+                            Width="40"
+                            Height="40"
+                            Background="#1976D2"
+                            Foreground="White"
+                            BorderThickness="0"
+                            ToolTip="Rechercher"/>
+                    
+                    <Button Content="🗑️"
+                            Command="{Binding ClearFiltersCommand}"
+                            Width="40"
+                            Height="40"
+                            Background="#F44336"
+                            Foreground="White"
+                            BorderThickness="0"
+                            Margin="8,0,0,0"
+                            ToolTip="Effacer les filtres"/>
+                </StackPanel>
             </Grid>
-        </materialDesign:Card>
+        </Border>
 
         <!-- LISTE DES CLIENTS -->
-        <materialDesign:Card Grid.Row="3">
-            <Grid>
-                <!-- Progress bar pendant le chargement -->
-                <ProgressBar IsIndeterminate="True"
-                             Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
-                             VerticalAlignment="Top"/>
+        <Border Grid.Row="2" 
+                Background="White" 
+                BorderBrush="#E0E0E0" 
+                BorderThickness="1" 
+                CornerRadius="8">
+            <DataGrid ItemsSource="{Binding Clients}"
+                      SelectedItem="{Binding SelectedClient}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      IsReadOnly="True"
+                      Style="{StaticResource ModernDataGridStyle}"
+                      ColumnHeaderStyle="{StaticResource ColumnHeaderStyle}"
+                      CellStyle="{StaticResource CellStyle}">
 
-                <!-- Message d'erreur -->
-                <materialDesign:Card Background="{DynamicResource ValidationErrorBrush}"
-                                     Margin="16"
-                                     Padding="16"
-                                     Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="AlertCircle" 
-                                                 VerticalAlignment="Center"
-                                                 Foreground="White"/>
-                        <TextBlock Text="{Binding ErrorMessage}"
-                                   Foreground="White"
-                                   Margin="8,0,0,0"
-                                   VerticalAlignment="Center"/>
-                    </StackPanel>
-                </materialDesign:Card>
+                <DataGrid.Columns>
+                    <!-- Code client -->
+                    <DataGridTextColumn Header="Code" 
+                                        Binding="{Binding ClientCode}" 
+                                        Width="120">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontWeight" Value="Medium"/>
+                                <Setter Property="Foreground" Value="#1976D2"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                <!-- DataGrid des clients -->
-                <DataGrid ItemsSource="{Binding Clients}"
-                          SelectedItem="{Binding SelectedClient}"
-                          AutoGenerateColumns="False"
-                          CanUserAddRows="False"
-                          CanUserDeleteRows="False"
-                          IsReadOnly="True"
-                          materialDesign:DataGridAssist.CellPadding="8"
-                          materialDesign:DataGridAssist.ColumnHeaderPadding="8"
-                          GridLinesVisibility="Horizontal"
-                          HeadersVisibility="Column"
-                          Visibility="{Binding IsListVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <!-- Nom -->
+                    <DataGridTextColumn Header="Nom/Raison sociale" 
+                                        Binding="{Binding Name}" 
+                                        Width="280">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontWeight" Value="Medium"/>
+                                <Setter Property="TextWrapping" Value="NoWrap"/>
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                <Setter Property="ToolTip" Value="{Binding Name}"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                    <DataGrid.Columns>
-                        <!-- Actions -->
-                        <DataGridTemplateColumn Header="Actions" Width="120" CanUserSort="False">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <Button Command="{Binding DataContext.ViewClientDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}"
-                                                Style="{StaticResource ActionButtonStyle}"
-                                                ToolTip="Voir détails">
-                                            <materialDesign:PackIcon Kind="Eye"/>
-                                        </Button>
-                                        
-                                        <Button Command="{Binding DataContext.EditClientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}"
-                                                Style="{StaticResource ActionButtonStyle}"
-                                                ToolTip="Modifier">
-                                            <materialDesign:PackIcon Kind="Pencil"/>
-                                        </Button>
-                                        
-                                        <Button Command="{Binding DataContext.DeleteClientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}"
-                                                Style="{StaticResource ActionButtonStyle}"
-                                                ToolTip="Supprimer">
-                                            <materialDesign:PackIcon Kind="Delete" Foreground="{DynamicResource ValidationErrorBrush}"/>
-                                        </Button>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                    <!-- NCC -->
+                    <DataGridTextColumn Header="NCC" 
+                                        Binding="{Binding ClientNcc}" 
+                                        Width="140">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontFamily" Value="Consolas"/>
+                                <Setter Property="Foreground" Value="#666666"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                        <!-- Code client -->
-                        <DataGridTextColumn Header="Code" 
-                                            Binding="{Binding ClientCode}" 
-                                            Width="80"/>
+                    <!-- Type -->
+                    <DataGridTextColumn Header="Type" 
+                                        Binding="{Binding ClientType}" 
+                                        Width="90">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontWeight" Value="Medium"/>
+                                <Setter Property="Foreground" Value="#4CAF50"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                        <!-- Nom -->
-                        <DataGridTextColumn Header="Nom/Raison sociale" 
-                                            Binding="{Binding Name}" 
-                                            Width="200"/>
+                    <!-- Email -->
+                    <DataGridTextColumn Header="Email" 
+                                        Binding="{Binding Email}" 
+                                        Width="260">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextWrapping" Value="NoWrap"/>
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                <Setter Property="Foreground" Value="#666666"/>
+                                <Setter Property="ToolTip" Value="{Binding Email}"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                        <!-- NCC -->
-                        <DataGridTextColumn Header="NCC" 
-                                            Binding="{Binding ClientNcc}" 
-                                            Width="120"/>
+                    <!-- Téléphone -->
+                    <DataGridTextColumn Header="Téléphone" 
+                                        Binding="{Binding Phone}" 
+                                        Width="160">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontFamily" Value="Consolas"/>
+                                <Setter Property="Foreground" Value="#666666"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                        <!-- Type -->
-                        <DataGridTextColumn Header="Type" 
-                                            Binding="{Binding ClientType}" 
-                                            Width="100"/>
+                    <!-- Statut -->
+                    <DataGridTextColumn Header="Statut" 
+                                        Binding="{Binding IsActive}" 
+                                        Width="100">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontWeight" Value="Medium"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                        <Setter Property="Text" Value="✅ Actif"/>
+                                        <Setter Property="Foreground" Value="#4CAF50"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                        <Setter Property="Text" Value="❌ Inactif"/>
+                                        <Setter Property="Foreground" Value="#F44336"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                        <!-- Email -->
-                        <DataGridTextColumn Header="Email" 
-                                            Binding="{Binding Email}" 
-                                            Width="180"/>
+                    <!-- Date création -->
+                    <DataGridTextColumn Header="Créé le" 
+                                        Binding="{Binding CreatedDate, StringFormat='{}{0:dd/MM/yyyy}'}" 
+                                        Width="110">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="#999999"/>
+                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                        <!-- Téléphone -->
-                        <DataGridTextColumn Header="Téléphone" 
-                                            Binding="{Binding Phone}" 
-                                            Width="120"/>
-
-                        <!-- Statut -->
-                        <DataGridTemplateColumn Header="Statut" Width="80">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <materialDesign:Chip Content="{Binding IsActive, Converter={StaticResource BooleanToStatusConverter}}"
-                                                         Background="{Binding IsActive, Converter={StaticResource BooleanToBrushConverter}}"
-                                                         Foreground="White"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <!-- Date création -->
-                        <DataGridTextColumn Header="Créé le" 
-                                            Binding="{Binding CreatedDate, StringFormat='{}{0:dd/MM/yyyy}'}" 
-                                            Width="100"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </Grid>
-        </materialDesign:Card>
+                    <!-- Actions - À L'EXTRÊME DROITE -->
+                    <DataGridTemplateColumn Header="Actions" Width="180" CanUserSort="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" 
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center">
+                                    <Button Content="👁"
+                                            Command="{Binding DataContext.ViewClientDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource ActionButtonStyle}"
+                                            ToolTip="Voir détails"/>
+                                    
+                                    <Button Content="✏️"
+                                            Command="{Binding DataContext.EditClientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource ActionButtonStyle}"
+                                            ToolTip="Modifier"/>
+                                    
+                                    <Button Content="🗑️"
+                                            Command="{Binding DataContext.DeleteClientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource ActionButtonStyle}"
+                                            ToolTip="Supprimer"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
 
         <!-- PAGINATION -->
-        <materialDesign:Card Grid.Row="4" Margin="0,16,0,0" Padding="16">
+        <Border Grid.Row="3" 
+                Background="#F8F9FA" 
+                BorderBrush="#E0E0E0" 
+                BorderThickness="1" 
+                CornerRadius="8" 
+                Padding="16" 
+                Margin="0,20,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- Taille de page -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="Afficher:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <ComboBox ItemsSource="{Binding PageSizes}"
-                              SelectedItem="{Binding PageSize}"
-                              Width="80"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                    <ComboBox Width="80" FontSize="14">
+                        <ComboBoxItem Content="25" IsSelected="True"/>
+                        <ComboBoxItem Content="50"/>
+                        <ComboBoxItem Content="100"/>
+                        <ComboBoxItem Content="200"/>
+                    </ComboBox>
                     <TextBlock Text="éléments par page" VerticalAlignment="Center" Margin="8,0,0,0"/>
                 </StackPanel>
 
                 <!-- Informations de pagination -->
                 <TextBlock Grid.Column="1" 
                            Text="{Binding PaginationInfo}"
-                           Style="{StaticResource MaterialDesignBody2TextBlock}"
                            VerticalAlignment="Center"
-                           HorizontalAlignment="Center"/>
+                           HorizontalAlignment="Center"
+                           FontSize="14"
+                           Foreground="#666666"/>
 
                 <!-- Navigation -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Command="{Binding PreviousPageCommand}"
-                            Style="{StaticResource MaterialDesignIconForegroundButton}"
+                    <Button Content="⬅️"
+                            Command="{Binding PreviousPageCommand}"
                             IsEnabled="{Binding HasPreviousPage}"
-                            ToolTip="Page précédente">
-                        <materialDesign:PackIcon Kind="ChevronLeft"/>
-                    </Button>
+                            Width="40"
+                            Height="32"
+                            Margin="0,0,8,0"
+                            ToolTip="Page précédente"/>
                     
                     <TextBlock Text="{Binding CurrentPage}" 
-                               Style="{StaticResource MaterialDesignBody1TextBlock}"
                                VerticalAlignment="Center"
-                               Margin="16,0"/>
+                               FontWeight="Medium"
+                               Margin="8,0"/>
                     
-                    <Button Command="{Binding NextPageCommand}"
-                            Style="{StaticResource MaterialDesignIconForegroundButton}"
+                    <Button Content="➡️"
+                            Command="{Binding NextPageCommand}"
                             IsEnabled="{Binding HasNextPage}"
-                            ToolTip="Page suivante">
-                        <materialDesign:PackIcon Kind="ChevronRight"/>
-                    </Button>
+                            Width="40"
+                            Height="32"
+                            Margin="8,0,0,0"
+                            ToolTip="Page suivante"/>
                 </StackPanel>
-
-                <!-- Bouton aller à la page -->
-                <Button Grid.Column="3"
-                        Content="Aller à la page..."
-                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                        Margin="16,0,0,0"/>
             </Grid>
-        </materialDesign:Card>
+        </Border>
     </Grid>
 </UserControl>

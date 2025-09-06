@@ -1,6 +1,6 @@
 Code Client,Nom/Raison Sociale,Type Client,NCC,Nom Commercial,Adresse,Ville,Code Postal,Pays,Téléphone,Email,Représentant,N° Fiscal,Devise,Actif,Notes
-CLI001,ARTHUR LE GRAND SARL,Entreprise,1234567890A,Arthur Le Grand,123 Boulevard de la Paix,Abidjan,01001,Côte d'Ivoire,+225 01 02 03 04,arthur@legrand.ci,Jean KOUAME,TIN123456,XOF,Oui,Client VIP
+CLI001,ARTHUR LE GRAND SARL,Entreprise,1234567890,Arthur Le Grand,123 Boulevard de la Paix,Abidjan,01001,Côte d'Ivoire,+225 01 02 03 04,arthur@legrand.ci,Jean KOUAME,TIN123456,XOF,Oui,Client VIP
 CLI002,MARIE KOUASSI,Particulier,,Marie Kouassi Boutique,45 Rue du Commerce,Bouaké,02001,Côte d'Ivoire,+225 05 06 07 08,marie.kouassi@gmail.com,Paul DIALLO,,XOF,Oui,
-CLI003,MINISTERE DE LA SANTE,Administration,9876543210B,Min. Santé et Hygiène Publique,Plateau Tour C 15ème étage,Abidjan,01000,Côte d'Ivoire,+225 20 21 22 23,contact@sante.gouv.ci,Dr. BAMBA,GOV789,XOF,Oui,Client gouvernemental
-CLI004,ONG ESPOIR AFRICA,Association,5555666677C,Espoir pour l'Afrique,Zone 4 Marcory,Abidjan,01002,Côte d'Ivoire,+225 07 08 09 10,info@espoirafrique.org,Fatou TRAORE,NGO456,XOF,Oui,Association caritative
-CLI005,INTERNATIONAL CORP,Entreprise,1111222233D,International Corporation CI,Deux Plateaux Vallon,Abidjan,01003,Côte d'Ivoire,+225 22 33 44 55,contact@intcorp.com,Mike JOHNSON,FOR789,USD,Oui,Client international
+CLI003,MINISTERE DE LA SANTE,Administration,9876543210,Min. Santé et Hygiène Publique,Plateau Tour C 15ème étage,Abidjan,01000,Côte d'Ivoire,+225 20 21 22 23,contact@sante.gouv.ci,Dr. BAMBA,GOV789,XOF,Oui,Client gouvernemental
+CLI004,ONG ESPOIR AFRICA,Association,5555666677,Espoir pour l'Afrique,Zone 4 Marcory,Abidjan,01002,Côte d'Ivoire,+225 07 08 09 10,info@espoirafrique.org,Fatou TRAORE,NGO456,XOF,Oui,Association caritative
+CLI005,INTERNATIONAL CORP,Entreprise,1111222233,International Corporation CI,Deux Plateaux Vallon,Abidjan,01003,Côte d'Ivoire,+225 22 33 44 55,contact@intcorp.com,Mike JOHNSON,FOR789,USD,Oui,Client international

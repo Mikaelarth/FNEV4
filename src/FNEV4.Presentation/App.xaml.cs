@@ -127,7 +127,7 @@ namespace FNEV4.Presentation
                         var pathService = serviceProvider.GetRequiredService<IPathConfigurationService>();
                         var connectionString = $"Data Source={pathService.DatabasePath}";
                         options.UseSqlite(connectionString);
-                    });
+                    }, ServiceLifetime.Transient); // Force une nouvelle instance à chaque injection
 
                     // Services Infrastructure
                     services.AddScoped<IDatabaseService, DatabaseService>();

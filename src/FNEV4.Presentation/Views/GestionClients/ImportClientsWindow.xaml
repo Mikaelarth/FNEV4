@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:vm="clr-namespace:FNEV4.Presentation.ViewModels.GestionClients"
+        xmlns:local="clr-namespace:FNEV4.Presentation.Converters"
         Title="{Binding WindowTitle}"
         Height="700" Width="900"
         MinHeight="600" MinWidth="800"
@@ -36,6 +37,7 @@
 
         <!-- Convertisseurs -->
         <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+        <local:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
     </Window.Resources>
 
     <Grid Margin="16">
@@ -132,8 +134,14 @@
                         <StackPanel Orientation="Horizontal" Margin="0,8">
                             <TextBlock Text="Nombre max d'erreurs:" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBox Text="{Binding MaxErrors}" 
-                                     Width="80" 
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                     Width="100" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     ToolTip="{Binding MaxErrorsDisplayText}"/>
+                            <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                    Width="24" Height="24" Margin="4,0,0,0"
+                                    ToolTip="Aide sur les options d'import&#x0a;• Ignorer doublons: Évite les clients déjà existants&#x0a;• Mettre à jour: Modifie les données existantes&#x0a;• Validation: Test sans importation&#x0a;• Max erreurs: Arrête l'import si trop d'erreurs (1-10000)">
+                                <md:PackIcon Kind="HelpCircleOutline" Width="16" Height="16"/>
+                            </Button>
                         </StackPanel>
                     </StackPanel>
                 </md:Card>
@@ -159,7 +167,7 @@
                                 </StackPanel>
                             </md:Card>
 
-                            <md:Card Style="{StaticResource StatsCardStyle}" Background="{StaticResource MaterialDesignValidationErrorBrush}">
+                            <md:Card Style="{StaticResource StatsCardStyle}" Background="#4CAF50">
                                 <StackPanel>
                                     <TextBlock Text="{Binding ValidRows}" 
                                                Style="{StaticResource MaterialDesignHeadline4TextBlock}" 
@@ -172,7 +180,7 @@
                                 </StackPanel>
                             </md:Card>
 
-                            <md:Card Style="{StaticResource StatsCardStyle}" Background="{StaticResource SecondaryHueMidBrush}">
+                            <md:Card Style="{StaticResource StatsCardStyle}" Background="#F44336">
                                 <StackPanel>
                                     <TextBlock Text="{Binding ErrorRows}" 
                                                Style="{StaticResource MaterialDesignHeadline4TextBlock}" 
@@ -185,17 +193,90 @@
                                 </StackPanel>
                             </md:Card>
 
-                            <md:Card Style="{StaticResource StatsCardStyle}" Background="{StaticResource MaterialDesignDivider}">
+                            <md:Card Style="{StaticResource StatsCardStyle}" Background="#FF9800">
                                 <StackPanel>
                                     <TextBlock Text="{Binding DuplicateRows}" 
                                                Style="{StaticResource MaterialDesignHeadline4TextBlock}" 
-                                               HorizontalAlignment="Center"/>
+                                               HorizontalAlignment="Center"
+                                               Foreground="White"/>
                                     <TextBlock Text="Doublons" 
                                                Style="{StaticResource MaterialDesignCaptionTextBlock}" 
-                                               HorizontalAlignment="Center"/>
+                                               HorizontalAlignment="Center"
+                                               Foreground="White"/>
                                 </StackPanel>
                             </md:Card>
                         </UniformGrid>
+
+                        <!-- Détails de l'aperçu -->
+                        <Expander Header="Détails de l'analyse" Margin="0,16,0,0" DataContext="{Binding Preview}">
+                            <StackPanel Margin="16">
+                                <!-- Colonnes détectées -->
+                                <TextBlock Text="Colonnes détectées:" 
+                                           Style="{StaticResource MaterialDesignSubtitle2TextBlock}" 
+                                           Margin="0,0,0,8"/>
+                                <ItemsControl ItemsSource="{Binding DetectedColumns}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <md:Chip Content="{Binding}" Margin="2" 
+                                                     Style="{StaticResource MaterialDesignOutlineChip}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!-- Exemples d'erreurs -->
+                                <StackPanel Margin="0,16,0,0" 
+                                            Visibility="{Binding SampleErrors.Count, Converter={StaticResource CountToVisibilityConverter}}">
+                                    <TextBlock Text="Exemples d'erreurs:" 
+                                               Style="{StaticResource MaterialDesignSubtitle2TextBlock}" 
+                                               Margin="0,0,0,8"/>
+                                    <ItemsControl ItemsSource="{Binding SampleErrors}" MaxHeight="150">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#FFEBEE" 
+                                                        BorderBrush="#F44336" 
+                                                        BorderThickness="1,0,0,0" 
+                                                        Padding="8,4" 
+                                                        Margin="0,2">
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding ErrorMessage}" 
+                                                                   FontWeight="SemiBold" 
+                                                                   Foreground="#F44336"/>
+                                                        <TextBlock Text="{Binding RowData}" 
+                                                                   FontSize="11" 
+                                                                   Foreground="#666" 
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+
+                                <!-- Informations du fichier -->
+                                <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                                    <TextBlock Text="Analysé le:" Margin="0,0,8,0" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding AnalyzedAt, StringFormat='dd/MM/yyyy HH:mm:ss'}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Expander>
+
+                        <!-- Actions contextuelles -->
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0" HorizontalAlignment="Right">
+                            <Button Content="🔄 Re-analyser" 
+                                    Command="{Binding DataContext.GeneratePreviewCommand, RelativeSource={RelativeSource AncestorType=md:Card}}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Margin="0,0,8,0"
+                                    ToolTip="Régénérer l'aperçu du fichier"/>
+                            <Button Content="📋 Rapport détaillé" 
+                                    Command="{Binding DataContext.ShowDetailedReportCommand, RelativeSource={RelativeSource AncestorType=md:Card}}"
+                                    Style="{StaticResource MaterialDesignOutlinedSecondaryButton}"
+                                    ToolTip="Afficher un rapport complet de l'analyse"/>
+                        </StackPanel>
                     </StackPanel>
                 </md:Card>
 
@@ -312,15 +393,16 @@
                         Orientation="Horizontal" 
                         HorizontalAlignment="Right">
                 
-                <Button Command="{Binding GeneratePreviewCommand}"
+                <Button Command="{Binding GeneratePreviewAsyncCommand}"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
-                        IsEnabled="{Binding IsFileSelected}"
+                        IsEnabled="{Binding CanRefreshPreview}"
                         Margin="0,0,8,0"
-                        Width="100">
+                        Width="140"
+                        ToolTip="Actualise l'aperçu après modification des options d'import ou pour rafraîchir les données">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
-                            <md:PackIcon Kind="Eye" Margin="0,0,4,0"/>
-                            <TextBlock Text="Aperçu"/>
+                            <md:PackIcon Kind="Refresh" Margin="0,0,4,0"/>
+                            <TextBlock Text="Actualiser"/>
                         </StackPanel>
                     </Button.Content>
                 </Button>
@@ -329,11 +411,28 @@
                         Style="{StaticResource MaterialDesignRaisedButton}"
                         IsEnabled="{Binding CanImport}"
                         Margin="0,0,8,0"
-                        Width="140">
+                        MinWidth="160"
+                        Padding="16,8">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
-                            <md:PackIcon Kind="Import" Margin="0,0,4,0"/>
-                            <TextBlock Text="{Binding ImportButtonText}"/>
+                            <md:PackIcon Kind="{Binding ImportIconKind}" Margin="0,0,8,0"/>
+                            <TextBlock Text="{Binding ImportButtonText}" TextWrapping="NoWrap"/>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
+
+                <!-- Bouton Annuler (visible seulement pendant le traitement) -->
+                <Button Command="{Binding CancelImportCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedSecondaryButton}"
+                        Margin="0,0,8,0"
+                        Width="120"
+                        Visibility="{Binding CanCancelImport, Converter={StaticResource BoolToVisibility}}"
+                        Background="#FFE57373"
+                        BorderBrush="#FFE57373">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="Cancel" Margin="0,0,4,0"/>
+                            <TextBlock Text="Annuler"/>
                         </StackPanel>
                     </Button.Content>
                 </Button>

@@ -47,7 +47,7 @@ namespace FNEV4.Application.UseCases.GestionClients
         }
 
         /// <summary>
-        /// Exécute l'import des clients depuis le fichier Excel
+        /// Exécute l'import des clients depuis le fichier Excel avec validation DGI
         /// </summary>
         public async Task<ClientImportResultDto> ExecuteImportAsync(string filePath, ClientImportOptionsDto options)
         {
@@ -60,19 +60,19 @@ namespace FNEV4.Application.UseCases.GestionClients
 
             try
             {
-                await _loggingService.LogInformationAsync($"Début import clients Excel: {Path.GetFileName(filePath)}");
+                await _loggingService.LogInformationAsync($"Début import clients Excel DGI: {Path.GetFileName(filePath)}");
 
-                // 1. Lire et valider le fichier Excel
+                // 1. Lire et valider le fichier Excel avec modèle DGI
                 var importedClients = await _excelImportService.ReadExcelFileAsync(filePath);
                 result.ProcessedCount = importedClients.Count;
 
                 var validatedClients = await _excelImportService.ValidateDataAsync(importedClients);
 
-                // 2. Séparer les clients valides et invalides
+                // 2. Séparer les clients valides et invalides selon règles DGI
                 var validClients = validatedClients.Where(c => c.IsValid).ToList();
                 var invalidClients = validatedClients.Where(c => !c.IsValid).ToList();
 
-                // 3. Traiter les erreurs de validation
+                // 3. Traiter les erreurs de validation DGI
                 foreach (var invalidClient in invalidClients)
                 {
                     foreach (var error in invalidClient.ValidationErrors)
@@ -81,8 +81,8 @@ namespace FNEV4.Application.UseCases.GestionClients
                         {
                             RowNumber = invalidClient.RowNumber,
                             ErrorMessage = error,
-                            RowData = $"{invalidClient.ClientCode} - {invalidClient.Name}",
-                            ErrorType = "Validation"
+                            RowData = $"{invalidClient.ClientCode} - {invalidClient.Name} ({invalidClient.Template})",
+                            ErrorType = "ValidationDGI"
                         });
                     }
                 }
@@ -94,12 +94,12 @@ namespace FNEV4.Application.UseCases.GestionClients
                 {
                     result.SuccessCount = validClients.Count;
                     result.IsSuccess = true;
-                    await _loggingService.LogInformationAsync($"Validation terminée: {result.SuccessCount} clients valides sur {result.ProcessedCount}");
+                    await _loggingService.LogInformationAsync($"Validation DGI terminée: {result.SuccessCount} clients valides sur {result.ProcessedCount}");
                     return result;
                 }
 
                 // 5. Traitement des doublons
-                var clientsToProcess = new List<ClientImportModel>();
+                var clientsToProcess = new List<ClientImportModelDgi>();
                 foreach (var client in validClients)
                 {
                     var existingClient = await _clientRepository.GetByClientCodeAsync(client.ClientCode);
@@ -121,7 +121,7 @@ namespace FNEV4.Application.UseCases.GestionClients
                             {
                                 RowNumber = client.RowNumber,
                                 ErrorMessage = "Client déjà existant",
-                                RowData = $"{client.ClientCode} - {client.Name}",
+                                RowData = $"{client.ClientCode} - {client.Name} ({client.Template})",
                                 ErrorType = "Duplicate"
                             });
                             result.ErrorCount++;
@@ -139,7 +139,7 @@ namespace FNEV4.Application.UseCases.GestionClients
                 {
                     try
                     {
-                        var client = ConvertToEntity(clientModel);
+                        var client = clientModel.ToClientEntity();
                         await _clientRepository.CreateAsync(client);
                         savedCount++;
                     }
@@ -151,7 +151,7 @@ namespace FNEV4.Application.UseCases.GestionClients
                         {
                             RowNumber = clientModel.RowNumber,
                             ErrorMessage = $"Erreur base de données: {ex.Message}",
-                            RowData = $"{clientModel.ClientCode} - {clientModel.Name}",
+                            RowData = $"{clientModel.ClientCode} - {clientModel.Name} ({clientModel.Template})",
                             ErrorType = "Database"
                         });
                         result.ErrorCount++;
@@ -164,12 +164,12 @@ namespace FNEV4.Application.UseCases.GestionClients
                 stopwatch.Stop();
                 result.Duration = stopwatch.Elapsed;
 
-                await _loggingService.LogInformationAsync($"Import terminé: {result.GetSummary()} en {result.Duration.TotalSeconds:F2}s");
+                await _loggingService.LogInformationAsync($"Import DGI terminé: {result.GetSummary()} en {result.Duration.TotalSeconds:F2}s");
                 return result;
             }
             catch (Exception ex)
             {
-                await _loggingService.LogErrorAsync($"Erreur import clients: {ex.Message}", ex);
+                await _loggingService.LogErrorAsync($"Erreur import clients DGI: {ex.Message}", ex);
                 
                 result.IsSuccess = false;
                 result.GeneralErrors.Add($"Erreur critique: {ex.Message}");
@@ -182,29 +182,21 @@ namespace FNEV4.Application.UseCases.GestionClients
         }
 
         /// <summary>
-        /// Convertit un modèle d'import en entité Client
+        /// Exporte un modèle Excel vierge avec les colonnes attendues DGI
         /// </summary>
-        private Client ConvertToEntity(ClientImportModel model)
+        public async Task ExportTemplateAsync(string filePath)
         {
-            return new Client
+            try
             {
-                ClientCode = model.ClientCode,
-                Name = model.Name,
-                ClientType = model.ClientType,
-                ClientNcc = model.ClientNcc,
-                CompanyName = model.CommercialName,
-                Address = model.Address,
-                Phone = model.Phone,
-                Email = model.Email,
-                Country = model.Country,
-                DefaultCurrency = model.Currency,
-                SellerName = model.Representative,
-                TaxIdentificationNumber = model.TaxNumber,
-                IsActive = model.IsActive,
-                Notes = model.Notes,
-                CreatedDate = DateTime.Now,
-                LastModifiedDate = DateTime.Now
-            };
+                await _loggingService.LogInformationAsync($"Génération modèle Excel: {Path.GetFileName(filePath)}");
+                await _excelImportService.ExportTemplateAsync(filePath);
+                await _loggingService.LogInformationAsync($"Modèle Excel créé avec succès: {filePath}");
+            }
+            catch (Exception ex)
+            {
+                await _loggingService.LogErrorAsync($"Erreur génération modèle Excel: {ex.Message}", ex);
+                throw;
+            }
         }
     }
 }

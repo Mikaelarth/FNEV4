@@ -4,9 +4,11 @@ using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using FNEV4.Core.Entities;
 using FNEV4.Core.Interfaces;
 using FNEV4.Application.UseCases.GestionClients;
+using FNEV4.Presentation.Messages;
 using InfraLogging = FNEV4.Infrastructure.Services.ILoggingService;
 
 namespace FNEV4.Presentation.ViewModels.GestionClients
@@ -15,8 +17,15 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
     /// ViewModel pour la liste des clients
     /// Module: Gestion Clients > Liste des clients
     /// </summary>
-    public partial class ListeClientsViewModel : ObservableObject
+    public partial class ListeClientsViewModel : ObservableObject, IRecipient<ClientsImportedMessage>
     {
+        #region Static Members
+
+        // Verrou statique pour éviter la concurrence DbContext
+        private static readonly SemaphoreSlim _dbLock = new SemaphoreSlim(1, 1);
+
+        #endregion
+
         #region Services
 
         private readonly ListeClientsUseCase _listeClientsUseCase;
@@ -41,6 +50,9 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
 
         [ObservableProperty]
         private bool? _isActiveFilter = true;
+
+        [ObservableProperty]
+        private StatusOption? _selectedStatusOption;
 
         [ObservableProperty]
         private bool _isLoading;
@@ -79,10 +91,17 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
         public ObservableCollection<string> ClientTypes { get; } = new()
         {
             "Tous",
-            "Individual",
-            "Company", 
-            "Government",
-            "International"
+            "B2C",  // Individual -> B2C
+            "B2B",  // Company -> B2B 
+            "B2G",  // Government -> B2G
+            "B2F"   // International -> B2F
+        };
+
+        public ObservableCollection<StatusOption> StatusOptions { get; } = new()
+        {
+            new StatusOption { Display = "Tous", Value = null },
+            new StatusOption { Display = "Actif", Value = true },
+            new StatusOption { Display = "Inactif", Value = false }
         };
 
         public ObservableCollection<int> PageSizes { get; } = new()
@@ -103,9 +122,6 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
             _loggingService = loggingService;
             _serviceProvider = serviceProvider;
 
-            // Initialisation des valeurs par défaut
-            SelectedClientType = "Tous";
-
             // Commandes
             LoadClientsCommand = new AsyncRelayCommand(LoadClientsAsync);
             RefreshCommand = new AsyncRelayCommand(RefreshAsync);
@@ -119,7 +135,10 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
             AddClientCommand = new RelayCommand(AddClient);
             ImportClientsCommand = new RelayCommand(ImportClients);
 
-            // Charger les données initiales
+            // Enregistrement pour recevoir les notifications d'import
+            WeakReferenceMessenger.Default.Register<ClientsImportedMessage>(this);
+
+            // INITIALISATION AUTOMATIQUE comme BaseDonneesViewModel
             _ = Task.Run(InitializeAsync);
         }
 
@@ -147,10 +166,17 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
         {
             try
             {
-                await LoadStatisticsAsync();
+                // Initialisation différée pour éviter les conflits de binding
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    SelectedClientType = "Tous"; // Initialisation sécurisée
+                    SelectedStatusOption = StatusOptions.FirstOrDefault(s => s.Value == null); // Sélectionner "Tous" par défaut
+                });
+
+                // Charger les clients et les statistiques
                 await LoadClientsAsync();
-                
-                await _loggingService.LogInfoAsync("Liste des clients initialisée", "GestionClients");
+                await Task.Delay(100); // Petit délai pour éviter la concurrence
+                await LoadStatisticsAsync();
             }
             catch (Exception ex)
             {
@@ -165,37 +191,54 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
                 IsLoading = true;
                 HasError = false;
 
-                var request = new ListeClientsRequest
-                {
-                    PageNumber = CurrentPage,
-                    PageSize = PageSize,
-                    SearchTerm = string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm,
-                    ClientType = SelectedClientType,
-                    IsActive = IsActiveFilter
-                };
+                // Utiliser le verrou pour éviter la concurrence DbContext
+                await _dbLock.WaitAsync();
 
-                var response = await _listeClientsUseCase.ExecuteAsync(request);
-
-                if (response.Success)
+                try
                 {
-                    Clients.Clear();
-                    foreach (var client in response.Clients)
+                    var request = new ListeClientsRequest
                     {
-                        Clients.Add(client);
+                        PageNumber = CurrentPage,
+                        PageSize = PageSize,
+                        SearchTerm = string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm,
+                        ClientType = SelectedClientType == "Tous" ? null : SelectedClientType,
+                        IsActive = IsActiveFilter
+                    };
+
+                    var response = await _listeClientsUseCase.ExecuteAsync(request);
+
+                    if (response.Success)
+                    {
+                        // Mettre à jour la collection sur le thread UI
+                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            Clients.Clear();
+                            foreach (var client in response.Clients)
+                            {
+                                Clients.Add(client);
+                            }
+                        });
+
+                        TotalCount = response.TotalCount;
+                        TotalPages = response.TotalPages;
+                        HasNextPage = response.HasNextPage;
+                        HasPreviousPage = response.HasPreviousPage;
+
+                        // Mettre à jour l'état des commandes de navigation sur le thread UI
+                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            NextPageCommand.NotifyCanExecuteChanged();
+                            PreviousPageCommand.NotifyCanExecuteChanged();
+                        });
                     }
-
-                    TotalCount = response.TotalCount;
-                    TotalPages = response.TotalPages;
-                    HasNextPage = response.HasNextPage;
-                    HasPreviousPage = response.HasPreviousPage;
-
-                    // Mettre à jour l'état des commandes de navigation
-                    NextPageCommand.NotifyCanExecuteChanged();
-                    PreviousPageCommand.NotifyCanExecuteChanged();
+                    else
+                    {
+                        await HandleErrorAsync("Erreur lors du chargement des clients", response.ErrorMessage);
+                    }
                 }
-                else
+                finally
                 {
-                    await HandleErrorAsync("Erreur lors du chargement des clients", response.ErrorMessage);
+                    _dbLock.Release();
                 }
             }
             catch (Exception ex)
@@ -212,10 +255,20 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
         {
             try
             {
-                var response = await _listeClientsUseCase.GetStatisticsAsync();
-                if (response.Success)
+                // Utiliser le même verrou pour éviter la concurrence
+                await _dbLock.WaitAsync();
+
+                try
                 {
-                    Statistics = response.Statistics;
+                    var response = await _listeClientsUseCase.GetStatisticsAsync();
+                    if (response.Success)
+                    {
+                        Statistics = response.Statistics;
+                    }
+                }
+                finally
+                {
+                    _dbLock.Release();
                 }
             }
             catch (Exception ex)
@@ -231,15 +284,9 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
                 IsLoading = true;
                 HasError = false;
                 
-                await _loggingService.LogInfoAsync("Actualisation de la liste des clients demandée", "GestionClients");
-                
-                // Recharger les statistiques et les clients en parallèle pour améliorer les performances
-                var statisticsTask = LoadStatisticsAsync();
-                var clientsTask = LoadClientsAsync();
-                
-                await Task.WhenAll(statisticsTask, clientsTask);
-                
-                await _loggingService.LogInfoAsync("Actualisation de la liste des clients terminée", "GestionClients");
+                // Recharger les statistiques et les clients pour améliorer les performances
+                await LoadStatisticsAsync();
+                await LoadClientsAsync();
             }
             catch (Exception ex)
             {
@@ -349,6 +396,14 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
             CurrentPage = 1;
             OnPropertyChanged(nameof(ActiveFiltersInfo));
             _ = Task.Run(LoadClientsAsync);
+        }
+
+        partial void OnSelectedStatusOptionChanged(StatusOption? value)
+        {
+            if (value != null)
+            {
+                IsActiveFilter = value.Value;
+            }
         }
 
         partial void OnIsActiveFilterChanged(bool? value)
@@ -529,5 +584,34 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
         }
 
         #endregion
+
+        #region IRecipient Implementation
+
+        /// <summary>
+        /// Reçoit les notifications d'import de clients et rafraîchit la liste
+        /// </summary>
+        public void Receive(ClientsImportedMessage message)
+        {
+            // Rafraîchir la liste des clients en arrière-plan
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await LoadClientsAsync();
+                }
+                catch (Exception ex)
+                {
+                    await _loggingService.LogErrorAsync($"Erreur lors du rafraîchissement après import: {ex.Message}", "GestionClients", ex);
+                }
+            });
+        }
+
+        #endregion
+    }
+
+    public class StatusOption
+    {
+        public string Display { get; set; } = string.Empty;
+        public bool? Value { get; set; }
     }
 }

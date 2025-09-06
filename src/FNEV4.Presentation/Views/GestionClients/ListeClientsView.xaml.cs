@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 using Microsoft.Extensions.DependencyInjection;
-using FNEV4.Presentation.Services;
+using FNEV4.Presentation.ViewModels.GestionClients;
 
 namespace FNEV4.Presentation.Views.GestionClients
 {
@@ -13,12 +13,8 @@ namespace FNEV4.Presentation.Views.GestionClients
         {
             InitializeComponent();
             
-            // Configuration du DataContext via le ViewModelLocator
-            if (App.ServiceProvider != null)
-            {
-                var locator = App.ServiceProvider.GetService(typeof(ViewModelLocator)) as ViewModelLocator;
-                DataContext = locator?.ListeClientsViewModel;
-            }
+            // Utiliser le MÊME pattern que BaseDonneesView - injection directe simple
+            DataContext = App.ServiceProvider.GetRequiredService<ListeClientsViewModel>();
         }
     }
 }

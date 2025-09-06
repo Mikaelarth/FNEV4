@@ -14,14 +14,14 @@ namespace FNEV4.Application.Interfaces
         Task<ClientImportPreviewDto> PreviewFileAsync(string filePath);
 
         /// <summary>
-        /// Lit et parse le fichier Excel
+        /// Lit et parse le fichier Excel avec le modèle DGI
         /// </summary>
-        Task<List<ClientImportModel>> ReadExcelFileAsync(string filePath);
+        Task<List<ClientImportModelDgi>> ReadExcelFileAsync(string filePath);
 
         /// <summary>
-        /// Valide les données avant import
+        /// Valide les données selon les règles DGI
         /// </summary>
-        Task<List<ClientImportModel>> ValidateDataAsync(List<ClientImportModel> clients);
+        Task<List<ClientImportModelDgi>> ValidateDataAsync(List<ClientImportModelDgi> clients);
 
         /// <summary>
         /// Exporte un modèle Excel vierge

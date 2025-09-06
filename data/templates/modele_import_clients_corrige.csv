@@ -1,0 +1,3 @@
+Code Client,Nom/Raison Sociale,Type Client,NCC,Nom Commercial,Adresse,Ville,Code Postal,Pays,Téléphone,Email,Représentant,N° Fiscal,Devise,Actif,Notes
+CLI001,ARTHUR LE GRAND SARL,Entreprise,1234567890,Arthur Le Grand,123 Boulevard de la Paix,Abidjan,01001,Côte d'Ivoire,+225 01 02 03 04,arthur@legrand.ci,Jean KOUAME,TIN123456,XOF,Oui,Client VIP
+CLI002,MARIE KOUASSI,Particulier,,Marie Kouassi Boutique,45 Rue du Commerce,Bouaké,02001,Côte d'Ivoire,+225 05 06 07 08,marie.kouassi@gmail.com,Paul DIALLO,,XOF,Oui,
