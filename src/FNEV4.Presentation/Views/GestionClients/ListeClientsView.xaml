@@ -104,31 +104,34 @@
                             Command="{Binding RefreshCommand}"
                             Background="#E3F2FD"
                             Foreground="#1976D2"
-                            Padding="16,10"
-                            Margin="0,0,10,0"
+                            Padding="20,12"
+                            Margin="0,0,12,0"
                             BorderThickness="1"
                             BorderBrush="#BBDEFB"
-                            FontSize="13"
-                            MinWidth="120"/>
+                            FontSize="14"
+                            MinWidth="130"
+                            MinHeight="40"/>
                     
                     <Button Content="📥 Import Excel"
                             Command="{Binding ImportClientsCommand}"
                             Background="#1976D2"
                             Foreground="White"
-                            Padding="16,10"
-                            Margin="0,0,10,0"
+                            Padding="20,12"
+                            Margin="0,0,12,0"
                             BorderThickness="0"
-                            FontSize="13"
-                            MinWidth="130"/>
+                            FontSize="14"
+                            MinWidth="140"
+                            MinHeight="40"/>
                     
                     <Button Content="➕ Nouveau client"
                             Command="{Binding AddClientCommand}"
                             Background="#4CAF50"
                             Foreground="White"
-                            Padding="16,10"
+                            Padding="20,12"
                             BorderThickness="0"
-                            FontSize="13"
-                            MinWidth="140"/>
+                            FontSize="14"
+                            MinWidth="150"
+                            MinHeight="40"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -254,88 +257,96 @@
                           VerticalScrollBarVisibility="Auto">                <DataGrid.Columns>
                     <!-- Code client -->
                     <DataGridTextColumn Header="Code" 
-                                        Binding="{Binding ClientCode}" 
-                                        Width="100">
+                                        Binding="{Binding ClientCode}"
+                                        Width="0.8*">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="FontWeight" Value="Medium"/>
                                 <Setter Property="Foreground" Value="#1976D2"/>
+                                <Setter Property="MinWidth" Value="80"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
                     <!-- Nom -->
                     <DataGridTextColumn Header="Nom/Raison sociale" 
-                                        Binding="{Binding Name}" 
-                                        Width="220">
+                                        Binding="{Binding Name}"
+                                        Width="2.5*">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="FontWeight" Value="Medium"/>
                                 <Setter Property="TextWrapping" Value="NoWrap"/>
                                 <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
                                 <Setter Property="ToolTip" Value="{Binding Name}"/>
+                                <Setter Property="MinWidth" Value="200"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
                     <!-- NCC -->
                     <DataGridTextColumn Header="NCC" 
-                                        Binding="{Binding ClientNcc}" 
-                                        Width="120">
+                                        Binding="{Binding ClientNcc}"
+                                        Width="1*">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="FontFamily" Value="Consolas"/>
                                 <Setter Property="Foreground" Value="#666666"/>
+                                <Setter Property="MinWidth" Value="100"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
                     <!-- Type -->
                     <DataGridTextColumn Header="Type" 
-                                        Binding="{Binding ClientType}" 
-                                        Width="70">
+                                        Binding="{Binding ClientType}"
+                                        Width="0.6*">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="FontWeight" Value="Medium"/>
                                 <Setter Property="Foreground" Value="#4CAF50"/>
                                 <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="MinWidth" Value="60"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
                     <!-- Email -->
                     <DataGridTextColumn Header="Email" 
-                                        Binding="{Binding Email}" 
-                                        Width="200">
+                                        Binding="{Binding Email}"
+                                        Width="2*">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="TextWrapping" Value="NoWrap"/>
                                 <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
                                 <Setter Property="Foreground" Value="#666666"/>
                                 <Setter Property="ToolTip" Value="{Binding Email}"/>
+                                <Setter Property="MinWidth" Value="160"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
                     <!-- Téléphone -->
                     <DataGridTextColumn Header="Téléphone" 
-                                        Binding="{Binding Phone}" 
-                                        Width="140">
+                                        Binding="{Binding Phone}"
+                                        Width="1.2*">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="FontFamily" Value="Consolas"/>
                                 <Setter Property="Foreground" Value="#666666"/>
+                                <Setter Property="MinWidth" Value="120"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
                     <!-- Statut avec Template -->
-                    <DataGridTemplateColumn Header="Statut" Width="90">
+                    <DataGridTemplateColumn Header="Statut"
+                                            Width="0.8*">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Medium">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
+                                            <Setter Property="MinWidth" Value="80"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsActive}" Value="True">
                                                     <Setter Property="Text" Value="✅ Actif"/>
@@ -355,41 +366,51 @@
 
                     <!-- Date création -->
                     <DataGridTextColumn Header="Créé le" 
-                                        Binding="{Binding CreatedDate, StringFormat='{}{0:dd/MM/yyyy}'}" 
-                                        Width="90">
+                                        Binding="{Binding CreatedDate, StringFormat='{}{0:dd/MM/yyyy}'}"
+                                        Width="0.8*">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="#999999"/>
                                 <Setter Property="FontSize" Value="12"/>
                                 <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="MinWidth" Value="80"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
                     <!-- Actions - À L'EXTRÊME DROITE -->
-                    <DataGridTemplateColumn Header="Actions" Width="140" CanUserSort="False">
+                    <DataGridTemplateColumn Header="Actions" 
+                                            CanUserSort="False"
+                                            Width="1.2*">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" 
                                             HorizontalAlignment="Right"
-                                            VerticalAlignment="Center">
+                                            VerticalAlignment="Center"
+                                            MinWidth="130">
                                     <Button Content="👁"
                                             Command="{Binding DataContext.ViewClientDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
                                             Style="{StaticResource ActionButtonStyle}"
-                                            ToolTip="Voir détails"/>
+                                            ToolTip="Voir détails"
+                                            MinWidth="30"
+                                            MinHeight="30"/>
                                     
                                     <Button Content="✏️"
                                             Command="{Binding DataContext.EditClientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
                                             Style="{StaticResource ActionButtonStyle}"
-                                            ToolTip="Modifier"/>
+                                            ToolTip="Modifier"
+                                            MinWidth="30"
+                                            MinHeight="30"/>
                                     
                                     <Button Content="🗑️"
                                             Command="{Binding DataContext.DeleteClientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
                                             Style="{StaticResource ActionButtonStyle}"
-                                            ToolTip="Supprimer"/>
+                                            ToolTip="Supprimer"
+                                            MinWidth="30"
+                                            MinHeight="30"/>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
