@@ -2,5 +2,7 @@
 FC:\wamp64\www\FNEV4\src\FNEV4.Presentation\App.xaml;;
 FC:\wamp64\www\FNEV4\src\FNEV4.Presentation\Views\Configuration\ApiFneConfigView.xaml;;
 FC:\wamp64\www\FNEV4\src\FNEV4.Presentation\Views\Configuration\CheminsDossiersConfigView.xaml;;
+FC:\wamp64\www\FNEV4\src\FNEV4.Presentation\Views\GestionClients\ImportClientsWindow.xaml;;
+FC:\wamp64\www\FNEV4\src\FNEV4.Presentation\Views\GestionClients\ListeClientsView.xaml;;
 FC:\wamp64\www\FNEV4\src\FNEV4.Presentation\Views\MainWindow.xaml;;
 

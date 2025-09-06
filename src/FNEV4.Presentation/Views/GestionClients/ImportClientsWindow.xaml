@@ -1,0 +1,360 @@
+<Window x:Class="FNEV4.Presentation.Views.GestionClients.ImportClientsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:vm="clr-namespace:FNEV4.Presentation.ViewModels.GestionClients"
+        Title="{Binding WindowTitle}"
+        Height="700" Width="900"
+        MinHeight="600" MinWidth="800"
+        WindowStartupLocation="CenterOwner"
+        Style="{StaticResource MaterialDesignWindow}">
+
+    <Window.Resources>
+        <!-- Styles personnalisés -->
+        <Style x:Key="SectionHeaderStyle" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignSubtitle1TextBlock}">
+            <Setter Property="Margin" Value="0,16,0,8"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryHueMidBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style x:Key="DescriptionTextStyle" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignBody2TextBlock}">
+            <Setter Property="Foreground" Value="{StaticResource MaterialDesignBodyLight}"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <Style x:Key="StatsCardStyle" TargetType="md:Card">
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="md:ShadowAssist.ShadowDepth" Value="Depth1"/>
+        </Style>
+
+        <Style x:Key="ErrorListBoxStyle" TargetType="ListBox" BasedOn="{StaticResource MaterialDesignListBox}">
+            <Setter Property="MaxHeight" Value="200"/>
+            <Setter Property="Margin" Value="0,8"/>
+            <Setter Property="Background" Value="{StaticResource MaterialDesignPaper}"/>
+        </Style>
+
+        <!-- Convertisseurs -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tête -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="{Binding HeaderTitle}" 
+                       Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                       Foreground="{StaticResource PrimaryHueMidBrush}"/>
+            <TextBlock Text="{Binding HeaderSubtitle}" 
+                       Style="{StaticResource MaterialDesignBody1TextBlock}"
+                       Foreground="{StaticResource MaterialDesignBodyLight}"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Contenu principal -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+
+                <!-- Section 1: Sélection du fichier -->
+                <md:Card Margin="0,0,0,16" Padding="20">
+                    <StackPanel>
+                        <TextBlock Text="1. Sélection du fichier" Style="{StaticResource SectionHeaderStyle}"/>
+                        <TextBlock Text="Choisissez un fichier Excel (.xlsx) contenant les données clients à importer" 
+                                   Style="{StaticResource DescriptionTextStyle}"/>
+                        
+                        <Grid Margin="0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox Grid.Column="0" 
+                                     Text="{Binding SelectedFilePath, Mode=OneWay}"
+                                     IsReadOnly="True"
+                                     md:HintAssist.Hint="Aucun fichier sélectionné"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Margin="0,0,8,0"/>
+
+                            <Button Grid.Column="1" 
+                                    Content="Parcourir..."
+                                    Command="{Binding SelectFileCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Margin="0,0,8,0"
+                                    Width="120"/>
+
+                            <Button Grid.Column="2" 
+                                    Command="{Binding DownloadTemplateCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedSecondaryButton}"
+                                    ToolTip="Télécharger un modèle Excel"
+                                    Width="100">
+                                <Button.Content>
+                                    <StackPanel Orientation="Horizontal">
+                                        <md:PackIcon Kind="Download" Margin="0,0,4,0"/>
+                                        <TextBlock Text="Modèle"/>
+                                    </StackPanel>
+                                </Button.Content>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </md:Card>
+
+                <!-- Section 2: Options d'import -->
+                <md:Card Margin="0,0,0,16" Padding="20" 
+                         Visibility="{Binding IsFileSelected, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="2. Options d'import" Style="{StaticResource SectionHeaderStyle}"/>
+                        <TextBlock Text="Configurez les paramètres d'import selon vos besoins" 
+                                   Style="{StaticResource DescriptionTextStyle}"/>
+
+                        <UniformGrid Columns="2" Margin="0,8">
+                            <CheckBox IsChecked="{Binding IgnoreDuplicates}" 
+                                      Content="Ignorer les doublons" 
+                                      Margin="0,4"
+                                      ToolTip="Ignorer les clients avec un code ou NCC déjà existant"/>
+                            
+                            <CheckBox IsChecked="{Binding UpdateExisting}" 
+                                      Content="Mettre à jour l'existant" 
+                                      Margin="0,4"
+                                      ToolTip="Mettre à jour les clients existants avec les nouvelles données"/>
+                            
+                            <CheckBox IsChecked="{Binding ValidateOnly}" 
+                                      Content="Validation uniquement" 
+                                      Margin="0,4"
+                                      ToolTip="Valider les données sans les importer"/>
+                        </UniformGrid>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,8">
+                            <TextBlock Text="Nombre max d'erreurs:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox Text="{Binding MaxErrors}" 
+                                     Width="80" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </md:Card>
+
+                <!-- Section 3: Aperçu -->
+                <md:Card Margin="0,0,0,16" Padding="20" 
+                         Visibility="{Binding HasPreview, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="3. Aperçu des données" Style="{StaticResource SectionHeaderStyle}"/>
+                        <TextBlock Text="Vérifiez les statistiques avant l'import" 
+                                   Style="{StaticResource DescriptionTextStyle}"/>
+
+                        <UniformGrid Columns="4" Margin="0,8" DataContext="{Binding Preview}">
+                            <md:Card Style="{StaticResource StatsCardStyle}" Background="{StaticResource MaterialDesignChipBackground}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding TotalRows}" 
+                                               Style="{StaticResource MaterialDesignHeadline4TextBlock}" 
+                                               HorizontalAlignment="Center"
+                                               Foreground="{StaticResource PrimaryHueMidBrush}"/>
+                                    <TextBlock Text="Total lignes" 
+                                               Style="{StaticResource MaterialDesignCaptionTextBlock}" 
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </md:Card>
+
+                            <md:Card Style="{StaticResource StatsCardStyle}" Background="{StaticResource MaterialDesignValidationErrorBrush}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding ValidRows}" 
+                                               Style="{StaticResource MaterialDesignHeadline4TextBlock}" 
+                                               HorizontalAlignment="Center"
+                                               Foreground="White"/>
+                                    <TextBlock Text="Valides" 
+                                               Style="{StaticResource MaterialDesignCaptionTextBlock}" 
+                                               HorizontalAlignment="Center"
+                                               Foreground="White"/>
+                                </StackPanel>
+                            </md:Card>
+
+                            <md:Card Style="{StaticResource StatsCardStyle}" Background="{StaticResource SecondaryHueMidBrush}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding ErrorRows}" 
+                                               Style="{StaticResource MaterialDesignHeadline4TextBlock}" 
+                                               HorizontalAlignment="Center"
+                                               Foreground="White"/>
+                                    <TextBlock Text="Erreurs" 
+                                               Style="{StaticResource MaterialDesignCaptionTextBlock}" 
+                                               HorizontalAlignment="Center"
+                                               Foreground="White"/>
+                                </StackPanel>
+                            </md:Card>
+
+                            <md:Card Style="{StaticResource StatsCardStyle}" Background="{StaticResource MaterialDesignDivider}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding DuplicateRows}" 
+                                               Style="{StaticResource MaterialDesignHeadline4TextBlock}" 
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Doublons" 
+                                               Style="{StaticResource MaterialDesignCaptionTextBlock}" 
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </md:Card>
+                        </UniformGrid>
+                    </StackPanel>
+                </md:Card>
+
+                <!-- Section 4: Résultats -->
+                <md:Card Margin="0,0,0,16" Padding="20" 
+                         Visibility="{Binding HasResults, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="4. Résultats de l'import" Style="{StaticResource SectionHeaderStyle}"/>
+                        
+                        <Grid Margin="0,8" DataContext="{Binding ImportResult}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="{Binding ProcessedCount}" 
+                                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                           Foreground="{StaticResource PrimaryHueMidBrush}"/>
+                                <TextBlock Text="Traités" Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="{Binding SuccessCount}" 
+                                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                           Foreground="Green"/>
+                                <TextBlock Text="Succès" Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="{Binding ErrorCount}" 
+                                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                           Foreground="Red"/>
+                                <TextBlock Text="Erreurs" Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="3">
+                                <TextBlock Text="{Binding SkippedCount}" 
+                                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                           Foreground="Orange"/>
+                                <TextBlock Text="Ignorés" Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Erreurs détaillées -->
+                        <StackPanel Visibility="{Binding ImportErrors.Count, Converter={StaticResource BoolToVisibility}}" 
+                                    Margin="0,16,0,0">
+                            <TextBlock Text="Erreurs détaillées:" 
+                                       Style="{StaticResource MaterialDesignBody1TextBlock}"
+                                       Margin="0,0,0,8"/>
+                            
+                            <ListBox ItemsSource="{Binding ImportErrors}" 
+                                     Style="{StaticResource ErrorListBoxStyle}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="8">
+                                            <TextBlock>
+                                                <Run Text="Ligne " FontWeight="Bold"/>
+                                                <Run Text="{Binding RowNumber}" FontWeight="Bold"/>
+                                                <Run Text=": "/>
+                                                <Run Text="{Binding ErrorMessage}"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding RowData}" 
+                                                       Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                                       Foreground="{StaticResource MaterialDesignBodyLight}"
+                                                       Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </StackPanel>
+                </md:Card>
+
+                <!-- Barre de progression -->
+                <md:Card Padding="20" 
+                         Visibility="{Binding ShowProgress, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding ProgressText}" 
+                                   Style="{StaticResource MaterialDesignBody1TextBlock}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,8"/>
+                        <ProgressBar Value="{Binding ProgressValue}"
+                                     Maximum="100"
+                                     Height="8"
+                                     Style="{StaticResource MaterialDesignLinearProgressBar}"/>
+                    </StackPanel>
+                </md:Card>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Barre de statut et boutons -->
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Statut -->
+            <Border Grid.Row="0" 
+                    Background="{StaticResource MaterialDesignChipBackground}" 
+                    Padding="12,8" 
+                    Margin="0,16,0,8"
+                    CornerRadius="4">
+                <TextBlock Text="{Binding StatusMessage}" 
+                           Style="{StaticResource MaterialDesignBody2TextBlock}"/>
+            </Border>
+
+            <!-- Boutons -->
+            <StackPanel Grid.Row="1" 
+                        Orientation="Horizontal" 
+                        HorizontalAlignment="Right">
+                
+                <Button Command="{Binding GeneratePreviewCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        IsEnabled="{Binding IsFileSelected}"
+                        Margin="0,0,8,0"
+                        Width="100">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="Eye" Margin="0,0,4,0"/>
+                            <TextBlock Text="Aperçu"/>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
+
+                <Button Command="{Binding ExecuteImportCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        IsEnabled="{Binding CanImport}"
+                        Margin="0,0,8,0"
+                        Width="140">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="Import" Margin="0,0,4,0"/>
+                            <TextBlock Text="{Binding ImportButtonText}"/>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
+
+                <Button Command="{Binding ResetCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedSecondaryButton}"
+                        Margin="0,0,8,0"
+                        Width="120">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="Refresh" Margin="0,0,4,0"/>
+                            <TextBlock Text="Reset"/>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
+
+                <Button Content="Fermer" 
+                        Command="{Binding CloseCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Width="100"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

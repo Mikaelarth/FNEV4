@@ -1245,7 +1245,7 @@ namespace FNEV4.Presentation.ViewModels.Configuration
                 }
 
                 // Mise à jour sur le thread UI
-                Application.Current?.Dispatcher.Invoke(() =>
+                System.Windows.Application.Current?.Dispatcher.Invoke(() =>
                 {
                     AvailableConfigurations = new ObservableCollection<string>(allConfigurations);
                     OnPropertyChanged(nameof(AvailableConfigurations));
@@ -1255,7 +1255,7 @@ namespace FNEV4.Presentation.ViewModels.Configuration
             {
                 System.Diagnostics.Debug.WriteLine($"Erreur LoadAvailableConfigurationsAsync: {ex}");
                 // En cas d'erreur, garder au moins les configurations par défaut sur le thread UI
-                Application.Current?.Dispatcher.Invoke(() =>
+                System.Windows.Application.Current?.Dispatcher.Invoke(() =>
                 {
                     AvailableConfigurations = new ObservableCollection<string>(new[] { "Test DGI", "Production DGI" });
                     OnPropertyChanged(nameof(AvailableConfigurations));
@@ -1371,7 +1371,7 @@ namespace FNEV4.Presentation.ViewModels.Configuration
             // Auto-hide après 4 secondes
             Task.Delay(4000).ContinueWith(_ =>
             {
-                Application.Current?.Dispatcher.Invoke(() =>
+                System.Windows.Application.Current?.Dispatcher.Invoke(() =>
                 {
                     IsNotificationVisible = false;
                 });

@@ -157,6 +157,7 @@ namespace FNEV4.Presentation.ViewModels
         private void NavigateToListeClients()
         {
             CurrentModuleName = "Clients - Liste des clients";
+            CurrentView = new Views.GestionClients.ListeClientsView();
         }
 
         [RelayCommand]

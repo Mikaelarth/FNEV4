@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using MaterialDesignThemes.Wpf;
 using FNEV4.Infrastructure.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FNEV4.Presentation.Views.Maintenance
 {
@@ -24,9 +25,8 @@ namespace FNEV4.Presentation.Views.Maintenance
             _tableName = tableName;
             _isNew = isNew;
             
-            // Injection de dépendance simplifiée - Dans un vrai projet, utiliser un container IoC
-            _databaseService = Application.Current.Properties["DatabaseService"] as IDatabaseService 
-                              ?? throw new InvalidOperationException("DatabaseService non trouvé");
+            // Injection de dépendance - utiliser le ServiceProvider statique
+            _databaseService = FNEV4.Presentation.App.ServiceProvider.GetRequiredService<IDatabaseService>();
 
             InitializeDialog();
         }

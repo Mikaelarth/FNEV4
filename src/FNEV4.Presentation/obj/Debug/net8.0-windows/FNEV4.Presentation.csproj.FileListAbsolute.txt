@@ -204,3 +204,9 @@ C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\ref\FNEV4.Pr
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\bin\Debug\net8.0-windows\Data\FNEV4.db
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\bin\Debug\net8.0-windows\Data\database-settings.json
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\bin\Debug\net8.0-windows\Data\Logs\FNEV4_20250906.log
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\GestionClients\ListeClientsView.g.cs
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\GestionClients\ListeClientsView.baml
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\GestionClients\AjoutModificationClientView.baml
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\GestionClients\AjoutModificationClientView.g.cs
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\GestionClients\ImportClientsWindow.g.cs
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\GestionClients\ImportClientsWindow.baml

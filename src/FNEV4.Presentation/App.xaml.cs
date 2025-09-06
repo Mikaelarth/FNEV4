@@ -4,11 +4,16 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using FNEV4.Infrastructure.Data;
 using FNEV4.Infrastructure.Services;
+using FNEV4.Infrastructure.Repositories;
+using FNEV4.Infrastructure.ExcelProcessing.Services;
 using FNEV4.Presentation.ViewModels.Maintenance;
 using FNEV4.Presentation.ViewModels.Configuration;
+using FNEV4.Presentation.ViewModels.GestionClients;
 using FNEV4.Presentation.Services;
 using FNEV4.Core.Interfaces;
 using FNEV4.Core.Services;
+using FNEV4.Application.UseCases.GestionClients;
+using FNEV4.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
 using Microsoft.Extensions.Configuration;
@@ -21,7 +26,7 @@ namespace FNEV4.Presentation
     /// Application principale FNEV4
     /// Gestion du démarrage et configuration globale
     /// </summary>
-    public partial class App : Application
+    public partial class App : System.Windows.Application
     {
         private IHost? _host;
         public static IServiceProvider ServiceProvider { get; private set; } = null!;
@@ -82,17 +87,19 @@ namespace FNEV4.Presentation
             }
         }
 
-        private async Task InitializePathConfiguration()
+        private Task InitializePathConfiguration()
         {
             try
             {
                 var pathService = ServiceProvider.GetRequiredService<IPathConfigurationService>();
                 pathService.EnsureDirectoriesExist();
                 System.Diagnostics.Debug.WriteLine("Dossiers initialisés avec succès");
+                return Task.CompletedTask;
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Erreur lors de l'initialisation des dossiers: {ex.Message}");
+                return Task.CompletedTask;
             }
         }
 
@@ -128,6 +135,22 @@ namespace FNEV4.Presentation
                     services.AddScoped<InfraLogging, LoggingService>();
                     services.AddScoped<IDiagnosticService, DiagnosticService>();
                     services.AddScoped<IBackupService, BackupService>();
+
+                    // Adaptateur pour ILoggingService (respecte l'architecture Clean)
+                    services.AddScoped<FNEV4.Core.Interfaces.ILoggingService>(provider => 
+                        new FNEV4.Presentation.Adapters.LoggingServiceAdapter(provider.GetRequiredService<InfraLogging>()));
+
+                    // Repositories
+                    services.AddScoped<IClientRepository, ClientRepository>();
+
+                    // Use Cases
+                    services.AddScoped<ListeClientsUseCase>();
+                    services.AddScoped<AjoutClientUseCase>();
+                    services.AddScoped<ModificationClientUseCase>();
+                    services.AddScoped<ImportClientsExcelUseCase>();
+                    
+                    // Services Excel Processing
+                    services.AddScoped<IClientExcelImportService, ClientExcelImportService>();
                     
                     // Services externes
                     services.AddSingleton<HttpClient>();
@@ -149,6 +172,10 @@ namespace FNEV4.Presentation
                             provider.GetRequiredService<IDatabaseService>()));
                     services.AddTransient<ApiFneConfigViewModel>();
                     services.AddTransient<CheminsDossiersConfigViewModel>();
+                    
+                    // ViewModels Gestion Clients
+                    services.AddTransient<ListeClientsViewModel>();
+                    services.AddTransient<AjoutModificationClientViewModel>();
 
                     // Service locator pour les ViewModels
                     services.AddSingleton<ViewModelLocator>();

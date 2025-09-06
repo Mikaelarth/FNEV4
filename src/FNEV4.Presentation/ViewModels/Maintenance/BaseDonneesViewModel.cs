@@ -290,7 +290,7 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
                 _ = Task.Run(async () =>
                 {
                     await Task.Delay(3000);
-                    Application.Current.Dispatcher.Invoke(() =>
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
                     {
                         if (SqlResults?.Contains("Actualisation terminée") == true)
                         {
@@ -317,7 +317,7 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
                 settingsDialog.DataContext = settingsViewModel;
                 settingsViewModel.SetDialogWindow(settingsDialog);
                 
-                var result = settingsDialog.ShowDialog(Application.Current.MainWindow);
+                var result = settingsDialog.ShowDialog(System.Windows.Application.Current.MainWindow);
                 
                 if (result == true)
                 {

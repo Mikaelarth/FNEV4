@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using FNEV4.Presentation.ViewModels.Maintenance;
+using FNEV4.Presentation.ViewModels.GestionClients;
 using System;
 
 namespace FNEV4.Presentation.Services
@@ -21,6 +22,12 @@ namespace FNEV4.Presentation.Services
         /// </summary>
         public BaseDonneesViewModel BaseDonneesViewModel => 
             _serviceProvider.GetRequiredService<BaseDonneesViewModel>();
+
+        /// <summary>
+        /// ViewModel pour la liste des clients
+        /// </summary>
+        public ListeClientsViewModel ListeClientsViewModel => 
+            _serviceProvider.GetRequiredService<ListeClientsViewModel>();
 
         /// <summary>
         /// Méthode générique pour récupérer n'importe quel ViewModel
