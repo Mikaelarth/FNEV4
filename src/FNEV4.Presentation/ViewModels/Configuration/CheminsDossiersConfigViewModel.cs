@@ -222,7 +222,8 @@ namespace FNEV4.Presentation.ViewModels.Configuration
             InitializeCollections();
             InitializePathsFromService();
             
-            // Pas d'initialisation des timers ni de chargement async pour éviter les erreurs
+            // Initialisation asynchrone pour mettre à jour les statuts au chargement
+            _ = Task.Run(async () => await InitializeStatusAsync());
         }
 
         #endregion
@@ -296,17 +297,52 @@ namespace FNEV4.Presentation.ViewModels.Configuration
 
         private void InitializeFallbackValues()
         {
-            // Chemins par défaut basés sur le répertoire de l'application
-            var appPath = AppDomain.CurrentDomain.BaseDirectory;
-            var dataPath = Path.Combine(appPath, "Data");
-
-            ImportFolderPath = Path.Combine(dataPath, "Import");
-            ExportFolderPath = Path.Combine(dataPath, "Export");
-            ArchiveFolderPath = Path.Combine(dataPath, "Archive");
-            LogsFolderPath = Path.Combine(dataPath, "Logs");
-            BackupFolderPath = Path.Combine(dataPath, "Backup");
+            // Chemins par défaut relatifs (comme dans appsettings.json)
+            ImportFolderPath = @"Data\Import";
+            ExportFolderPath = @"Data\Export";
+            ArchiveFolderPath = @"Data\Archive";
+            LogsFolderPath = @"Data\Logs";
+            BackupFolderPath = @"Data\Backup";
 
             UpdateNamingPreview();
+        }
+
+        private void ResetOptionsToDefaults()
+        {
+            // Réinitialiser les options de surveillance et automatisation
+            ImportFolderWatchEnabled = true;
+            ExportAutoOrganizeEnabled = true;
+            ArchiveAutoEnabled = false;
+            LogRotationEnabled = true;
+            BackupAutoEnabled = true;
+
+            // Réinitialiser les sélections aux valeurs par défaut
+            SelectedArchivePeriod = "30 jours";
+            SelectedLogLevel = "Information";
+            SelectedBackupFrequency = "Quotidien";
+            SelectedExportNaming = "{Date}_{NomClient}_{NumFacture}.pdf";
+            SelectedArchiveOrganization = "{Annee}/{Mois}/{Client}";
+
+            UpdateNamingPreview();
+        }
+
+        /// <summary>
+        /// Initialise les statuts des dossiers de manière asynchrone au chargement
+        /// </summary>
+        private async Task InitializeStatusAsync()
+        {
+            try
+            {
+                // Effectuer la première mise à jour des statuts
+                await UpdateAllStatusAsync();
+                await CalculateSpaceUsageAsync();
+            }
+            catch (Exception ex)
+            {
+                // En cas d'erreur, afficher un message d'erreur au lieu de rester figé
+                GlobalStatusMessage = "❌ Erreur lors de l'initialisation";
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de l'initialisation des statuts: {ex.Message}");
+            }
         }
 
         private void InitializeTimers()
@@ -669,10 +705,28 @@ namespace FNEV4.Presentation.ViewModels.Configuration
         [RelayCommand]
         private async Task ResetToDefaultsAsync()
         {
-            // Réinitialisation via le service centralisé
-            InitializePathsFromService();
+            await ShowNotificationAsync("🔄 Remise aux valeurs par défaut...", "RestoreAlert", Brushes.Orange);
+            
+            // Réinitialisation avec les vraies valeurs par défaut
+            InitializeFallbackValues();
+            
+            // Sauvegarder les nouvelles valeurs par défaut dans le service centralisé
+            _pathConfigurationService.UpdatePaths(
+                ImportFolderPath,
+                ExportFolderPath,
+                ArchiveFolderPath,
+                LogsFolderPath,
+                BackupFolderPath
+            );
+            
+            // Assurer que tous les dossiers existent
+            _pathConfigurationService.EnsureDirectoriesExist();
+            
+            // Réinitialiser les options aux valeurs par défaut
+            ResetOptionsToDefaults();
+            
             await UpdateAllStatusAsync();
-            await ShowNotificationAsync("🔄 Configuration réinitialisée", "RestoreAlert", Brushes.Orange);
+            await ShowNotificationAsync("✅ Configuration réinitialisée aux valeurs par défaut", "CheckCircle", Brushes.Green);
         }
 
         #endregion
@@ -847,23 +901,21 @@ namespace FNEV4.Presentation.ViewModels.Configuration
 
         private async Task UpdateAllStatusAsync()
         {
-            await Task.Run(async () =>
-            {
-                await ValidatePathAsync("Import", ImportFolderPath);
-                await ValidatePathAsync("Export", ExportFolderPath);
-                await ValidatePathAsync("Archive", ArchiveFolderPath);
-                await ValidatePathAsync("Logs", LogsFolderPath);
-                await ValidatePathAsync("Backup", BackupFolderPath);
+            // Exécuter directement sur le thread UI pour mettre à jour les propriétés observables
+            await ValidatePathAsync("Import", ImportFolderPath);
+            await ValidatePathAsync("Export", ExportFolderPath);
+            await ValidatePathAsync("Archive", ArchiveFolderPath);
+            await ValidatePathAsync("Logs", LogsFolderPath);
+            await ValidatePathAsync("Backup", BackupFolderPath);
 
-                await UpdateImportFolderInfoAsync();
-                await UpdateExportFolderInfoAsync();
-                await UpdateArchiveFolderInfoAsync();
-                await UpdateLogsFolderInfoAsync();
-                await UpdateBackupFolderInfoAsync();
+            await UpdateImportFolderInfoAsync();
+            await UpdateExportFolderInfoAsync();
+            await UpdateArchiveFolderInfoAsync();
+            await UpdateLogsFolderInfoAsync();
+            await UpdateBackupFolderInfoAsync();
 
-                await UpdateGlobalStatusAsync();
-                await UpdateStatisticsAsync();
-            });
+            await UpdateGlobalStatusAsync();
+            await UpdateStatisticsAsync();
         }
 
         private async Task UpdateGlobalStatusAsync()
@@ -1035,29 +1087,26 @@ namespace FNEV4.Presentation.ViewModels.Configuration
 
         private async Task CalculateSpaceUsageAsync()
         {
-            await Task.Run(async () =>
+            try
             {
-                try
+                long totalSize = 0;
+                var folders = new[] { ImportFolderPath, ExportFolderPath, ArchiveFolderPath, LogsFolderPath, BackupFolderPath };
+                
+                foreach (var folder in folders)
                 {
-                    long totalSize = 0;
-                    var folders = new[] { ImportFolderPath, ExportFolderPath, ArchiveFolderPath, LogsFolderPath, BackupFolderPath };
-                    
-                    foreach (var folder in folders)
+                    if (Directory.Exists(folder))
                     {
-                        if (Directory.Exists(folder))
-                        {
-                            var dirInfo = new DirectoryInfo(folder);
-                            totalSize += await CalculateDirectorySizeAsync(dirInfo);
-                        }
+                        var dirInfo = new DirectoryInfo(folder);
+                        totalSize += await CalculateDirectorySizeAsync(dirInfo);
                     }
-                    
-                    TotalSpaceUsed = FormatBytes(totalSize);
                 }
-                catch
-                {
-                    TotalSpaceUsed = "Erreur calcul";
-                }
-            });
+                
+                TotalSpaceUsed = FormatBytes(totalSize);
+            }
+            catch
+            {
+                TotalSpaceUsed = "Erreur calcul";
+            }
         }
 
         #endregion
