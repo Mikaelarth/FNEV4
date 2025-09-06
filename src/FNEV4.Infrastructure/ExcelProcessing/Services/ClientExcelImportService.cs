@@ -86,6 +86,54 @@ namespace FNEV4.Infrastructure.ExcelProcessing.Services
                     preview.ErrorRows = clients.Count(c => !c.IsValid);
                     preview.EmptyRows = totalRows - clients.Count;
 
+                    // Détecter les doublons
+                    var duplicates = clients
+                        .GroupBy(c => new { c.ClientCode, c.ClientNcc })
+                        .Where(g => g.Count() > 1)
+                        .SelectMany(g => g)
+                        .ToList();
+                    preview.DuplicateRows = duplicates.Count();
+
+                    // Créer l'aperçu des clients avec statuts
+                    preview.PreviewClients = clients.Take(100).Select(c => // Limiter à 100 pour performance
+                    {
+                        var previewClient = new ClientPreviewDto
+                        {
+                            RowNumber = c.RowNumber,
+                            Code = c.ClientCode ?? "",
+                            Name = c.Name ?? "",
+                            Ncc = c.ClientNcc,
+                            Type = c.Template ?? "",
+                            Email = c.Email,
+                            Phone = c.Phone,
+                            Address = c.Address,
+                            City = c.City,
+                            PostalCode = c.PostalCode,
+                            Country = c.Country,
+                            Representative = c.Representative,
+                            Currency = c.Currency,
+                            Active = c.IsActive ? "Oui" : "Non",
+                            Notes = c.Notes,
+                            ValidationIssues = c.ValidationErrors.ToList()
+                        };
+
+                        // Déterminer le statut
+                        if (!c.IsValid)
+                        {
+                            previewClient.Status = "Erreur";
+                        }
+                        else if (duplicates.Any(d => d.RowNumber == c.RowNumber))
+                        {
+                            previewClient.Status = "Doublon";
+                        }
+                        else
+                        {
+                            previewClient.Status = "Nouveau";
+                        }
+
+                        return previewClient;
+                    }).ToList();
+
                     // Échantillon d'erreurs (max 10)
                     preview.SampleErrors = clients
                         .Where(c => !c.IsValid)
@@ -271,8 +319,8 @@ namespace FNEV4.Infrastructure.ExcelProcessing.Services
                     client.Currency = GetCellValue(worksheet, row, columnMap, nameof(ClientImportModelDgi.Currency)) ?? "XOF";
                     client.Notes = GetCellValue(worksheet, row, columnMap, nameof(ClientImportModelDgi.Notes)) ?? "";
 
-                    // Traitement spécial pour IsActive
-                    var activeValue = GetCellValue(worksheet, row, columnMap, nameof(ClientImportModelDgi.IsActive))?.ToLower();
+                    // Traitement spécial pour IsActive avec gestion des espaces
+                    var activeValue = GetCellValue(worksheet, row, columnMap, nameof(ClientImportModelDgi.IsActive))?.ToLower().Trim();
                     client.IsActive = activeValue != "non" && activeValue != "false" && activeValue != "0";
 
                     // Ignorer les lignes vides

@@ -1,4 +1,5 @@
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\bin\Debug\net8.0-windows\appsettings.json
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\bin\Debug\net8.0-windows\Data\FNEV4.db
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\bin\Debug\net8.0-windows\FNEV4.Presentation.exe
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\bin\Debug\net8.0-windows\FNEV4.Presentation.deps.json
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\bin\Debug\net8.0-windows\FNEV4.Presentation.runtimeconfig.json

@@ -149,7 +149,6 @@
                     <ColumnDefinition Width="2*" MinWidth="300"/>
                     <ColumnDefinition Width="Auto" MinWidth="220"/>
                     <ColumnDefinition Width="Auto" MinWidth="180"/>
-                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- Recherche -->
@@ -210,31 +209,7 @@
                     <ComboBoxItem Content="❌ Clients inactifs"/>
                 </ComboBox>
 
-                <!-- Boutons d'action -->
-                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="🔍"
-                            Command="{Binding SearchCommand}"
-                            MinWidth="44"
-                            MinHeight="40"
-                            Background="#1976D2"
-                            Foreground="White"
-                            BorderThickness="0"
-                            Padding="8,4"
-                            FontSize="16"
-                            ToolTip="Rechercher"/>
-                    
-                    <Button Content="🗑️"
-                            Command="{Binding ClearFiltersCommand}"
-                            MinWidth="44"
-                            MinHeight="40"
-                            Background="#F44336"
-                            Foreground="White"
-                            BorderThickness="0"
-                            Padding="8,4"
-                            FontSize="16"
-                            Margin="8,0,0,0"
-                            ToolTip="Effacer les filtres"/>
-                </StackPanel>
+                <!-- Boutons d'action supprimés - recherche automatique activée -->
             </Grid>
         </Border>
 

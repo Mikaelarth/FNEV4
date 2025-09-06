@@ -63,7 +63,47 @@ namespace FNEV4.Application.DTOs.GestionClients
         public int EmptyRows { get; set; }
         public List<ClientImportErrorDto> SampleErrors { get; set; } = new();
         public List<string> DetectedColumns { get; set; } = new();
+        public List<ClientPreviewDto> PreviewClients { get; set; } = new();
         public string FileName { get; set; } = string.Empty;
         public DateTime AnalyzedAt { get; set; } = DateTime.Now;
+    }
+
+    /// <summary>
+    /// Client pour l'aperçu avant import
+    /// </summary>
+    public class ClientPreviewDto
+    {
+        public int RowNumber { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string? Ncc { get; set; }
+        public string Type { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
+        public string? Address { get; set; }
+        public string? City { get; set; }
+        public string? PostalCode { get; set; }
+        public string? Country { get; set; }
+        public string? Representative { get; set; }
+        public string? Currency { get; set; }
+        public string? Active { get; set; }
+        public string? Notes { get; set; }
+        public string Status { get; set; } = "Nouveau"; // Nouveau, Doublon, Erreur, À mettre à jour
+        public List<string> ValidationIssues { get; set; } = new();
+        public bool IsValid => ValidationIssues.Count == 0;
+        public string StatusColor => Status switch
+        {
+            "Nouveau" => "#4CAF50",
+            "À mettre à jour" => "#2196F3", 
+            "Doublon" => "#FF9800",
+            "Erreur" => "#F44336",
+            _ => "#9E9E9E"
+        };
+        
+        // Propriétés calculées pour l'affichage
+        public string DisplayAddress => string.IsNullOrWhiteSpace(Address) ? "" : 
+            $"{Address}{(string.IsNullOrWhiteSpace(City) ? "" : $", {City}")}{(string.IsNullOrWhiteSpace(PostalCode) ? "" : $" {PostalCode}")}";
+            
+        public string ProblemsText => ValidationIssues.Count == 0 ? "" : string.Join("; ", ValidationIssues);
     }
 }

@@ -9,6 +9,7 @@ using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
+using System.Windows;
 
 namespace FNEV4.Presentation.ViewModels.GestionClients
 {
@@ -72,6 +73,72 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
         private bool _canCancelImport;
 
         private CancellationTokenSource? _cancellationTokenSource;
+
+        // Propriétés de filtrage pour l'aperçu des clients
+        private ObservableCollection<ClientPreviewDto> _filteredPreviewClients = new();
+
+        private bool _showAllPreview = true;
+        private bool _showValidOnly;
+        private bool _showErrorsOnly;
+        private bool _showDuplicatesOnly;
+
+        public bool ShowAllPreview
+        {
+            get => _showAllPreview;
+            set 
+            { 
+                if (SetProperty(ref _showAllPreview, value) && value)
+                {
+                    ShowValidOnly = ShowErrorsOnly = ShowDuplicatesOnly = false;
+                    UpdateFilteredClients();
+                }
+            }
+        }
+
+        public bool ShowValidOnly
+        {
+            get => _showValidOnly;
+            set 
+            { 
+                if (SetProperty(ref _showValidOnly, value) && value)
+                {
+                    ShowAllPreview = ShowErrorsOnly = ShowDuplicatesOnly = false;
+                    UpdateFilteredClients();
+                }
+            }
+        }
+
+        public bool ShowErrorsOnly
+        {
+            get => _showErrorsOnly;
+            set 
+            { 
+                if (SetProperty(ref _showErrorsOnly, value) && value)
+                {
+                    ShowAllPreview = ShowValidOnly = ShowDuplicatesOnly = false;
+                    UpdateFilteredClients();
+                }
+            }
+        }
+
+        public bool ShowDuplicatesOnly
+        {
+            get => _showDuplicatesOnly;
+            set 
+            { 
+                if (SetProperty(ref _showDuplicatesOnly, value) && value)
+                {
+                    ShowAllPreview = ShowValidOnly = ShowErrorsOnly = false;
+                    UpdateFilteredClients();
+                }
+            }
+        }
+
+        public ObservableCollection<ClientPreviewDto> FilteredPreviewClients
+        {
+            get => _filteredPreviewClients;
+            set => SetProperty(ref _filteredPreviewClients, value);
+        }
 
         // Options d'import
         public bool IgnoreDuplicates
@@ -439,6 +506,73 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
             }
         }
 
+        // Commandes de filtrage pour l'aperçu des clients
+        [RelayCommand]
+        private void ShowAllPreviewFilter()
+        {
+            ShowAllPreview = true;
+            ShowValidOnly = ShowErrorsOnly = ShowDuplicatesOnly = false;
+            UpdateFilteredClients();
+        }
+
+        [RelayCommand]
+        private void ShowValidOnlyFilter()
+        {
+            ShowValidOnly = true;
+            ShowAllPreview = ShowErrorsOnly = ShowDuplicatesOnly = false;
+            UpdateFilteredClients();
+        }
+
+        [RelayCommand]
+        private void ShowErrorsOnlyFilter()
+        {
+            ShowErrorsOnly = true;
+            ShowAllPreview = ShowValidOnly = ShowDuplicatesOnly = false;
+            UpdateFilteredClients();
+        }
+
+        [RelayCommand]
+        private void ShowDuplicatesOnlyFilter()
+        {
+            ShowDuplicatesOnly = true;
+            ShowAllPreview = ShowValidOnly = ShowErrorsOnly = false;
+            UpdateFilteredClients();
+        }
+
+        private void UpdateFilteredClients()
+        {
+            // Calculer les données filtrées sur le thread courant
+            if (Preview?.PreviewClients == null)
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    FilteredPreviewClients.Clear();
+                });
+                return;
+            }
+
+            var filtered = Preview.PreviewClients.AsEnumerable();
+
+            if (ShowValidOnly)
+                filtered = filtered.Where(c => c.IsValid);
+            else if (ShowErrorsOnly)
+                filtered = filtered.Where(c => !c.IsValid && c.Status == "Erreur");
+            else if (ShowDuplicatesOnly)
+                filtered = filtered.Where(c => c.Status == "Doublon");
+
+            var clientsToAdd = filtered.Take(100).ToList(); // Limiter à 100 pour performance
+
+            // Mettre à jour la collection sur le thread UI
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                FilteredPreviewClients.Clear();
+                foreach (var client in clientsToAdd)
+                {
+                    FilteredPreviewClients.Add(client);
+                }
+            });
+        }
+
         [RelayCommand]
         private async Task ShowDetailedReportAsync()
         {
@@ -551,6 +685,11 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
         partial void OnHasPreviewChanged(bool value)
         {
             OnPropertyChanged(nameof(CanImport));
+        }
+
+        partial void OnPreviewChanged(ClientImportPreviewDto? value)
+        {
+            UpdateFilteredClients();
         }
 
         partial void OnIsProcessingChanged(bool value)

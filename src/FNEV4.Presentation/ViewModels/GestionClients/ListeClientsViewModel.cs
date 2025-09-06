@@ -17,7 +17,7 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
     /// ViewModel pour la liste des clients
     /// Module: Gestion Clients > Liste des clients
     /// </summary>
-    public partial class ListeClientsViewModel : ObservableObject, IRecipient<ClientsImportedMessage>
+    public partial class ListeClientsViewModel : ObservableObject, IRecipient<ClientsImportedMessage>, IDisposable
     {
         #region Static Members
 
@@ -31,6 +31,10 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
         private readonly ListeClientsUseCase _listeClientsUseCase;
         private readonly InfraLogging _loggingService;
         private readonly IServiceProvider _serviceProvider;
+        
+        // Pour la recherche en temps réel avec debounce
+        private CancellationTokenSource? _searchCancellationTokenSource;
+        private const int SearchDebounceDelayMs = 300; // 300ms de délai
 
         #endregion
 
@@ -125,7 +129,7 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
             // Commandes
             LoadClientsCommand = new AsyncRelayCommand(LoadClientsAsync);
             RefreshCommand = new AsyncRelayCommand(RefreshAsync);
-            SearchCommand = new AsyncRelayCommand(SearchAsync);
+            SearchCommand = new AsyncRelayCommand(ClearFiltersAsync);
             ClearFiltersCommand = new RelayCommand(ClearFilters);
             NextPageCommand = new AsyncRelayCommand(NextPageAsync, () => HasNextPage);
             PreviousPageCommand = new AsyncRelayCommand(PreviousPageAsync, () => HasPreviousPage);
@@ -283,14 +287,85 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
             {
                 IsLoading = true;
                 HasError = false;
-                
-                // Recharger les statistiques et les clients pour améliorer les performances
-                await LoadStatisticsAsync();
-                await LoadClientsAsync();
+                ErrorMessage = string.Empty;
+
+                // Utiliser le verrou une seule fois pour toute l'opération d'actualisation
+                await _dbLock.WaitAsync();
+
+                try
+                {
+                    // Charger les statistiques et les clients en parallèle pour améliorer les performances
+                    var statisticsTask = _listeClientsUseCase.GetStatisticsAsync();
+                    
+                    var clientsRequest = new ListeClientsRequest
+                    {
+                        PageNumber = CurrentPage,
+                        PageSize = PageSize,
+                        SearchTerm = string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm,
+                        ClientType = SelectedClientType == "Tous" ? null : SelectedClientType,
+                        IsActive = IsActiveFilter
+                    };
+                    var clientsTask = _listeClientsUseCase.ExecuteAsync(clientsRequest);
+
+                    // Attendre les deux opérations en parallèle
+                    await Task.WhenAll(statisticsTask, clientsTask);
+
+                    var statisticsResponse = await statisticsTask;
+                    var clientsResponse = await clientsTask;
+
+                    // Traitement des résultats
+                    if (statisticsResponse.Success && clientsResponse.Success)
+                    {
+                        // Mettre à jour les statistiques
+                        Statistics = statisticsResponse.Statistics;
+
+                        // Mettre à jour la collection sur le thread UI
+                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            Clients.Clear();
+                            foreach (var client in clientsResponse.Clients)
+                            {
+                                Clients.Add(client);
+                            }
+                        });
+
+                        // Mettre à jour les données de pagination
+                        TotalCount = clientsResponse.TotalCount;
+                        TotalPages = clientsResponse.TotalPages;
+                        HasNextPage = clientsResponse.HasNextPage;
+                        HasPreviousPage = clientsResponse.HasPreviousPage;
+
+                        // Mettre à jour l'état des commandes de navigation
+                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            NextPageCommand.NotifyCanExecuteChanged();
+                            PreviousPageCommand.NotifyCanExecuteChanged();
+                        });
+
+                        // Log de succès  
+                        await _loggingService.LogInfoAsync(
+                            $"Actualisation réussie: {clientsResponse.Clients.Count()} clients chargés, statistiques mises à jour", 
+                            "GestionClients");
+                    }
+                    else
+                    {
+                        var errors = new List<string>();
+                        if (!statisticsResponse.Success) 
+                            errors.Add($"Statistiques: {statisticsResponse.ErrorMessage}");
+                        if (!clientsResponse.Success) 
+                            errors.Add($"Clients: {clientsResponse.ErrorMessage}");
+                            
+                        await HandleErrorAsync("Erreur lors de l'actualisation", string.Join("; ", errors));
+                    }
+                }
+                finally
+                {
+                    _dbLock.Release();
+                }
             }
             catch (Exception ex)
             {
-                await HandleErrorAsync("Erreur lors de l'actualisation", ex);
+                await HandleErrorAsync("Erreur critique lors de l'actualisation", ex);
             }
             finally
             {
@@ -301,6 +376,52 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
         private async Task SearchAsync()
         {
             CurrentPage = 1; // Retourner à la première page lors d'une recherche
+            await LoadClientsAsync();
+        }
+
+        /// <summary>
+        /// Recherche avec debounce pour éviter trop d'appels à la base de données
+        /// </summary>
+        private async Task PerformDebouncedSearchAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                // Attendre le délai de debounce
+                await Task.Delay(SearchDebounceDelayMs, cancellationToken);
+                
+                // Si la tâche n'a pas été annulée, effectuer la recherche
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+                    {
+                        CurrentPage = 1; // Retourner à la première page lors d'une recherche
+                        await LoadClientsAsync();
+                    });
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // L'opération a été annulée, c'est normal
+            }
+            catch (Exception ex)
+            {
+                await HandleErrorAsync("Erreur lors de la recherche automatique", ex);
+            }
+        }
+
+        /// <summary>
+        /// Réinitialise tous les filtres et recharge la liste
+        /// </summary>
+        private async Task ClearFiltersAsync()
+        {
+            // Annuler toute recherche en cours
+            _searchCancellationTokenSource?.Cancel();
+            
+            SearchTerm = string.Empty;
+            SelectedClientType = null;
+            IsActiveFilter = true;
+            CurrentPage = 1;
+            
             await LoadClientsAsync();
         }
 
@@ -416,6 +537,13 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
         partial void OnSearchTermChanged(string value)
         {
             OnPropertyChanged(nameof(ActiveFiltersInfo));
+            
+            // Annuler la recherche précédente si elle existe
+            _searchCancellationTokenSource?.Cancel();
+            _searchCancellationTokenSource = new CancellationTokenSource();
+            
+            // Démarrer une nouvelle recherche avec debounce
+            _ = Task.Run(async () => await PerformDebouncedSearchAsync(_searchCancellationTokenSource.Token));
         }
 
         partial void OnCurrentPageChanged(int value)
@@ -604,6 +732,23 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
                     await _loggingService.LogErrorAsync($"Erreur lors du rafraîchissement après import: {ex.Message}", "GestionClients", ex);
                 }
             });
+        }
+
+        #endregion
+
+        #region IDisposable
+
+        public void Dispose()
+        {
+            // Annuler toute recherche en cours
+            _searchCancellationTokenSource?.Cancel();
+            _searchCancellationTokenSource?.Dispose();
+            
+            // Désenregistrer du messenger
+            WeakReferenceMessenger.Default.Unregister<ClientsImportedMessage>(this);
+            
+            // Nettoyer les ressources
+            _dbLock?.Dispose();
         }
 
         #endregion
