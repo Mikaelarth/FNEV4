@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using FNEV4.Infrastructure.Data;
 using FNEV4.Infrastructure.Services;
 using FNEV4.Presentation.Services;
+using FNEV4.Core.Interfaces;
 
 namespace FNEV4.Presentation.ViewModels.Maintenance
 {
@@ -21,6 +22,7 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
     {
         private readonly IDatabaseService _databaseService;
         private readonly IDatabaseConfigurationNotificationService? _notificationService;
+        private readonly IPathConfigurationService _pathConfigurationService = null!;
 
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -150,13 +152,18 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             // Créer manuellement le service pour test
             try
             {
-                var connectionString = "Data Source=Data/FNEV4.db";
+                // Utiliser le service centralisé des chemins
+                _pathConfigurationService = App.GetService<IPathConfigurationService>();
+                var connectionString = $"Data Source={_pathConfigurationService.DatabasePath}";
                 var options = new DbContextOptionsBuilder<FNEV4DbContext>()
                     .UseSqlite(connectionString)
                     .Options;
                 
                 var context = new FNEV4DbContext(options);
                 _databaseService = new DatabaseService(context);
+                
+                // Initialiser le chemin de base de données depuis le service centralisé
+                DatabasePath = _pathConfigurationService.DatabasePath;
             }
             catch
             {
@@ -167,10 +174,14 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             InitializeCommands();
         }
 
-        public BaseDonneesViewModel(IDatabaseService databaseService, IDatabaseConfigurationNotificationService? notificationService = null)
+        public BaseDonneesViewModel(IDatabaseService databaseService, IDatabaseConfigurationNotificationService? notificationService = null, IPathConfigurationService pathConfigurationService = null)
         {
             _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
             _notificationService = notificationService;
+            _pathConfigurationService = pathConfigurationService ?? App.GetService<IPathConfigurationService>();
+            
+            // Initialiser le chemin de base de données depuis le service centralisé
+            DatabasePath = _pathConfigurationService.DatabasePath;
             
             // S'abonner aux notifications de changement de configuration
             if (_notificationService != null)

@@ -206,12 +206,14 @@ namespace FNEV4.Presentation.ViewModels
         private void NavigateToApiFneConfig()
         {
             CurrentModuleName = "Configuration - API FNE";
+            CurrentView = new Views.Configuration.ApiFneConfigView();
         }
 
         [RelayCommand]
         private void NavigateToCheminsDossiers()
         {
             CurrentModuleName = "Configuration - Chemins & Dossiers";
+            CurrentView = new Views.Configuration.CheminsDossiersConfigView();
         }
 
         [RelayCommand]

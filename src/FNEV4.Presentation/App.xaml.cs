@@ -10,6 +10,7 @@ using FNEV4.Presentation.Services;
 using FNEV4.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
+using Microsoft.Extensions.Configuration;
 
 namespace FNEV4.Presentation
 {
@@ -51,6 +52,9 @@ namespace FNEV4.Presentation
                 // Charger et appliquer la configuration de base de données sauvegardée
                 await LoadDatabaseConfiguration();
                 
+                // Initialiser les dossiers du service centralisé
+                await InitializePathConfiguration();
+                
                 System.Diagnostics.Debug.WriteLine("Application démarrée avec succès");
             }
             catch (Exception ex)
@@ -75,6 +79,20 @@ namespace FNEV4.Presentation
             }
         }
 
+        private async Task InitializePathConfiguration()
+        {
+            try
+            {
+                var pathService = ServiceProvider.GetRequiredService<IPathConfigurationService>();
+                pathService.EnsureDirectoriesExist();
+                System.Diagnostics.Debug.WriteLine("Dossiers initialisés avec succès");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de l'initialisation des dossiers: {ex.Message}");
+            }
+        }
+
         protected override void OnExit(ExitEventArgs e)
         {
             _host?.Dispose();
@@ -84,11 +102,22 @@ namespace FNEV4.Presentation
         private IHostBuilder CreateHostBuilder()
         {
             return Host.CreateDefaultBuilder()
+                .ConfigureAppConfiguration((context, config) =>
+                {
+                    config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                })
                 .ConfigureServices((context, services) =>
                 {
-                    // Configuration Entity Framework
-                    services.AddDbContext<FNEV4DbContext>(options =>
-                        options.UseSqlite("Data Source=Data/FNEV4.db"));
+                    // Configuration du service centralisé des chemins en premier
+                    services.AddSingleton<IPathConfigurationService, PathConfigurationService>();
+                    
+                    // Configuration Entity Framework avec le service centralisé
+                    services.AddDbContext<FNEV4DbContext>((serviceProvider, options) =>
+                    {
+                        var pathService = serviceProvider.GetRequiredService<IPathConfigurationService>();
+                        var connectionString = $"Data Source={pathService.DatabasePath}";
+                        options.UseSqlite(connectionString);
+                    });
 
                     // Services Infrastructure
                     services.AddScoped<IDatabaseService, DatabaseService>();
@@ -113,6 +142,8 @@ namespace FNEV4.Presentation
                         new EntrepriseConfigViewModel(
                             provider.GetService<IDgiService>(),
                             provider.GetRequiredService<IDatabaseService>()));
+                    services.AddTransient<ApiFneConfigViewModel>();
+                    services.AddTransient<CheminsDossiersConfigViewModel>();
 
                     // Service locator pour les ViewModels
                     services.AddSingleton<ViewModelLocator>();

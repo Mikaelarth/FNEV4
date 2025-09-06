@@ -195,3 +195,9 @@ C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Mainte
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Maintenance\RecordEditDialog.g.cs
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Configuration\EntrepriseConfigView.baml
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Configuration\EntrepriseConfigView.g.cs
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Configuration\CheminsDossiersConfigView.baml
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Configuration\ApiFneConfigView.g.cs
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Configuration\CheminsDossiersConfigView.g.cs
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Configuration\ApiFneConfigView.baml
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\bin\Debug\net8.0-windows\appsettings.json
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\FNEV4.Presentation_Content.g.cs

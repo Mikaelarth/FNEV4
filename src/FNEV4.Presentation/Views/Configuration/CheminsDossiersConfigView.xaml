@@ -1,0 +1,818 @@
+<UserControl x:Class="FNEV4.Presentation.Views.Configuration.CheminsDossiersConfigView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:FNEV4.Presentation.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="900">
+    
+    <UserControl.Resources>
+        <!-- Convertisseurs -->
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:StatusToBrushConverter x:Key="StatusToBrushConverter" />
+        
+        <!-- Animations -->
+        <Storyboard x:Key="FadeInAnimation">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.5"/>
+        </Storyboard>
+        
+        <Storyboard x:Key="SlideInAnimation">
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" 
+                           From="20" To="0" Duration="0:0:0.3"/>
+        </Storyboard>
+        
+        <!-- Styles -->
+        <Style x:Key="SectionHeaderStyle" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignHeadline6TextBlock}">
+            <Setter Property="Margin" Value="0,0,0,15"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        
+        <Style x:Key="FieldLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignBody1TextBlock}">
+            <Setter Property="Margin" Value="0,15,0,5"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+        </Style>
+
+        <Style x:Key="InfoCardStyle" TargetType="materialDesign:Card">
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+            <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth2"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <TranslateTransform/>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <EventTrigger RoutedEvent="Loaded">
+                    <BeginStoryboard Storyboard="{StaticResource SlideInAnimation}"/>
+                </EventTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Style pour les champs de chemin avec validation -->
+        <Style x:Key="PathTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Tag}" Value="Valid">
+                    <Setter Property="BorderBrush" Value="Green"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Tag}" Value="Invalid">
+                    <Setter Property="BorderBrush" Value="Red"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Tag}" Value="Warning">
+                    <Setter Property="BorderBrush" Value="Orange"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Style pour les boutons d'action de dossier -->
+        <Style x:Key="FolderActionButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Margin" Value="4,0"/>
+        </Style>
+
+        <!-- Style pour les indicateurs de statut -->
+        <Style x:Key="StatusIndicatorStyle" TargetType="Border">
+            <Setter Property="Width" Value="12"/>
+            <Setter Property="Height" Value="12"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tête moderne avec icône -->
+        <Grid Grid.Row="0" Margin="0,0,0,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <materialDesign:PackIcon Grid.Column="0" 
+                                   Kind="FolderNetwork" 
+                                   Width="32" Height="32"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+            
+            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="Configuration Chemins &amp; Dossiers" 
+                         FontSize="24" 
+                         FontWeight="Bold"
+                         Foreground="{DynamicResource MaterialDesignBody}"/>
+                <TextBlock Text="Configurez les chemins d'import, export, archivage et surveillance automatique" 
+                         FontSize="14" 
+                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                         Margin="0,4,0,0"/>
+            </StackPanel>
+            
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                        VerticalAlignment="Center"
+                        Command="{Binding RefreshAllPathsCommand}"
+                        Margin="0,0,8,0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" Margin="0,0,8,0"/>
+                        <TextBlock Text="Actualiser"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                        VerticalAlignment="Center"
+                        Command="{Binding ResetToDefaultsCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="RestoreAlert" Width="16" Height="16" Margin="0,0,8,0"/>
+                        <TextBlock Text="Par défaut"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Résumé de statut global -->
+        <materialDesign:Card Grid.Row="1" Margin="0,0,0,16" Padding="20">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Statut global -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Border Style="{StaticResource StatusIndicatorStyle}"
+                            Background="{Binding GlobalStatusColor}"/>
+                    <materialDesign:PackIcon Kind="{Binding GlobalStatusIcon}" 
+                                           Width="24" Height="24"
+                                           VerticalAlignment="Center" 
+                                           Margin="0,0,12,0"
+                                           Foreground="{Binding GlobalStatusColor}"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding GlobalStatusMessage}" 
+                                 Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                                 FontWeight="Medium"/>
+                        <TextBlock Text="{Binding PathsConfiguredSummary}" 
+                                 Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                 Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    </StackPanel>
+                </StackPanel>
+                
+                <!-- Surveillances actives -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="20,0">
+                    <materialDesign:PackIcon Kind="Eye" Width="20" Height="20" 
+                                           VerticalAlignment="Center" Margin="0,0,8,0"
+                                           Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding ActiveWatchersCount}" 
+                                 Style="{StaticResource MaterialDesignSubtitle2TextBlock}"
+                                 FontWeight="Bold"/>
+                        <TextBlock Text="Surveillances" 
+                                 Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                 Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    </StackPanel>
+                </StackPanel>
+                
+                <!-- Espace utilisé -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="20,0">
+                    <materialDesign:PackIcon Kind="Harddisk" Width="20" Height="20" 
+                                           VerticalAlignment="Center" Margin="0,0,8,0"
+                                           Foreground="{DynamicResource AccentColorBrush}"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding TotalSpaceUsed}" 
+                                 Style="{StaticResource MaterialDesignSubtitle2TextBlock}"
+                                 FontWeight="Bold"/>
+                        <TextBlock Text="Espace total" 
+                                 Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                 Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    </StackPanel>
+                </StackPanel>
+                
+                <!-- Actions rapides -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal">
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            Command="{Binding OpenRootFolderCommand}"
+                            ToolTip="Ouvrir le dossier racine">
+                        <materialDesign:PackIcon Kind="FolderOpen" Width="20" Height="20"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            Command="{Binding TestAllPathsCommand}"
+                            ToolTip="Tester tous les chemins">
+                        <materialDesign:PackIcon Kind="TestTube" Width="20" Height="20"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- Contenu principal avec scroll -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                
+                <!-- Section 1: Dossiers principaux -->
+                <materialDesign:Card Style="{StaticResource InfoCardStyle}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                            <materialDesign:PackIcon Kind="FolderMultiple" 
+                                                   Width="24" Height="24"
+                                                   VerticalAlignment="Center" 
+                                                   Margin="0,0,12,0" 
+                                                   Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                            <TextBlock Text="Dossiers Principaux" 
+                                     Style="{StaticResource SectionHeaderStyle}"
+                                     Margin="0"/>
+                        </StackPanel>
+                        
+                        <!-- Dossier Import Excel Sage -->
+                        <Grid Margin="0,0,0,20">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Label et options -->
+                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Style="{StaticResource StatusIndicatorStyle}"
+                                        Background="{Binding ImportFolderStatus, Converter={StaticResource StatusToBrushConverter}}"/>
+                                <TextBlock Text="📥 Dossier Import Excel Sage" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                <TextBlock Text="*" Foreground="Red" FontWeight="Bold" Margin="4,0,0,0"/>
+                                <CheckBox Content="Surveillance automatique" 
+                                        IsChecked="{Binding ImportFolderWatchEnabled}"
+                                        Margin="20,0,0,0"
+                                        VerticalAlignment="Center"/>
+                            </StackPanel>
+                            
+                            <!-- Chemin et actions -->
+                            <Grid Grid.Row="1" Grid.Column="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding ImportFolderPath}"
+                                         Style="{StaticResource PathTextBoxStyle}"
+                                         Tag="{Binding ImportFolderStatus}"
+                                         materialDesign:HintAssist.Hint="Chemin du dossier contenant les fichiers Excel Sage 100"/>
+                                
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding BrowseImportFolderCommand}"
+                                            ToolTip="Parcourir">
+                                        <materialDesign:PackIcon Kind="FolderOpen" Width="20" Height="20"/>
+                                    </Button>
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding OpenImportFolderCommand}"
+                                            ToolTip="Ouvrir le dossier">
+                                        <materialDesign:PackIcon Kind="OpenInNew" Width="20" Height="20"/>
+                                    </Button>
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding TestImportFolderCommand}"
+                                            ToolTip="Tester le chemin">
+                                        <materialDesign:PackIcon Kind="TestTube" Width="20" Height="20"/>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                            
+                            <!-- Informations détaillées -->
+                            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,8,0,0">
+                                <TextBlock Text="{Binding ImportFolderInfo}" 
+                                         Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                         TextWrapping="Wrap"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0"
+                                          Visibility="{Binding ImportFolderWatchEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBlock Text="🟢 Surveillance:" Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
+                                    <TextBlock Text="{Binding ImportFolderWatchInfo}" 
+                                             Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                             Margin="8,0,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <!-- Dossier Export Factures -->
+                        <Grid Margin="0,0,0,20">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Style="{StaticResource StatusIndicatorStyle}"
+                                        Background="{Binding ExportFolderStatus, Converter={StaticResource StatusToBrushConverter}}"/>
+                                <TextBlock Text="📤 Dossier Export Factures Certifiées" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                <TextBlock Text="*" Foreground="Red" FontWeight="Bold" Margin="4,0,0,0"/>
+                                <CheckBox Content="Organisation automatique" 
+                                        IsChecked="{Binding ExportAutoOrganizeEnabled}"
+                                        Margin="20,0,0,0"
+                                        VerticalAlignment="Center"/>
+                            </StackPanel>
+                            
+                            <Grid Grid.Row="1" Grid.Column="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding ExportFolderPath}"
+                                         Style="{StaticResource PathTextBoxStyle}"
+                                         Tag="{Binding ExportFolderStatus}"
+                                         materialDesign:HintAssist.Hint="Chemin de sortie pour les factures certifiées"/>
+                                
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding BrowseExportFolderCommand}"
+                                            ToolTip="Parcourir">
+                                        <materialDesign:PackIcon Kind="FolderOpen" Width="20" Height="20"/>
+                                    </Button>
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding OpenExportFolderCommand}"
+                                            ToolTip="Ouvrir le dossier">
+                                        <materialDesign:PackIcon Kind="OpenInNew" Width="20" Height="20"/>
+                                    </Button>
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding TestExportFolderCommand}"
+                                            ToolTip="Tester le chemin">
+                                        <materialDesign:PackIcon Kind="TestTube" Width="20" Height="20"/>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                            
+                            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,8,0,0">
+                                <TextBlock Text="{Binding ExportFolderInfo}" 
+                                         Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                         TextWrapping="Wrap"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0"
+                                          Visibility="{Binding ExportAutoOrganizeEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBlock Text="📁 Organisation:" Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
+                                    <TextBlock Text="{Binding ExportOrganizationInfo}" 
+                                             Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                             Margin="8,0,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <!-- Dossier Archivage -->
+                        <Grid Margin="0,0,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Style="{StaticResource StatusIndicatorStyle}"
+                                        Background="{Binding ArchiveFolderStatus, Converter={StaticResource StatusToBrushConverter}}"/>
+                                <TextBlock Text="🗄️ Dossier Archivage" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                <CheckBox Content="Archivage automatique" 
+                                        IsChecked="{Binding ArchiveAutoEnabled}"
+                                        Margin="20,0,0,0"
+                                        VerticalAlignment="Center"/>
+                                <ComboBox ItemsSource="{Binding ArchivePeriodOptions}"
+                                        SelectedItem="{Binding SelectedArchivePeriod}"
+                                        Width="120"
+                                        Margin="12,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Visibility="{Binding ArchiveAutoEnabled, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            </StackPanel>
+                            
+                            <Grid Grid.Row="1" Grid.Column="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding ArchiveFolderPath}"
+                                         Style="{StaticResource PathTextBoxStyle}"
+                                         Tag="{Binding ArchiveFolderStatus}"
+                                         materialDesign:HintAssist.Hint="Chemin d'archivage des anciens fichiers"/>
+                                
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding BrowseArchiveFolderCommand}"
+                                            ToolTip="Parcourir">
+                                        <materialDesign:PackIcon Kind="FolderOpen" Width="20" Height="20"/>
+                                    </Button>
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding OpenArchiveFolderCommand}"
+                                            ToolTip="Ouvrir le dossier">
+                                        <materialDesign:PackIcon Kind="OpenInNew" Width="20" Height="20"/>
+                                    </Button>
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding TestArchiveFolderCommand}"
+                                            ToolTip="Tester le chemin">
+                                        <materialDesign:PackIcon Kind="TestTube" Width="20" Height="20"/>
+                                    </Button>
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding CleanArchiveFolderCommand}"
+                                            ToolTip="Nettoyer les archives anciennes">
+                                        <materialDesign:PackIcon Kind="Broom" Width="20" Height="20"/>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                            
+                            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,8,0,0">
+                                <TextBlock Text="{Binding ArchiveFolderInfo}" 
+                                         Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                         TextWrapping="Wrap"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0"
+                                          Visibility="{Binding ArchiveAutoEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBlock Text="🕒 Politique:" Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
+                                    <TextBlock Text="{Binding ArchivePolicyInfo}" 
+                                             Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                             Margin="8,0,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Section 2: Dossiers Logs et Diagnostics -->
+                <materialDesign:Card Style="{StaticResource InfoCardStyle}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                            <materialDesign:PackIcon Kind="FileDocumentEdit" 
+                                                   Width="24" Height="24"
+                                                   VerticalAlignment="Center" 
+                                                   Margin="0,0,12,0" 
+                                                   Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                            <TextBlock Text="Logs &amp; Diagnostics" 
+                                     Style="{StaticResource SectionHeaderStyle}"
+                                     Margin="0"/>
+                        </StackPanel>
+                        
+                        <!-- Dossier Logs -->
+                        <Grid Margin="0,0,0,20">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Style="{StaticResource StatusIndicatorStyle}"
+                                        Background="{Binding LogsFolderStatus, Converter={StaticResource StatusToBrushConverter}}"/>
+                                <TextBlock Text="📋 Dossier Logs Applicatifs" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                <ComboBox ItemsSource="{Binding LogLevelOptions}"
+                                        SelectedItem="{Binding SelectedLogLevel}"
+                                        Width="100"
+                                        Margin="20,0,0,0"
+                                        VerticalAlignment="Center"/>
+                                <CheckBox Content="Rotation automatique" 
+                                        IsChecked="{Binding LogRotationEnabled}"
+                                        Margin="12,0,0,0"
+                                        VerticalAlignment="Center"/>
+                            </StackPanel>
+                            
+                            <Grid Grid.Row="1" Grid.Column="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding LogsFolderPath}"
+                                         Style="{StaticResource PathTextBoxStyle}"
+                                         Tag="{Binding LogsFolderStatus}"
+                                         materialDesign:HintAssist.Hint="Chemin des fichiers logs de l'application"/>
+                                
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding BrowseLogsFolderCommand}"
+                                            ToolTip="Parcourir">
+                                        <materialDesign:PackIcon Kind="FolderOpen" Width="20" Height="20"/>
+                                    </Button>
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding OpenLogsFolderCommand}"
+                                            ToolTip="Ouvrir le dossier">
+                                        <materialDesign:PackIcon Kind="OpenInNew" Width="20" Height="20"/>
+                                    </Button>
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding ViewLatestLogCommand}"
+                                            ToolTip="Voir le log actuel">
+                                        <materialDesign:PackIcon Kind="FileDocumentOutline" Width="20" Height="20"/>
+                                    </Button>
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding CleanOldLogsCommand}"
+                                            ToolTip="Nettoyer les anciens logs">
+                                        <materialDesign:PackIcon Kind="DeleteSweep" Width="20" Height="20"/>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                            
+                            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,8,0,0">
+                                <TextBlock Text="{Binding LogsFolderInfo}" 
+                                         Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                         TextWrapping="Wrap"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="📊 Statistiques:" Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
+                                    <TextBlock Text="{Binding LogsStatistics}" 
+                                             Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                             Margin="8,0,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <!-- Dossier Backup Base de Données -->
+                        <Grid Margin="0,0,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Style="{StaticResource StatusIndicatorStyle}"
+                                        Background="{Binding BackupFolderStatus, Converter={StaticResource StatusToBrushConverter}}"/>
+                                <TextBlock Text="💾 Dossier Sauvegarde Base" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                <CheckBox Content="Backup automatique" 
+                                        IsChecked="{Binding BackupAutoEnabled}"
+                                        Margin="20,0,0,0"
+                                        VerticalAlignment="Center"/>
+                                <ComboBox ItemsSource="{Binding BackupFrequencyOptions}"
+                                        SelectedItem="{Binding SelectedBackupFrequency}"
+                                        Width="120"
+                                        Margin="12,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Visibility="{Binding BackupAutoEnabled, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            </StackPanel>
+                            
+                            <Grid Grid.Row="1" Grid.Column="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding BackupFolderPath}"
+                                         Style="{StaticResource PathTextBoxStyle}"
+                                         Tag="{Binding BackupFolderStatus}"
+                                         materialDesign:HintAssist.Hint="Chemin de sauvegarde de la base de données"/>
+                                
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding BrowseBackupFolderCommand}"
+                                            ToolTip="Parcourir">
+                                        <materialDesign:PackIcon Kind="FolderOpen" Width="20" Height="20"/>
+                                    </Button>
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding OpenBackupFolderCommand}"
+                                            ToolTip="Ouvrir le dossier">
+                                        <materialDesign:PackIcon Kind="OpenInNew" Width="20" Height="20"/>
+                                    </Button>
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding CreateBackupNowCommand}"
+                                            ToolTip="Créer une sauvegarde maintenant">
+                                        <materialDesign:PackIcon Kind="DatabaseExport" Width="20" Height="20"/>
+                                    </Button>
+                                    <Button Style="{StaticResource FolderActionButtonStyle}"
+                                            Command="{Binding ManageBackupsCommand}"
+                                            ToolTip="Gérer les sauvegardes">
+                                        <materialDesign:PackIcon Kind="DatabaseSettings" Width="20" Height="20"/>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                            
+                            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,8,0,0">
+                                <TextBlock Text="{Binding BackupFolderInfo}" 
+                                         Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                         TextWrapping="Wrap"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="🔄 Dernière sauvegarde:" Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
+                                    <TextBlock Text="{Binding LastBackupInfo}" 
+                                             Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                             Margin="8,0,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Section 3: Règles d'Organisation et Actions -->
+                <materialDesign:Card Style="{StaticResource InfoCardStyle}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                            <materialDesign:PackIcon Kind="Cogs" 
+                                                   Width="24" Height="24"
+                                                   VerticalAlignment="Center" 
+                                                   Margin="0,0,12,0" 
+                                                   Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                            <TextBlock Text="Règles d'Organisation &amp; Actions" 
+                                     Style="{StaticResource SectionHeaderStyle}"
+                                     Margin="0"/>
+                        </StackPanel>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Règles de nommage -->
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="📋 Règles de Nommage" 
+                                         Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                                         FontWeight="Medium"
+                                         Margin="0,0,0,12"/>
+                                
+                                <!-- Patron export -->
+                                <TextBlock Text="Format Export:" Style="{StaticResource FieldLabelStyle}"/>
+                                <ComboBox ItemsSource="{Binding ExportNamingPatterns}"
+                                        SelectedItem="{Binding SelectedExportNaming}"
+                                        materialDesign:HintAssist.Hint="Modèle de nommage des fichiers exportés"
+                                        Margin="0,0,0,12"/>
+                                
+                                <!-- Patron archivage -->
+                                <TextBlock Text="Organisation Archivage:" Style="{StaticResource FieldLabelStyle}"/>
+                                <ComboBox ItemsSource="{Binding ArchiveOrganizationPatterns}"
+                                        SelectedItem="{Binding SelectedArchiveOrganization}"
+                                        materialDesign:HintAssist.Hint="Structure des dossiers d'archivage"
+                                        Margin="0,0,0,12"/>
+                                
+                                <!-- Prévisualisation -->
+                                <Border Background="{DynamicResource MaterialDesignCardBackground}"
+                                        CornerRadius="4" Padding="12" Margin="0,0,0,12">
+                                    <StackPanel>
+                                        <TextBlock Text="📄 Aperçu:" Style="{StaticResource MaterialDesignCaptionTextBlock}" FontWeight="Medium"/>
+                                        <TextBlock Text="{Binding NamingPreview}" 
+                                                 FontFamily="Consolas" FontSize="11"
+                                                 Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                 TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                            
+                            <!-- Actions système -->
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="⚡ Actions Système" 
+                                         Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                                         FontWeight="Medium"
+                                         Margin="0,0,0,12"/>
+                                
+                                <!-- Bouton Sauvegarde -->
+                                <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                        Command="{Binding SaveConfigurationCommand}"
+                                        IsEnabled="{Binding CanSave}"
+                                        Height="48"
+                                        Margin="0,0,0,12"
+                                        Background="{DynamicResource PrimaryHueMidBrush}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ContentSave" Width="20" Height="20" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Enregistrer Configuration" FontWeight="Medium"/>
+                                    </StackPanel>
+                                </Button>
+                                
+                                <!-- Actions secondaires -->
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="8"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <Button Grid.Row="0" Grid.Column="0"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                            Command="{Binding CreateAllFoldersCommand}"
+                                            Height="36">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="FolderPlus" Width="16" Height="16" Margin="0,0,4,0"/>
+                                            <TextBlock Text="Créer Tout"/>
+                                        </StackPanel>
+                                    </Button>
+                                    
+                                    <Button Grid.Row="0" Grid.Column="2"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                            Command="{Binding VerifyAllPermissionsCommand}"
+                                            Height="36">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="ShieldCheck" Width="16" Height="16" Margin="0,0,4,0"/>
+                                            <TextBlock Text="Vérifier"/>
+                                        </StackPanel>
+                                    </Button>
+                                    
+                                    <Button Grid.Row="2" Grid.Column="0"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                            Command="{Binding ExportConfigurationCommand}"
+                                            Height="36">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Export" Width="16" Height="16" Margin="0,0,4,0"/>
+                                            <TextBlock Text="Exporter"/>
+                                        </StackPanel>
+                                    </Button>
+                                    
+                                    <Button Grid.Row="2" Grid.Column="2"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                            Command="{Binding ImportConfigurationCommand}"
+                                            Height="36">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Import" Width="16" Height="16" Margin="0,0,4,0"/>
+                                            <TextBlock Text="Importer"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                                
+                                <!-- Statistiques résumées -->
+                                <Border Background="{DynamicResource PrimaryHueLightBrush}"
+                                        CornerRadius="8" Padding="16" Margin="0,16,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="📊 Résumé Configuration" 
+                                                 Foreground="White" FontWeight="Medium" Margin="0,0,0,8"/>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Dossiers configurés:" Foreground="White" FontSize="12"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ConfiguredFoldersCount}" Foreground="White" FontSize="12" FontWeight="Bold"/>
+                                            
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Surveillances actives:" Foreground="White" FontSize="12"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ActiveWatchersCount}" Foreground="White" FontSize="12" FontWeight="Bold"/>
+                                            
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Espace total:" Foreground="White" FontSize="12"/>
+                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding TotalSpaceUsed}" Foreground="White" FontSize="12" FontWeight="Bold"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </materialDesign:Card>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Snackbar pour les notifications -->
+        <materialDesign:Snackbar Grid.Row="2" 
+                               MessageQueue="{materialDesign:MessageQueue}"
+                               x:Name="NotificationSnackbar"
+                               IsActive="{Binding IsNotificationVisible}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Bottom"
+                               Margin="16">
+            <materialDesign:SnackbarMessage>
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="{Binding NotificationIcon}" 
+                                           Width="20" Height="20"
+                                           VerticalAlignment="Center"
+                                           Foreground="{Binding NotificationColor}"
+                                           Margin="0,0,8,0"/>
+                    <TextBlock Text="{Binding NotificationMessage}" 
+                             VerticalAlignment="Center"
+                             FontWeight="Medium"/>
+                </StackPanel>
+            </materialDesign:SnackbarMessage>
+        </materialDesign:Snackbar>
+    </Grid>
+</UserControl>

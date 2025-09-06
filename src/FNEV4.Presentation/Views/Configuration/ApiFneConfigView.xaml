@@ -1,0 +1,520 @@
+<UserControl x:Class="FNEV4.Presentation.Views.Configuration.ApiFneConfigView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:FNEV4.Presentation.Converters"
+             Background="{DynamicResource MaterialDesignPaper}">
+
+    <UserControl.Resources>
+        <!-- Convertisseurs -->
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:BooleanToPackIconConverter x:Key="BooleanToPackIconConverter"/>
+        <converters:BooleanToColorConverter x:Key="BooleanToColorConverter"/>
+        <converters:BooleanToValidationTextConverter x:Key="BooleanToValidationTextConverter"/>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+
+        <!-- Styles pour les cartes d'information -->
+        <Style x:Key="InfoCardStyle" TargetType="materialDesign:Card">
+            <Setter Property="Margin" Value="0,0,0,24"/>
+            <Setter Property="Padding" Value="24"/>
+            <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth2"/>
+        </Style>
+
+        <!-- Style pour les TextBox -->
+        <Style x:Key="ConfigTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignFilledTextBox}">
+            <Setter Property="Margin" Value="0,0,0,16"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+
+        <!-- Style pour les ComboBox -->
+        <Style x:Key="ConfigComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignFilledComboBox}">
+            <Setter Property="Margin" Value="0,0,0,16"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="32">
+
+                <!-- En-tête avec titre et actions -->
+                <materialDesign:Card Style="{StaticResource InfoCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <materialDesign:PackIcon Grid.Column="0" 
+                                               Kind="Api" 
+                                               Width="32" Height="32"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                        
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="Configuration API FNE" 
+                                     FontSize="24" 
+                                     FontWeight="Bold"
+                                     Foreground="{DynamicResource MaterialDesignBody}"/>
+                            <TextBlock Text="Configurez les paramètres d'accès à l'API FNE selon la procédure DGI" 
+                                     FontSize="14" 
+                                     Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                     Margin="0,4,0,0"/>
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Margin="0,0,8,0"
+                                    Command="{Binding TestConnectionCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Connection" Width="16" Height="16"/>
+                                    <TextBlock Text="Tester" Margin="8,0,0,0"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Command="{Binding SaveConfigurationCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ContentSave" Width="16" Height="16"/>
+                                    <TextBlock Text="Sauvegarder" Margin="8,0,0,0"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </materialDesign:Card>
+
+                <!-- Progression de la configuration -->
+                <materialDesign:Card Style="{StaticResource InfoCardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Statut -->
+                        <TextBlock Grid.Row="0" 
+                                 Text="{Binding StatusMessage}" 
+                                 FontSize="16" 
+                                 FontWeight="Medium"
+                                 Foreground="{DynamicResource MaterialDesignBody}"
+                                 Margin="0,0,0,12"/>
+
+                        <!-- Barre de progression -->
+                        <ProgressBar Grid.Row="1" 
+                                   Value="{Binding ConfigurationProgress}" 
+                                   Minimum="0" Maximum="100"
+                                   Height="8"
+                                   Margin="0,0,0,8"/>
+
+                        <!-- Détails de progression -->
+                        <TextBlock Grid.Row="2" 
+                                 Text="{Binding ProgressDetails}" 
+                                 FontSize="14"
+                                 Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    </Grid>
+                </materialDesign:Card>
+
+                <!-- Configuration de base -->
+                <materialDesign:Card Style="{StaticResource InfoCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="🔧 Configuration de base"
+                                 FontSize="18" 
+                                 FontWeight="SemiBold"
+                                 Foreground="{DynamicResource MaterialDesignBody}"
+                                 Margin="0,0,0,16"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Colonne gauche -->
+                            <StackPanel Grid.Column="0">
+                                <!-- Nom de configuration -->
+                                <TextBox Style="{StaticResource ConfigTextBoxStyle}"
+                                       materialDesign:HintAssist.Hint="Nom de la configuration"
+                                       Text="{Binding ConfigurationName, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <!-- Environnement -->
+                                <ComboBox Style="{StaticResource ConfigComboBoxStyle}"
+                                        materialDesign:HintAssist.Hint="Environnement"
+                                        ItemsSource="{Binding AvailableEnvironments}"
+                                        SelectedItem="{Binding Environment}"/>
+
+                                <!-- URL API -->
+                                <TextBox Style="{StaticResource ConfigTextBoxStyle}"
+                                       materialDesign:HintAssist.Hint="URL de base API FNE"
+                                       Text="{Binding BaseUrl, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+
+                            <!-- Colonne droite -->
+                            <StackPanel Grid.Column="2">
+                                <!-- URL Web -->
+                                <TextBox Style="{StaticResource ConfigTextBoxStyle}"
+                                       materialDesign:HintAssist.Hint="URL interface web FNE"
+                                       Text="{Binding WebUrl, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <!-- Email support -->
+                                <TextBox Style="{StaticResource ConfigTextBoxStyle}"
+                                       materialDesign:HintAssist.Hint="Email support DGI"
+                                       Text="{Binding SupportEmail, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <!-- Configuration active -->
+                                <CheckBox Content="Configuration active"
+                                        IsChecked="{Binding IsActive}"
+                                        Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Actions de base -->
+                        <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Margin="0,0,8,0"
+                                    Command="{Binding OpenWebUrlCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Web" Width="16" Height="16"/>
+                                    <TextBlock Text="Ouvrir interface web" Margin="8,0,0,0"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Command="{Binding ContactSupportCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Email" Width="16" Height="16"/>
+                                    <TextBlock Text="Contacter support" Margin="8,0,0,0"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Authentification -->
+                <materialDesign:Card Style="{StaticResource InfoCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="🔐 Authentification"
+                                 FontSize="18" 
+                                 FontWeight="SemiBold"
+                                 Foreground="{DynamicResource MaterialDesignBody}"
+                                 Margin="0,0,0,16"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Clé API -->
+                            <StackPanel Grid.Column="0">
+                                <TextBox Style="{StaticResource ConfigTextBoxStyle}"
+                                       materialDesign:HintAssist.Hint="Clé API FNE (fournie par DGI)"
+                                       Text="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}"/>
+                                
+                                <TextBlock Text="💡 Visible uniquement après validation DGI"
+                                         FontSize="12"
+                                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                         Margin="0,-12,0,16"/>
+                            </StackPanel>
+
+                            <!-- Bearer Token -->
+                            <StackPanel Grid.Column="2">
+                                <TextBox Style="{StaticResource ConfigTextBoxStyle}"
+                                       materialDesign:HintAssist.Hint="Bearer Token (alternatif)"
+                                       Text="{Binding BearerToken, UpdateSourceTrigger=PropertyChanged}"/>
+                                
+                                <TextBlock Text="💡 Utiliser si différent de la clé API"
+                                         FontSize="12"
+                                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                         Margin="0,-12,0,16"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Statut validation DGI -->
+                        <Border Background="{DynamicResource MaterialDesignSelection}"
+                              CornerRadius="4"
+                              Padding="16,12"
+                              Margin="0,8,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <materialDesign:PackIcon Grid.Column="0"
+                                                       Kind="{Binding IsValidatedByDgi, Converter={StaticResource BooleanToPackIconConverter}}"
+                                                       Foreground="{Binding IsValidatedByDgi, Converter={StaticResource BooleanToColorConverter}}"
+                                                       Width="20" Height="20"
+                                                       VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                    <TextBlock Text="{Binding IsValidatedByDgi, Converter={StaticResource BooleanToValidationTextConverter}}"
+                                             FontWeight="Medium"/>
+                                    <TextBlock Text="{Binding ValidationDate, StringFormat='Validé le {0:dd/MM/yyyy à HH:mm}'}"
+                                             FontSize="12"
+                                             Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                             Visibility="{Binding ValidationDate, Converter={StaticResource NullToVisibilityConverter}}"/>
+                                </StackPanel>
+
+                                <Button Grid.Column="2"
+                                      Style="{StaticResource MaterialDesignFlatButton}"
+                                      Command="{Binding ValidateWithDgiCommand}"
+                                      Visibility="{Binding IsValidatedByDgi, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="CheckDecagram" Width="16" Height="16"/>
+                                        <TextBlock Text="Valider avec DGI" Margin="8,0,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Paramètres techniques -->
+                <materialDesign:Card Style="{StaticResource InfoCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="⚙️ Paramètres techniques"
+                                 FontSize="18" 
+                                 FontWeight="SemiBold"
+                                 Foreground="{DynamicResource MaterialDesignBody}"
+                                 Margin="0,0,0,16"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Timeout -->
+                            <StackPanel Grid.Column="0">
+                                <TextBox Style="{StaticResource ConfigTextBoxStyle}"
+                                       materialDesign:HintAssist.Hint="Timeout requêtes (secondes)"
+                                       Text="{Binding RequestTimeoutSeconds, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBlock Text="Recommandé : 30-60s"
+                                         FontSize="12"
+                                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                         Margin="0,-12,0,0"/>
+                            </StackPanel>
+
+                            <!-- Tentatives -->
+                            <StackPanel Grid.Column="2">
+                                <TextBox Style="{StaticResource ConfigTextBoxStyle}"
+                                       materialDesign:HintAssist.Hint="Max tentatives"
+                                       Text="{Binding MaxRetryAttempts, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBlock Text="Recommandé : 3-5"
+                                         FontSize="12"
+                                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                         Margin="0,-12,0,0"/>
+                            </StackPanel>
+
+                            <!-- Délai entre tentatives -->
+                            <StackPanel Grid.Column="4">
+                                <TextBox Style="{StaticResource ConfigTextBoxStyle}"
+                                       materialDesign:HintAssist.Hint="Délai entre tentatives (s)"
+                                       Text="{Binding RetryDelaySeconds, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBlock Text="Recommandé : 5-10s"
+                                         FontSize="12"
+                                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                         Margin="0,-12,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Actions avancées -->
+                <materialDesign:Card Style="{StaticResource InfoCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="🛠️ Actions avancées"
+                                 FontSize="18" 
+                                 FontWeight="SemiBold"
+                                 Foreground="{DynamicResource MaterialDesignBody}"
+                                 Margin="0,0,0,16"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Gestion des configurations -->
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Configurations prédéfinies"
+                                         FontWeight="Medium"
+                                         Margin="0,0,0,8"/>
+                                
+                                <ComboBox materialDesign:HintAssist.Hint="Charger une configuration"
+                                        ItemsSource="{Binding AvailableConfigurations}"
+                                        Margin="0,0,0,8">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="Settings" Width="16" Height="16" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding}" Margin="8,0,0,0"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                
+                                <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                      Command="{Binding LoadConfigurationCommand}"
+                                      CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                      HorizontalAlignment="Stretch">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Download" Width="16" Height="16"/>
+                                        <TextBlock Text="Charger configuration" Margin="8,0,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+
+                            <!-- Actions système -->
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Actions système"
+                                         FontWeight="Medium"
+                                         Margin="0,0,0,8"/>
+                                
+                                <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                      Margin="0,0,0,8"
+                                      Command="{Binding ResetConfigurationCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16"/>
+                                        <TextBlock Text="Réinitialiser" Margin="8,0,0,0"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                      Foreground="{DynamicResource MaterialDesignValidationErrorBrush}"
+                                      Command="{Binding DeleteConfigurationCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Delete" Width="16" Height="16"/>
+                                        <TextBlock Text="Supprimer config" Margin="8,0,0,0"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Informations et aide -->
+                <materialDesign:Card Style="{StaticResource InfoCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="📋 Procédure d'interfaçage FNE"
+                                 FontSize="18" 
+                                 FontWeight="SemiBold"
+                                 Foreground="{DynamicResource MaterialDesignBody}"
+                                 Margin="0,0,0,16"/>
+
+                        <TextBlock TextWrapping="Wrap"
+                                 Foreground="{DynamicResource MaterialDesignBody}"
+                                 Margin="0,0,0,16">
+                            <Run Text="Selon la procédure DGI, les étapes d'interfaçage sont :"/>
+                        </TextBlock>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Étapes gauche -->
+                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                <Border Background="{DynamicResource PrimaryHueLightBrush}"
+                                      CornerRadius="4"
+                                      Padding="12,8"
+                                      Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <TextBlock Text="1️⃣ Inscription environnement test"
+                                                 FontWeight="Medium"
+                                                 Foreground="White"/>
+                                        <TextBlock Text="http://54.247.95.108"
+                                                 FontSize="12"
+                                                 Foreground="White"
+                                                 Opacity="0.8"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Background="{DynamicResource PrimaryHueLightBrush}"
+                                      CornerRadius="4"
+                                      Padding="12,8"
+                                      Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <TextBlock Text="2️⃣ Développement et tests"
+                                                 FontWeight="Medium"
+                                                 Foreground="White"/>
+                                        <TextBlock Text="Interfaçage avec API test"
+                                                 FontSize="12"
+                                                 Foreground="White"
+                                                 Opacity="0.8"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Étapes droite -->
+                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                <Border Background="{DynamicResource PrimaryHueLightBrush}"
+                                      CornerRadius="4"
+                                      Padding="12,8"
+                                      Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <TextBlock Text="3️⃣ Transmission spécimens"
+                                                 FontWeight="Medium"
+                                                 Foreground="White"/>
+                                        <TextBlock Text="support.fne@dgi.gouv.ci"
+                                                 FontSize="12"
+                                                 Foreground="White"
+                                                 Opacity="0.8"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Background="{DynamicResource PrimaryHueLightBrush}"
+                                      CornerRadius="4"
+                                      Padding="12,8"
+                                      Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <TextBlock Text="4️⃣ Validation et production"
+                                                 FontWeight="Medium"
+                                                 Foreground="White"/>
+                                        <TextBlock Text="URL production transmise"
+                                                 FontSize="12"
+                                                 Foreground="White"
+                                                 Opacity="0.8"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </materialDesign:Card>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Notification Snackbar -->
+        <materialDesign:Snackbar MessageQueue="{materialDesign:MessageQueue}"
+                               x:Name="NotificationSnackbar"
+                               IsActive="{Binding IsNotificationVisible}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Bottom"
+                               Margin="16">
+            <materialDesign:SnackbarMessage>
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="{Binding NotificationIcon}" 
+                                           Width="20" Height="20"
+                                           VerticalAlignment="Center"
+                                           Foreground="{Binding NotificationColor}"
+                                           Margin="0,0,8,0"/>
+                    <TextBlock Text="{Binding NotificationMessage}" 
+                             VerticalAlignment="Center"
+                             FontWeight="Medium"/>
+                </StackPanel>
+            </materialDesign:SnackbarMessage>
+        </materialDesign:Snackbar>
+    </Grid>
+</UserControl>

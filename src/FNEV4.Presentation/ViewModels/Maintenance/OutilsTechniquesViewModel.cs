@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System;
+using FNEV4.Core.Interfaces;
 
 namespace FNEV4.Presentation.ViewModels.Maintenance
 {
@@ -18,6 +19,7 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
         #region Services
         private readonly IDiagnosticService _diagnosticService;
         private readonly ILoggingService _loggingService;
+        private readonly IPathConfigurationService _pathConfigurationService;
         #endregion
 
         #region Properties
@@ -85,10 +87,11 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
 
         #region Constructor
 
-        public OutilsTechniquesViewModel(IDiagnosticService diagnosticService, ILoggingService loggingService)
+        public OutilsTechniquesViewModel(IDiagnosticService diagnosticService, ILoggingService loggingService, IPathConfigurationService pathConfigurationService = null)
         {
             _diagnosticService = diagnosticService ?? throw new ArgumentNullException(nameof(diagnosticService));
             _loggingService = loggingService ?? throw new ArgumentNullException(nameof(loggingService));
+            _pathConfigurationService = pathConfigurationService ?? App.GetService<IPathConfigurationService>();
 
             // Initialisation des commandes
             TestApiFneCommand = new AsyncRelayCommand(TestApiFneAsync);
@@ -115,9 +118,11 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
         private void LoadStaticInfo()
         {
             ApplicationPath = Environment.CurrentDirectory;
-            DataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "FNEV4");
-            LogsPath = Path.Combine(DataPath, "Logs");
-            DatabasePath = Path.Combine(DataPath, "fnev4.db");
+            
+            // Utiliser le service centralisé pour les chemins
+            DataPath = _pathConfigurationService.DataRootPath;
+            LogsPath = _pathConfigurationService.LogsFolderPath;
+            DatabasePath = _pathConfigurationService.DatabasePath;
             
             ProcessId = $"PID {Environment.ProcessId}";
             FrameworkVersion = $".NET {Environment.Version.Major}.{Environment.Version.Minor}";

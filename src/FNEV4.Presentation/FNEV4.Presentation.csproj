@@ -48,4 +48,11 @@
     <ProjectReference Include="..\FNEV4.Infrastructure\FNEV4.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Configuration files -->
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

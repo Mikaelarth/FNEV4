@@ -253,3 +253,4 @@ C:\wamp64\www\FNEV4\tests\FNEV4.Tests.Unit\Presentation\obj\Debug\net8.0-windows
 C:\wamp64\www\FNEV4\tests\FNEV4.Tests.Unit\Presentation\obj\Debug\net8.0-windows\FNEV4.Tests.Unit.Presentation.pdb
 C:\wamp64\www\FNEV4\tests\FNEV4.Tests.Unit\Presentation\obj\Debug\net8.0-windows\FNEV4.Tests.Unit.Presentation.genruntimeconfig.cache
 C:\wamp64\www\FNEV4\tests\FNEV4.Tests.Unit\Presentation\obj\Debug\net8.0-windows\ref\FNEV4.Tests.Unit.Presentation.dll
+C:\wamp64\www\FNEV4\tests\FNEV4.Tests.Unit\Presentation\bin\Debug\net8.0-windows\appsettings.json
