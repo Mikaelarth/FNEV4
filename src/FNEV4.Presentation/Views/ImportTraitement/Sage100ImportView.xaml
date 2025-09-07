@@ -125,6 +125,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         
@@ -242,23 +243,75 @@
                             </Grid>
                         </Border>
                         
+                        <!-- Section recherche et filtres -->
+                        <Grid Grid.Row="3" 
+                             Margin="0,8,0,8"
+                             Visibility="{Binding HasPreviewData, Converter={StaticResource BoolToVisConverter}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Recherche -->
+                            <TextBox Grid.Column="0" 
+                                    Style="{StaticResource MaterialDesignTextBox}"
+                                    materialDesign:HintAssist.Hint="🔍 Rechercher (facture, client, montant...)"
+                                    Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                    materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                                    materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                                    Margin="0,0,16,0"/>
+                            
+                            <!-- Filtres -->
+                            <ComboBox Grid.Column="1" 
+                                     Style="{StaticResource MaterialDesignComboBox}"
+                                     materialDesign:HintAssist.Hint="État"
+                                     SelectedValue="{Binding FilterEtat}"
+                                     SelectedValuePath="Tag"
+                                     Width="120"
+                                     Margin="0,0,8,0">
+                                <ComboBoxItem Content="Tous" Tag="All"/>
+                                <ComboBoxItem Content="✅ Valides" Tag="Valid"/>
+                                <ComboBoxItem Content="❌ Erreurs" Tag="Error"/>
+                            </ComboBox>
+                            
+                            <ComboBox Grid.Column="2" 
+                                     Style="{StaticResource MaterialDesignComboBox}"
+                                     materialDesign:HintAssist.Hint="Paiement"
+                                     SelectedValue="{Binding FilterPaiement}"
+                                     SelectedValuePath="Tag"
+                                     Width="140">
+                                <ComboBoxItem Content="Tous" Tag="All"/>
+                                <ComboBoxItem Content="💰 Cash" Tag="cash"/>
+                                <ComboBoxItem Content="🏦 Par défaut" Tag="default"/>
+                                <ComboBoxItem Content="❗ Inexistant" Tag="missing"/>
+                            </ComboBox>
+                        </Grid>
+                        
                         <!-- Aperçu des factures -->
-                        <DataGrid Grid.Row="3" 
-                                 ItemsSource="{Binding PreviewFactures}"
+                        <DataGrid Grid.Row="4" 
+                                 ItemsSource="{Binding PreviewFacturesView}"
                                  Visibility="{Binding HasPreviewData, Converter={StaticResource BoolToVisConverter}}"
                                  Style="{StaticResource MaterialDesignDataGrid}"
                                  AutoGenerateColumns="False"
                                  IsReadOnly="True"
-                                 Margin="0,16,0,0"
+                                 Margin="0,8,0,0"
                                  CanUserResizeColumns="True"
                                  CanUserReorderColumns="True"
                                  GridLinesVisibility="Horizontal"
                                  HeadersVisibility="Column"
                                  AlternatingRowBackground="#FAFAFA"
-                                 FontSize="13"
-                                 RowHeight="35">
+                                 FontSize="12"
+                                 RowHeight="32"
+                                 VirtualizingPanel.IsVirtualizing="True"
+                                 VirtualizingPanel.VirtualizationMode="Recycling"
+                                 VirtualizingPanel.IsContainerVirtualizable="True"
+                                 ScrollViewer.CanContentScroll="True"
+                                 EnableRowVirtualization="True"
+                                 EnableColumnVirtualization="True"
+                                 MaxHeight="400">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Feuille" Binding="{Binding NomFeuille}" MinWidth="100" Width="SizeToHeader">
+                                <DataGridTextColumn Header="Feuille" Binding="{Binding NomFeuille}" MinWidth="80" Width="100">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="FontWeight" Value="Medium"/>
@@ -268,7 +321,7 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 
-                                <DataGridTextColumn Header="N° Facture" Binding="{Binding NumeroFacture}" MinWidth="110" Width="SizeToHeader">
+                                <DataGridTextColumn Header="N° Facture" Binding="{Binding NumeroFacture}" MinWidth="100" Width="110">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -278,7 +331,7 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 
-                                <DataGridTextColumn Header="Client" Binding="{Binding NomClient}" MinWidth="200" Width="Auto">
+                                <DataGridTextColumn Header="Client" Binding="{Binding NomClient}" MinWidth="150" Width="180">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="TextWrapping" Value="NoWrap"/>
@@ -289,7 +342,7 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 
-                                <DataGridTextColumn Header="Date" Binding="{Binding DateFacture, StringFormat='dd/MM/yyyy'}" MinWidth="100" Width="SizeToHeader">
+                                <DataGridTextColumn Header="Date" Binding="{Binding DateFacture, StringFormat='dd/MM/yyyy'}" MinWidth="80" Width="90">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -298,7 +351,7 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 
-                                <DataGridTextColumn Header="Moyen Paiement" Binding="{Binding MoyenPaiement}" MinWidth="150" Width="Auto">
+                                <DataGridTextColumn Header="Paiement" Binding="{Binding MoyenPaiement}" MinWidth="120" Width="140">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="TextWrapping" Value="NoWrap"/>
@@ -310,7 +363,7 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 
-                                <DataGridTextColumn Header="Nb Prod." Binding="{Binding NombreProduits}" MinWidth="80" Width="SizeToHeader">
+                                <DataGridTextColumn Header="Prod." Binding="{Binding NombreProduits}" MinWidth="50" Width="60">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -320,7 +373,7 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 
-                                <DataGridTextColumn Header="Montant (FCFA)" Binding="{Binding MontantEstime, StringFormat='N0'}" MinWidth="120" Width="SizeToHeader">
+                                <DataGridTextColumn Header="Montant" Binding="{Binding MontantEstime, StringFormat='N0'}" MinWidth="100" Width="110">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -332,23 +385,38 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 
-                                <DataGridTemplateColumn Header="État" Width="80" MinWidth="80">
+                                <DataGridTextColumn Header="Type" Binding="{Binding TypeFacture}" MinWidth="60" Width="70">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                            <Setter Property="FontWeight" Value="Medium"/>
+                                            <Setter Property="Foreground" Value="#FF9800"/>
+                                            <Setter Property="ToolTip" Value="Type de facturation FNE (B2B, B2C, B2G, B2F)"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                
+                                <DataGridTextColumn Header="TVA" Binding="{Binding TypeTva}" MinWidth="60" Width="70">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                            <Setter Property="FontWeight" Value="Medium"/>
+                                            <Setter Property="Foreground" Value="#9C27B0"/>
+                                            <Setter Property="ToolTip" Value="Type TVA: TVA (18%), TVAB (9%), TVAC (0%), TVAD (0%)"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                
+                                <DataGridTemplateColumn Header="État" Width="70" MinWidth="70">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border Background="{Binding EstValide, Converter={StaticResource BoolToLightColorConverter}}"
-                                                   CornerRadius="12"
-                                                   Padding="8,4"
+                                                   CornerRadius="10"
+                                                   Padding="6,2"
                                                    HorizontalAlignment="Center">
-                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <materialDesign:PackIcon Kind="{Binding EstValide, Converter={StaticResource BoolToIconConverter}}"
-                                                                           Foreground="{Binding EstValide, Converter={StaticResource BoolToColorConverter}}"
-                                                                           Width="14" Height="14"
-                                                                           Margin="0,0,4,0"/>
-                                                    <TextBlock Text="{Binding EstValide, Converter={StaticResource BoolToStatusConverter}}"
-                                                             FontSize="10"
-                                                             FontWeight="Medium"
-                                                             Foreground="{Binding EstValide, Converter={StaticResource BoolToColorConverter}}"/>
-                                                </StackPanel>
+                                                <materialDesign:PackIcon Kind="{Binding EstValide, Converter={StaticResource BoolToIconConverter}}"
+                                                                       Foreground="{Binding EstValide, Converter={StaticResource BoolToColorConverter}}"
+                                                                       Width="14" Height="14"/>
                                                 <Border.ToolTip>
                                                     <TextBlock>
                                                         <Run Text="État: "/>

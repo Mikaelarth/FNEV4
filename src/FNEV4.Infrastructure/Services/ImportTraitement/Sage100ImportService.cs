@@ -510,6 +510,9 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                 preview.NombreProduits = nombreProduits;
                 preview.MontantEstime = montantTotal;
 
+                // Analyse des informations pour certification FNE et détection des conflits
+                await AnalyzerInformationsFNE(preview, worksheet, codeClient);
+
                 // Validation avec vérification d'existence du client
                 var validation = await ValidateWorksheetStructureAsync(worksheet);
                 preview.EstValide = validation.IsValid;
@@ -522,6 +525,119 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
             }
 
             return preview;
+        }
+
+        /// <summary>
+        /// Analyse les informations pour la certification FNE et détecte les conflits de données
+        /// </summary>
+        private async Task AnalyzerInformationsFNE(Sage100FacturePreview preview, IXLWorksheet worksheet, string codeClient)
+        {
+            var conflits = new List<string>();
+            
+            // Récupération des données Excel
+            preview.NomClientExcel = preview.NomClient;
+            preview.TelephoneClientExcel = GetCellValue(worksheet, "A14"); // Exemple cellule téléphone
+            preview.EmailClientExcel = GetCellValue(worksheet, "A15"); // Exemple cellule email
+            
+            // Détermination du type de facturation FNE basé sur le code client
+            if (codeClient == "1999")
+            {
+                preview.TypeFacture = "B2C"; // Client particulier/divers
+            }
+            else if (codeClient.StartsWith("GOV") || codeClient.StartsWith("ETAT"))
+            {
+                preview.TypeFacture = "B2G"; // Gouvernement/État
+            }
+            else if (codeClient.StartsWith("INT") || codeClient.StartsWith("EXT"))
+            {
+                preview.TypeFacture = "B2F"; // International
+            }
+            else
+            {
+                preview.TypeFacture = "B2B"; // Entreprise (défaut)
+            }
+            
+            // Détermination du type de TVA (à partir des produits ou configuration)
+            preview.TypeTva = DeterminerTypeTVA(worksheet);
+            
+            // Comparaison avec les données de la base si client trouvé
+            if (preview.ClientTrouve && codeClient != "1999")
+            {
+                var clientBDD = await _clientRepository.GetByClientCodeAsync(codeClient);
+                if (clientBDD != null)
+                {
+                    preview.NomClientBDD = clientBDD.Name ?? string.Empty;
+                    preview.TelephoneClientBDD = clientBDD.Phone ?? string.Empty;
+                    preview.EmailClientBDD = clientBDD.Email ?? string.Empty;
+                    
+                    // Détection des conflits (Source de vérité : Excel prioritaire sauf moyens de paiement)
+                    if (!string.IsNullOrEmpty(preview.NomClientExcel) && 
+                        !string.IsNullOrEmpty(preview.NomClientBDD) &&
+                        !preview.NomClientExcel.Equals(preview.NomClientBDD, StringComparison.OrdinalIgnoreCase))
+                    {
+                        conflits.Add($"Nom: Excel='{preview.NomClientExcel}' ≠ BDD='{preview.NomClientBDD}'");
+                    }
+                    
+                    if (!string.IsNullOrEmpty(preview.TelephoneClientExcel) && 
+                        !string.IsNullOrEmpty(preview.TelephoneClientBDD) &&
+                        preview.TelephoneClientExcel != preview.TelephoneClientBDD)
+                    {
+                        conflits.Add($"Tél: Excel='{preview.TelephoneClientExcel}' ≠ BDD='{preview.TelephoneClientBDD}'");
+                    }
+                    
+                    if (!string.IsNullOrEmpty(preview.EmailClientExcel) && 
+                        !string.IsNullOrEmpty(preview.EmailClientBDD) &&
+                        !preview.EmailClientExcel.Equals(preview.EmailClientBDD, StringComparison.OrdinalIgnoreCase))
+                    {
+                        conflits.Add($"Email: Excel='{preview.EmailClientExcel}' ≠ BDD='{preview.EmailClientBDD}'");
+                    }
+                }
+            }
+            
+            // Formatage des conflits pour affichage
+            if (conflits.Any())
+            {
+                preview.ConflitDonnees = "⚠️ Conflits détectés";
+                preview.ConflitDetails = $"Conflits de données (Source de vérité = Excel):\n{string.Join("\n", conflits)}";
+            }
+            else
+            {
+                preview.ConflitDonnees = "✅ Cohérent";
+                preview.ConflitDetails = "Aucun conflit détecté entre Excel et base de données";
+            }
+        }
+        
+        /// <summary>
+        /// Détermine le type de TVA basé sur les produits de la facture
+        /// </summary>
+        private string DeterminerTypeTVA(IXLWorksheet worksheet)
+        {
+            // Analyse des produits pour déterminer le type de TVA prédominant
+            var typesTva = new Dictionary<string, int>();
+            
+            var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 25;
+            for (int row = 20; row <= lastRow; row++)
+            {
+                var codeProduit = GetCellValue(worksheet, $"B{row}");
+                if (!string.IsNullOrWhiteSpace(codeProduit))
+                {
+                    // Logique basée sur le code produit ou configuration
+                    var typeTva = "TVA"; // Défaut 18%
+                    
+                    // Exemples de règles métier
+                    if (codeProduit.StartsWith("MED") || codeProduit.StartsWith("SANTE"))
+                        typeTva = "TVAB"; // 9% pour médicaments
+                    else if (codeProduit.StartsWith("EXPORT") || codeProduit.StartsWith("EXP"))
+                        typeTva = "TVAC"; // 0% exonération conventionnelle
+                    else if (codeProduit.StartsWith("AGRI") || codeProduit.StartsWith("RIZ"))
+                        typeTva = "TVAD"; // 0% exonération légale
+                    
+                    typesTva[typeTva] = typesTva.GetValueOrDefault(typeTva, 0) + 1;
+                }
+            }
+            
+            // Retourne le type de TVA le plus fréquent
+            return typesTva.OrderByDescending(x => x.Value).FirstOrDefault().Key ?? "TVA";
         }
 
         private string GetCellValue(IXLWorksheet worksheet, string cellAddress)

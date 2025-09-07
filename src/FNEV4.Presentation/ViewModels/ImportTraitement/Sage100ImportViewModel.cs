@@ -5,10 +5,12 @@ using FNEV4.Core.Models.ImportTraitement;
 using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Media;
 
 namespace FNEV4.Presentation.ViewModels.ImportTraitement
@@ -66,6 +68,61 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
 
         public ObservableCollection<Sage100FacturePreview> PreviewFactures { get; } = new();
         public ObservableCollection<Sage100FactureImportee> ImportedFactures { get; } = new();
+
+        // Collection filtrée pour la vue
+        private ICollectionView? _previewFacturesView;
+        public ICollectionView PreviewFacturesView
+        {
+            get
+            {
+                if (_previewFacturesView == null)
+                {
+                    _previewFacturesView = CollectionViewSource.GetDefaultView(PreviewFactures);
+                    _previewFacturesView.Filter = FilterFactures;
+                }
+                return _previewFacturesView;
+            }
+        }
+
+        // Propriétés pour la recherche et le filtrage
+        private string _searchText = string.Empty;
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if (SetProperty(ref _searchText, value))
+                {
+                    PreviewFacturesView?.Refresh();
+                }
+            }
+        }
+
+        private string _filterEtat = "All";
+        public string FilterEtat
+        {
+            get => _filterEtat;
+            set
+            {
+                if (SetProperty(ref _filterEtat, value))
+                {
+                    PreviewFacturesView?.Refresh();
+                }
+            }
+        }
+
+        private string _filterPaiement = "All";
+        public string FilterPaiement
+        {
+            get => _filterPaiement;
+            set
+            {
+                if (SetProperty(ref _filterPaiement, value))
+                {
+                    PreviewFacturesView?.Refresh();
+                }
+            }
+        }
 
         public bool HasSelectedFile => !string.IsNullOrEmpty(SelectedFilePath);
         public bool CanImport => HasValidationResult && PreviewFactures.Any(f => f.EstValide);
@@ -139,6 +196,9 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                     {
                         PreviewFactures.Add(facture);
                     }
+                    
+                    // Mettre à jour la vue filtrée
+                    PreviewFacturesView?.Refresh();
                     
                     HasPreviewData = PreviewFactures.Count > 0;
                     
@@ -371,6 +431,65 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 ImportResultColor = new SolidColorBrush(Colors.Red);
                 ImportResultDetails = result.Message;
             }
+        }
+
+
+
+        private void ApplyFilters()
+        {
+            // Rafraîchit le filtre de la vue
+            _previewFacturesView?.Refresh();
+        }
+
+        private bool FilterFactures(object item)
+        {
+            if (item is not Sage100FacturePreview facture) return false;
+
+            // Filtre par recherche
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                var searchLower = SearchText.ToLower();
+                if (!facture.NumeroFacture.ToLower().Contains(searchLower) &&
+                    !facture.NomClient.ToLower().Contains(searchLower) &&
+                    !facture.MontantEstime.ToString().Contains(searchLower) &&
+                    !facture.MoyenPaiement.ToLower().Contains(searchLower))
+                {
+                    return false;
+                }
+            }
+
+            // Filtre par état
+            if (FilterEtat != "All")
+            {
+                switch (FilterEtat)
+                {
+                    case "Valid":
+                        if (!facture.EstValide) return false;
+                        break;
+                    case "Error":
+                        if (facture.EstValide) return false;
+                        break;
+                }
+            }
+
+            // Filtre par paiement
+            if (FilterPaiement != "All")
+            {
+                switch (FilterPaiement)
+                {
+                    case "cash":
+                        if (!facture.MoyenPaiement.ToLower().Contains("cash")) return false;
+                        break;
+                    case "default":
+                        if (!facture.MoyenPaiement.ToLower().Contains("défaut")) return false;
+                        break;
+                    case "missing":
+                        if (!facture.MoyenPaiement.ToLower().Contains("inexistant")) return false;
+                        break;
+                }
+            }
+
+            return true;
         }
 
         partial void OnSelectedFilePathChanged(string value)

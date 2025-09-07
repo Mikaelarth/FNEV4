@@ -124,6 +124,20 @@ namespace FNEV4.Core.Models.ImportTraitement
         public bool EstValide { get; set; }
         public bool ClientTrouve { get; set; }
         public List<string> Erreurs { get; set; } = new();
+        
+        // Nouvelles propriétés pour certification FNE
+        public string TypeFacture { get; set; } = "B2B"; // B2B, B2C, B2G, B2F
+        public string TypeTva { get; set; } = "TVA"; // TVA, TVAB, TVAC, TVAD
+        public string ConflitDonnees { get; set; } = string.Empty;
+        public string ConflitDetails { get; set; } = string.Empty;
+        
+        // Propriétés additionnelles pour comparaison source de vérité
+        public string NomClientExcel { get; set; } = string.Empty; // Nom du client dans Excel
+        public string NomClientBDD { get; set; } = string.Empty;   // Nom du client dans BDD
+        public string TelephoneClientExcel { get; set; } = string.Empty;
+        public string TelephoneClientBDD { get; set; } = string.Empty;
+        public string EmailClientExcel { get; set; } = string.Empty;
+        public string EmailClientBDD { get; set; } = string.Empty;
     }
 
     /// <summary>
