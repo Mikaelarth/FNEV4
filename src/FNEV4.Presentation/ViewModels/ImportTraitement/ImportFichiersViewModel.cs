@@ -79,8 +79,8 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         {
             InitializeImportTypes();
             
-            // Debug - Forcer le message de statut
-            StatusMessage = $"✅ {AvailableImportTypes.Count} types d'import spécialisés chargés";
+            // Status avec description claire des types d'import
+            StatusMessage = $"✅ {AvailableImportTypes.Count} types d'import disponibles : Standard, Exceptionnel Sage v15, Configuration";
         }
 
         #endregion
@@ -141,12 +141,31 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 
                 switch (type)
                 {
-                    case "Factures":
-                        StatusMessage = "🚧 Import de factures Sage 100 v15 - En cours de développement";
+                    case "Standard":
+                        StatusMessage = "🚧 Import Standard - En cours de développement";
                         MessageBox.Show(
-                            "Import de Factures Sage 100 v15\n\n" +
+                            "Import Standard\n\n" +
                             "Fonctionnalité en cours de développement.\n" +
-                            "Support du nouveau champ A18 (moyens de paiement).\n\n" +
+                            "Gérera les formats Excel standards avec en-têtes normalisés :\n" +
+                            "• Clients avec colonnes fixes\n" +
+                            "• Factures format conventionnel\n" +
+                            "• Données métier standardisées\n\n" +
+                            "Sera disponible dans une prochaine mise à jour.",
+                            "En développement",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                        break;
+                        
+                    case "SageExceptionnel":
+                        StatusMessage = "🚧 Import Exceptionnel Sage 100 v15 - En cours de développement";
+                        MessageBox.Show(
+                            "Import Exceptionnel Sage 100 v15\n\n" +
+                            "Fonctionnalité en cours de développement.\n" +
+                            "Gérera les spécificités de Sage 100 v15 :\n" +
+                            "• Structure non-standard propriétaire\n" +
+                            "• Support du nouveau champ A18 (moyens de paiement)\n" +
+                            "• Adaptation aux formats propriétaires\n" +
+                            "• Validation spécifique v15\n\n" +
                             "Sera disponible dans une prochaine mise à jour.",
                             "En développement",
                             MessageBoxButton.OK,
@@ -158,7 +177,11 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                         MessageBox.Show(
                             "Import de Configuration Système\n\n" +
                             "Fonctionnalité en cours de développement.\n" +
-                            "Permettra l'import de paramètres, chemins et règles métier.\n\n" +
+                            "Permettra l'import de :\n" +
+                            "• Paramètres de l'application\n" +
+                            "• Chemins de dossiers\n" +
+                            "• Règles métier personnalisées\n" +
+                            "• Configuration base de données\n\n" +
                             "Sera disponible dans une prochaine mise à jour.",
                             "En développement",
                             MessageBoxButton.OK,
@@ -185,13 +208,14 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             StatusMessage = "💡 Affichage de l'aide...";
             
             MessageBox.Show(
-                "Aide sur l'import de fichiers spécialisés :\n\n" +
-                "• Factures : Import des factures Sage 100 v15 avec support A18\n" +
-                "• Configuration : Import des paramètres système et règles métier\n\n" +
-                "Note : Pour l'import de clients, utilisez le menu\n" +
+                "Aide sur l'import de fichiers :\n\n" +
+                "• Import Standard : Formats Excel normalisés avec en-têtes fixes\n" +
+                "• Import Exceptionnel Sage v15 : Structure non-standard spécifique\n" +
+                "• Import Configuration : Paramètres système et règles métier\n\n" +
+                "Note : Pour l'import de clients standard, utilisez le menu\n" +
                 "'Gestion Clients > Liste des clients > Importer'\n\n" +
                 "Pour plus d'informations, consultez la documentation.",
-                "Aide - Import de fichiers spécialisés",
+                "Aide - Import de fichiers",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
             
@@ -281,34 +305,49 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         {
             AvailableImportTypes.Clear();
             
-            // Import de Factures Sage 100 - Nouveau avec support A18
+            // Import Standard - Formats normaux et standardisés
             AvailableImportTypes.Add(new ImportTypeInfo
             {
-                Type = "Factures",
-                Title = "Import Factures Sage 100 v15",
-                Description = "Import des factures depuis Sage 100 v15 avec support du nouveau champ A18 (moyens de paiement). Utilise le dossier d'import configuré avec surveillance automatique et archivage selon les règles définies.",
-                Icon = "FileDocumentMultiple", 
+                Type = "Standard",
+                Title = "Import Standard",
+                Description = "Import des données depuis des fichiers aux formats standards et normalisés. Prend en charge les structures Excel conventionnelles avec en-têtes fixes et colonnes prédéfinies pour clients, factures et données métier.",
+                Icon = "FileDocument", 
                 IsEnabled = true,
-                Status = "Nouveau - Support A18",
-                StatusColor = new SolidColorBrush(Colors.Orange),
-                SupportedFormats = ".xlsx (Structure : 1 classeur = N factures, 1 feuille = 1 facture)",
-                ButtonText = "IMPORTER FACTURES",
-                Color = new SolidColorBrush(Color.FromRgb(255, 152, 0)) // Orange Material
+                Status = "Standard",
+                StatusColor = new SolidColorBrush(Color.FromRgb(76, 175, 80)), // Green
+                SupportedFormats = ".xlsx, .xls, .csv (formats standards avec en-têtes normalisés)",
+                ButtonText = "IMPORT STANDARD",
+                Color = new SolidColorBrush(Color.FromRgb(67, 160, 71)) // Green moderne
             });
             
-            // Import de Données de Configuration
+            // Import Exceptionnel Sage 100 v15 - Structure non-standard
+            AvailableImportTypes.Add(new ImportTypeInfo
+            {
+                Type = "SageExceptionnel",
+                Title = "Import Exceptionnel Sage 100 v15",
+                Description = "Import spécialisé pour Sage 100 v15 avec structure non-standard. Gère les formats propriétaires, le nouveau champ A18 pour moyens de paiement et les spécificités techniques de cette version particulière.",
+                Icon = "AlertCircle", 
+                IsEnabled = true,
+                Status = "Exceptionnel - V15",
+                StatusColor = new SolidColorBrush(Color.FromRgb(255, 193, 7)), // Amber
+                SupportedFormats = ".xlsx spécifique Sage 100 v15 (structure non-standard, champ A18)",
+                ButtonText = "IMPORT SAGE V15",
+                Color = new SolidColorBrush(Color.FromRgb(255, 87, 34)) // Deep Orange moderne
+            });
+            
+            // Import de Configuration - Paramètres système
             AvailableImportTypes.Add(new ImportTypeInfo
             {
                 Type = "Configuration",
                 Title = "Import Configuration Système",
-                Description = "Import des paramètres de configuration, chemins de dossiers et règles métier depuis un fichier de sauvegarde. Permet la migration entre environnements.",
+                Description = "Import des paramètres de configuration, chemins de dossiers et règles métier depuis un fichier de sauvegarde. Solution complète pour la migration entre environnements de développement et production.",
                 Icon = "Cog", 
                 IsEnabled = true,
                 Status = "Système",
-                StatusColor = new SolidColorBrush(Colors.Purple),
-                SupportedFormats = ".json, .xml (fichiers de configuration)",
+                StatusColor = new SolidColorBrush(Color.FromRgb(103, 58, 183)), // Deep Purple
+                SupportedFormats = ".json, .xml (fichiers de configuration système)",
                 ButtonText = "IMPORTER CONFIG",
-                Color = new SolidColorBrush(Color.FromRgb(156, 39, 176)) // Purple Material
+                Color = new SolidColorBrush(Color.FromRgb(156, 39, 176)) // Purple moderne
             });
 
             // Copier vers la collection d'affichage

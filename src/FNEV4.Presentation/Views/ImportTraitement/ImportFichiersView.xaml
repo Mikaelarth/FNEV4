@@ -13,79 +13,87 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
         <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisConverter"/>
         
-        <!-- Style pour les cartes d'import -->
-        <Style x:Key="ImportCardStyle" TargetType="materialDesign:Card">
-            <Setter Property="Margin" Value="10"/>
-            <Setter Property="Padding" Value="20"/>
-            <Setter Property="materialDesign:ElevationAssist.Elevation" Value="Dp2"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <EventSetter Event="MouseEnter" Handler="Card_MouseEnter"/>
-            <EventSetter Event="MouseLeave" Handler="Card_MouseLeave"/>
-        </Style>
-
-        <!-- Style pour les boutons d'action -->
-        <Style x:Key="ActionButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
-            <Setter Property="Height" Value="40"/>
-            <Setter Property="Margin" Value="5"/>
-            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="20"/>
+        <!-- Styles cohérents avec le reste de l'application -->
+        <Style x:Key="SectionHeaderStyle" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignHeadline6TextBlock}">
+            <Setter Property="Margin" Value="0,0,0,15"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
         
-        <!-- Template pour les éléments d'import -->
+        <Style x:Key="ImportCardStyle" TargetType="materialDesign:Card">
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+            <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style x:Key="ActionButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Margin" Value="0,15,0,0"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="20,8"/>
+        </Style>
+        
+        <!-- Template simple pour les éléments d'import -->
         <DataTemplate x:Key="ImportTypeTemplate">
-            <materialDesign:Card Style="{StaticResource ImportCardStyle}" 
-                                 Background="{Binding Color}">
+            <materialDesign:Card Style="{StaticResource ImportCardStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Icône et titre -->
+                    <!-- En-tête avec icône et titre -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
-                        <materialDesign:PackIcon Kind="{Binding Icon}" 
-                                                Width="32" Height="32" 
-                                                VerticalAlignment="Center"
-                                                Foreground="{DynamicResource MaterialDesignBody}"/>
-                        <TextBlock Text="{Binding Title}" 
-                                  Style="{DynamicResource MaterialDesignHeadline6TextBlock}"
-                                  Margin="15,0,0,0" 
-                                  VerticalAlignment="Center"/>
+                        <Border Background="{Binding Color}" 
+                               CornerRadius="4" 
+                               Padding="8" 
+                               Margin="0,0,15,0">
+                            <materialDesign:PackIcon Kind="{Binding Icon}" 
+                                                    Width="24" Height="24" 
+                                                    Foreground="White"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Title}" 
+                                      Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                      FontWeight="SemiBold"/>
+                            <Border Background="{Binding StatusColor}"
+                                   CornerRadius="2"
+                                   Padding="6,2"
+                                   Margin="0,4,0,0"
+                                   HorizontalAlignment="Left">
+                                <TextBlock Text="{Binding Status}"
+                                          Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                          Foreground="White"
+                                          FontWeight="Medium"/>
+                            </Border>
+                        </StackPanel>
                     </StackPanel>
 
                     <!-- Description -->
                     <TextBlock Grid.Row="1" 
                               Text="{Binding Description}"
-                              Style="{DynamicResource MaterialDesignBody1TextBlock}"
+                              Style="{StaticResource MaterialDesignBody2TextBlock}"
                               TextWrapping="Wrap"
-                              Margin="0,0,0,10"
-                              Opacity="0.8"/>
+                              Margin="0,0,0,15"
+                              LineHeight="22"/>
 
-                    <!-- Statut -->
-                    <Border Grid.Row="2" 
-                           Background="{Binding StatusColor}"
-                           CornerRadius="10"
-                           Padding="8,4"
-                           Margin="0,0,0,15"
-                           HorizontalAlignment="Left">
-                        <TextBlock Text="{Binding Status}"
-                                  Style="{DynamicResource MaterialDesignCaptionTextBlock}"
-                                  Foreground="White"
-                                  FontWeight="Medium"/>
-                    </Border>
-
-                    <!-- Détails techniques -->
-                    <StackPanel Grid.Row="3" Margin="0,0,0,15">
+                    <!-- Formats supportés -->
+                    <StackPanel Grid.Row="2" Margin="0,0,0,15">
                         <TextBlock Text="Formats supportés :" 
-                                  Style="{DynamicResource MaterialDesignCaptionTextBlock}"
-                                  FontWeight="Medium"
+                                  Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                  FontWeight="SemiBold"
                                   Margin="0,0,0,5"/>
                         <TextBlock Text="{Binding SupportedFormats}"
-                                  Style="{DynamicResource MaterialDesignCaptionTextBlock}"
-                                  Opacity="0.7"/>
+                                  Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                  Foreground="{DynamicResource MaterialDesignBodyLight}"/>
                     </StackPanel>
+
+                    <!-- Séparateur -->
+                    <Separator Grid.Row="3" Margin="0,10"/>
 
                     <!-- Bouton d'action -->
                     <Button Grid.Row="4" 
@@ -95,56 +103,74 @@
                            CommandParameter="{Binding Type}"
                            Style="{StaticResource ActionButtonStyle}"
                            IsEnabled="{Binding IsEnabled}"
-                           HorizontalAlignment="Stretch"/>
+                           Background="{Binding Color}"/>
                 </Grid>
             </materialDesign:Card>
         </DataTemplate>
     </UserControl.Resources>
 
-    <Grid>
+    <!-- Layout cohérent avec le reste de l'application -->
+    <Grid Margin="20">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="Auto"/> <!-- Filtres -->
+            <RowDefinition Height="*"/>    <!-- Liste -->
+            <RowDefinition Height="Auto"/> <!-- Status -->
         </Grid.RowDefinitions>
 
-        <!-- En-tête -->
-        <materialDesign:Card Grid.Row="0" 
-                            Margin="10" 
-                            Padding="20"
-                            materialDesign:ElevationAssist.Elevation="Dp1">
+        <!-- HEADER cohérent -->
+        <Border Grid.Row="0" 
+                Background="#F8F9FA" 
+                BorderBrush="#E0E0E0" 
+                BorderThickness="1" 
+                CornerRadius="4" 
+                Padding="20" 
+                Margin="0,0,0,16">
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0">
+                <!-- Icône -->
+                <Border Grid.Column="0"
+                       Background="{DynamicResource PrimaryHueMidBrush}"
+                       CornerRadius="4"
+                       Width="40" Height="40"
+                       Margin="0,0,15,0">
+                    <materialDesign:PackIcon Kind="CloudUpload" 
+                                           Width="24" Height="24"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Foreground="White"/>
+                </Border>
+
+                <!-- Titre et description -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <TextBlock Text="Import de fichiers" 
-                              Style="{DynamicResource MaterialDesignHeadline4TextBlock}"
+                              Style="{StaticResource SectionHeaderStyle}"
                               Margin="0,0,0,5"/>
-                    <TextBlock Text="Sélectionnez le type de fichiers que vous souhaitez importer dans FNE V4"
-                              Style="{DynamicResource MaterialDesignBody1TextBlock}"
-                              Opacity="0.7"/>
+                    <TextBlock Text="Choisissez entre import standard, exceptionnel (Sage v15) ou configuration système"
+                              Style="{StaticResource MaterialDesignBody2TextBlock}"
+                              Foreground="{DynamicResource MaterialDesignBodyLight}"/>
                 </StackPanel>
 
-                <Button Grid.Column="1"
+                <!-- Bouton actualiser -->
+                <Button Grid.Column="2"
                        Style="{StaticResource MaterialDesignIconButton}"
                        Command="{Binding RefreshCommand}"
-                       ToolTip="Actualiser"
-                       Width="40" Height="40">
-                    <materialDesign:PackIcon Kind="Refresh" 
-                                           Width="20" Height="20"/>
+                       ToolTip="Actualiser">
+                    <materialDesign:PackIcon Kind="Refresh" Width="24" Height="24"/>
                 </Button>
             </Grid>
-        </materialDesign:Card>
+        </Border>
 
-        <!-- Filtres et actions rapides -->
+        <!-- Barre de recherche et actions cohérente -->
         <materialDesign:Card Grid.Row="1" 
-                            Margin="10,0,10,10" 
-                            Padding="15"
-                            materialDesign:ElevationAssist.Elevation="Dp1">
+                            Padding="15" 
+                            Margin="0,0,0,16"
+                            materialDesign:ShadowAssist.ShadowDepth="Depth1">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -152,7 +178,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Recherche -->
+                <!-- Recherche standard -->
                 <TextBox Grid.Column="0"
                         materialDesign:HintAssist.Hint="Rechercher un type d'import..."
                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
@@ -163,7 +189,7 @@
                     </TextBox.InputBindings>
                 </TextBox>
 
-                <!-- Bouton d'aide -->
+                <!-- Boutons d'action standard -->
                 <Button Grid.Column="1"
                        Content="AIDE"
                        Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -174,7 +200,6 @@
                     </Button.ToolTip>
                 </Button>
 
-                <!-- Bouton historique -->
                 <Button Grid.Column="2"
                        Content="HISTORIQUE"
                        Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -187,17 +212,17 @@
             </Grid>
         </materialDesign:Card>
 
-        <!-- Zone principale - Grille des types d'import -->
+        <!-- Zone principale standard -->
         <ScrollViewer Grid.Row="2" 
                      VerticalScrollBarVisibility="Auto"
-                     HorizontalScrollBarVisibility="Disabled"
-                     Padding="10">
+                     HorizontalScrollBarVisibility="Disabled">
             
             <Grid>
-                <!-- Indicateur de chargement -->
+                <!-- Indicateur de chargement standard -->
                 <StackPanel Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisConverter}}"
                            VerticalAlignment="Center" 
-                           HorizontalAlignment="Center">
+                           HorizontalAlignment="Center"
+                           Margin="0,40,0,0">
                     <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
                                 Value="0" 
                                 IsIndeterminate="True"
@@ -211,10 +236,11 @@
                 <!-- Contenu principal -->
                 <Grid Visibility="{Binding IsLoading, Converter={StaticResource InverseBoolToVisConverter}}">
                     
-                    <!-- Message si aucun résultat -->
+                    <!-- Message standard si aucun résultat -->
                     <StackPanel Visibility="{Binding HasResults, Converter={StaticResource InverseBoolToVisConverter}}"
                                VerticalAlignment="Center" 
-                               HorizontalAlignment="Center">
+                               HorizontalAlignment="Center"
+                               Margin="0,40,0,0">
                         <materialDesign:PackIcon Kind="FileDocumentOutline" 
                                                Width="80" Height="80"
                                                Opacity="0.3"
@@ -230,13 +256,13 @@
                                   Margin="0,10,0,0"/>
                     </StackPanel>
 
-                    <!-- Grille des options d'import -->
+                    <!-- Grille standard des options d'import -->
                     <ItemsControl ItemsSource="{Binding ImportTypes}"
                                  ItemTemplate="{StaticResource ImportTypeTemplate}"
                                  Visibility="{Binding HasResults, Converter={StaticResource BoolToVisConverter}}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <UniformGrid Columns="2" />
+                                <UniformGrid Columns="3" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>
@@ -244,44 +270,42 @@
             </Grid>
         </ScrollViewer>
 
-        <!-- Barre de statut -->
-        <materialDesign:Card Grid.Row="3" 
-                            Margin="10" 
-                            Padding="15,10"
-                            materialDesign:ElevationAssist.Elevation="Dp1">
-            <Grid>
+        <!-- Barre de statut standard -->
+        <Border Grid.Row="3" 
+               Background="#F8F9FA"
+               BorderBrush="#E0E0E0"
+               BorderThickness="0,1,0,0">
+            <Grid Margin="20,12">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Icône de statut -->
-                <materialDesign:PackIcon Grid.Column="0"
-                                       Kind="Information"
-                                       Width="16" Height="16"
-                                       VerticalAlignment="Center"
-                                       Margin="0,0,10,0"
-                                       Opacity="0.7"/>
-
                 <!-- Message de statut -->
-                <TextBlock Grid.Column="1"
-                          Text="{Binding StatusMessage}"
-                          Style="{DynamicResource MaterialDesignCaptionTextBlock}"
-                          VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Information"
+                                           Width="16" Height="16"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,8,0"
+                                           Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                    
+                    <TextBlock Text="{Binding StatusMessage}"
+                              Style="{DynamicResource MaterialDesignBody2TextBlock}"
+                              VerticalAlignment="Center"/>
+                </StackPanel>
 
                 <!-- Compteur -->
                 <TextBlock Grid.Column="2"
                           VerticalAlignment="Center"
-                          Style="{DynamicResource MaterialDesignCaptionTextBlock}"
-                          Opacity="0.7">
+                          Style="{DynamicResource MaterialDesignCaptionTextBlock}">
                     <TextBlock.Text>
-                        <MultiBinding StringFormat="{}{0} types d'import disponibles">
+                        <MultiBinding StringFormat="{}{0} types disponibles">
                             <Binding Path="ImportTypes.Count"/>
                         </MultiBinding>
                     </TextBlock.Text>
                 </TextBlock>
             </Grid>
-        </materialDesign:Card>
+        </Border>
     </Grid>
 </UserControl>
