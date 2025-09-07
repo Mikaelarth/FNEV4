@@ -125,6 +125,9 @@ namespace FNEV4.Core.Models.ImportTraitement
         public bool ClientTrouve { get; set; }
         public List<string> Erreurs { get; set; } = new();
         
+        // Liste des produits pour affichage détaillé
+        public List<Sage100ProduitData> Produits { get; set; } = new();
+        
         // Nouvelles propriétés pour certification FNE
         public string TypeFacture { get; set; } = "B2B"; // B2B, B2C, B2G, B2F
         public string TypeTva { get; set; } = "TVA"; // TVA, TVAB, TVAC, TVAD

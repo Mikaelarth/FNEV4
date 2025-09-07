@@ -22,6 +22,9 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
     {
         private readonly ISage100ImportService _sage100ImportService;
 
+        // Référence à la fenêtre pour pouvoir la fermer
+        public Window? ParentWindow { get; set; }
+
         #region Properties
 
         [ObservableProperty]
@@ -178,16 +181,31 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 return;
             }
 
+            // Reset des résultats précédents
+            ResetResults();
             IsProcessing = true;
+            
             try
             {
-                // Validation de la structure
+                // Affichage du message de début de validation
+                ValidationMessage = "Validation en cours...";
+                ValidationDetails = "Vérification de la structure du fichier";
+                ValidationIcon = "Loading";
+                ValidationColor = new SolidColorBrush(Colors.Orange);
+                HasValidationResult = true;
+                
+                // Validation de la structure avec un petit délai pour permettre à l'UI de se mettre à jour
+                await Task.Delay(100);
                 _lastValidation = await _sage100ImportService.ValidateFileStructureAsync(SelectedFilePath);
                 
                 UpdateValidationUI(_lastValidation);
                 
                 if (_lastValidation.IsValid)
                 {
+                    // Mise à jour du message pour la génération de l'aperçu
+                    ValidationMessage = "Génération de l'aperçu...";
+                    ValidationDetails = "Analyse des factures et validation des données";
+                    
                     // Générer l'aperçu
                     var preview = await _sage100ImportService.PreviewFileAsync(SelectedFilePath);
                     
@@ -207,11 +225,23 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                         var validFactures = PreviewFactures.Count(f => f.EstValide);
                         var invalidFactures = PreviewFactures.Count - validFactures;
                         
-                        ValidationDetails = $"{validFactures} facture(s) valide(s)";
+                        // Message de succès détaillé
+                        ValidationMessage = "Validation terminée";
+                        ValidationDetails = $"✅ {validFactures} facture(s) valide(s)";
                         if (invalidFactures > 0)
                         {
-                            ValidationDetails += $", {invalidFactures} invalide(s)";
+                            ValidationDetails += $" | ⚠️ {invalidFactures} facture(s) avec erreurs";
                         }
+                        ValidationDetails += $" | 📄 Total: {PreviewFactures.Count} facture(s)";
+                        ValidationIcon = "CheckCircle";
+                        ValidationColor = new SolidColorBrush(Colors.Green);
+                    }
+                    else
+                    {
+                        ValidationMessage = "Aucune facture détectée";
+                        ValidationDetails = "Le fichier ne contient aucune donnée de facture valide";
+                        ValidationIcon = "AlertCircle";
+                        ValidationColor = new SolidColorBrush(Colors.Orange);
                     }
                 }
                 
@@ -221,13 +251,36 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de la validation :\n{ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Gestion d'erreur améliorée avec plus de détails
+                var errorMessage = $"Erreur lors de la validation du fichier :\n\n{ex.Message}";
                 
-                ValidationMessage = "Erreur de validation";
-                ValidationDetails = ex.Message;
+                // Ajouter des suggestions selon le type d'erreur
+                if (ex.Message.Contains("fichier") || ex.Message.Contains("access") || ex.Message.Contains("file"))
+                {
+                    errorMessage += "\n\n💡 Suggestions :\n• Vérifiez que le fichier n'est pas ouvert dans Excel\n• Assurez-vous d'avoir les droits de lecture sur le fichier\n• Vérifiez que le fichier n'est pas corrompu";
+                }
+                else if (ex.Message.Contains("structure") || ex.Message.Contains("format"))
+                {
+                    errorMessage += "\n\n💡 Suggestions :\n• Vérifiez que le fichier respecte le format Sage 100 v15\n• Assurez-vous que la structure '1 feuille = 1 facture' est respectée\n• Vérifiez que les colonnes requises sont présentes";
+                }
+                
+                var result = MessageBox.Show($"{errorMessage}\n\nVoulez-vous réessayer avec un autre fichier ?", 
+                                           "Erreur de validation", 
+                                           MessageBoxButton.YesNo, 
+                                           MessageBoxImage.Error);
+                
+                ValidationMessage = "❌ Erreur de validation";
+                ValidationDetails = $"Échec : {ex.Message}";
                 ValidationIcon = "AlertCircle";
                 ValidationColor = new SolidColorBrush(Colors.Red);
                 HasValidationResult = true;
+                
+                // Si l'utilisateur veut réessayer, ouvrir la sélection de fichier
+                if (result == MessageBoxResult.Yes)
+                {
+                    await Task.Delay(100); // Petit délai pour l'UI
+                    SelectFile();
+                }
             }
             finally
             {
@@ -332,8 +385,29 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         [RelayCommand]
         private void GoBack()
         {
-            // TODO: Implémenter la navigation retour
-            // Peut fermer la fenêtre ou naviguer vers le menu principal
+            // Fermer la fenêtre pour retourner au menu principal
+            try
+            {
+                ParentWindow?.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de la fermeture : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        [RelayCommand]
+        private void CloseWindow()
+        {
+            // Commande explicite pour fermer la fenêtre
+            try
+            {
+                ParentWindow?.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de la fermeture : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         [RelayCommand]

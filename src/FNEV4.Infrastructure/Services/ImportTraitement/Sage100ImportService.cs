@@ -492,6 +492,7 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                 // Compter produits et calculer montant
                 decimal montantTotal = 0;
                 int nombreProduits = 0;
+                var produits = new List<Sage100ProduitData>();
                 
                 var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 20;
                 for (int row = 20; row <= lastRow; row++)
@@ -504,10 +505,25 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                         {
                             montantTotal += montant;
                         }
+                        
+                        // Créer l'objet produit pour le détail
+                        var produit = new Sage100ProduitData
+                        {
+                            CodeProduit = codeProduit,
+                            Designation = GetCellValue(worksheet, $"C{row}"),
+                            PrixUnitaire = decimal.TryParse(GetCellValue(worksheet, $"D{row}"), NumberStyles.Number, CultureInfo.InvariantCulture, out var prix) ? prix : 0,
+                            Quantite = decimal.TryParse(GetCellValue(worksheet, $"E{row}"), NumberStyles.Number, CultureInfo.InvariantCulture, out var qte) ? qte : 0,
+                            Emballage = GetCellValue(worksheet, $"F{row}"),
+                            CodeTva = GetCellValue(worksheet, $"G{row}"),
+                            MontantHt = montant,
+                            NumeroLigne = row
+                        };
+                        produits.Add(produit);
                     }
                 }
 
                 preview.NombreProduits = nombreProduits;
+                preview.Produits = produits;
                 preview.MontantEstime = montantTotal;
 
                 // Analyse des informations pour certification FNE et détection des conflits

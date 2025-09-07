@@ -190,6 +190,7 @@ namespace FNEV4.Presentation
                     
                     // ViewModels Import & Traitement
                     services.AddTransient<FNEV4.Presentation.ViewModels.ImportTraitement.ImportFichiersViewModel>();
+                    services.AddTransient<FNEV4.Presentation.ViewModels.ImportTraitement.Sage100ImportViewModel>();
 
                     // Service locator pour les ViewModels
                     services.AddSingleton<ViewModelLocator>();

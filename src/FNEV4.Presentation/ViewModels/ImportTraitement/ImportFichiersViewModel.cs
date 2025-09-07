@@ -333,10 +333,6 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             OnPropertyChanged(nameof(HasResults));
         }
 
-        #endregion
-
-        #region Private Methods - Navigation
-
         /// <summary>
         /// Ouvre la fenêtre d'import Sage 100 v15
         /// </summary>
@@ -344,37 +340,33 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         {
             try
             {
-                // Créer le ViewModel avec l'injection de dépendance
-                var sage100Service = _serviceProvider.GetRequiredService<ISage100ImportService>();
-                var viewModel = new Sage100ImportViewModel(sage100Service);
+                var sage100ImportView = new Sage100ImportView();
+                var sage100ImportViewModel = _serviceProvider.GetRequiredService<Sage100ImportViewModel>();
+                sage100ImportView.DataContext = sage100ImportViewModel;
                 
-                // Créer la vue
-                var view = new Sage100ImportView
-                {
-                    DataContext = viewModel
-                };
-                
-                // Créer la fenêtre
                 var window = new Window
                 {
-                    Content = view,
                     Title = "Import Exceptionnel Sage 100 v15",
-                    Width = 1000,
-                    Height = 800,
+                    Content = sage100ImportView,
+                    Width = 1400,
+                    Height = 900,
                     WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                    WindowState = WindowState.Normal,
+                    ShowInTaskbar = true,
                     ResizeMode = ResizeMode.CanResize
                 };
                 
-                // Afficher la fenêtre
-                window.ShowDialog();
+                // Passer la référence de la fenêtre au ViewModel pour pouvoir la fermer
+                sage100ImportViewModel.ParentWindow = window;
                 
-                StatusMessage = "Interface Sage 100 v15 fermée";
+                window.ShowDialog();
+                StatusMessage = "📋 Fenêtre d'import Sage 100 fermée";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"❌ Erreur ouverture Sage 100 : {ex.Message}";
+                StatusMessage = $"❌ Erreur lors de l'ouverture : {ex.Message}";
                 MessageBox.Show(
-                    $"Impossible d'ouvrir l'interface Sage 100 v15 :\n\n{ex.Message}",
+                    $"Impossible d'ouvrir la fenêtre d'import Sage 100 :\n\n{ex.Message}",
                     "Erreur",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);

@@ -14,6 +14,10 @@
         <converters:BoolToIconConverter x:Key="BoolToIconConverter"/>
         <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
         <converters:BoolToStateConverter x:Key="BoolToStateConverter"/>
+        <converters:ProcessingTextConverter x:Key="ProcessingTextConverter"/>
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <converters:BooleanAndConverter x:Key="BooleanAndConverter"/>
+        <converters:ProduitsToTooltipConverter x:Key="ProduitsToTooltipConverter"/>
         
         <!-- Nouveaux convertisseurs pour améliorer la DataGrid -->
         <converters:BoolToStatusConverter x:Key="BoolToStatusConverter"/>
@@ -46,6 +50,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             
             <materialDesign:PackIcon Grid.Column="0" 
@@ -65,11 +70,20 @@
             <Button Grid.Column="2" 
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     Command="{Binding GoBackCommand}"
-                    VerticalAlignment="Center">
+                    VerticalAlignment="Center"
+                    Margin="0,0,8,0">
                 <StackPanel Orientation="Horizontal">
                     <materialDesign:PackIcon Kind="ArrowLeft" Width="16" Height="16" Margin="0,0,8,0"/>
                     <TextBlock Text="Retour"/>
                 </StackPanel>
+            </Button>
+            
+            <Button Grid.Column="3" 
+                    Style="{StaticResource MaterialDesignIconButton}"
+                    Command="{Binding CloseWindowCommand}"
+                    VerticalAlignment="Center"
+                    ToolTip="Fermer la fenêtre">
+                <materialDesign:PackIcon Kind="Close" Width="20" Height="20"/>
             </Button>
         </Grid>
 
@@ -160,11 +174,49 @@
                             </StackPanel>
                             
                             <Button Grid.Column="2" 
-                                   Content="Valider"
                                    Style="{StaticResource MaterialDesignRaisedButton}"
                                    Command="{Binding ValidateFileCommand}"
-                                   IsEnabled="{Binding HasSelectedFile}"
-                                   Width="120"/>
+                                   Width="120">
+                                <Button.IsEnabled>
+                                    <MultiBinding Converter="{StaticResource BooleanAndConverter}">
+                                        <Binding Path="HasSelectedFile"/>
+                                        <Binding Path="IsProcessing" Converter="{StaticResource InverseBooleanConverter}"/>
+                                    </MultiBinding>
+                                </Button.IsEnabled>
+                                <Button.Content>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="{Binding ValidationIcon, FallbackValue=CheckCircle}"
+                                                               Width="16" Height="16"
+                                                               Margin="0,0,8,0"
+                                                               Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <materialDesign:PackIcon.Style>
+                                                <Style TargetType="materialDesign:PackIcon">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsProcessing}" Value="True">
+                                                            <DataTrigger.EnterActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard RepeatBehavior="Forever">
+                                                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Angle"
+                                                                                       From="0" To="360" Duration="0:0:1"/>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </DataTrigger.EnterActions>
+                                                            <Setter Property="Kind" Value="Loading"/>
+                                                            <Setter Property="RenderTransform">
+                                                                <Setter.Value>
+                                                                    <RotateTransform/>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </materialDesign:PackIcon.Style>
+                                        </materialDesign:PackIcon>
+                                        <TextBlock Text="{Binding IsProcessing, Converter={StaticResource ProcessingTextConverter}, FallbackValue=Valider}"
+                                                  VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button.Content>
+                            </Button>
                         </Grid>
                         
                         <!-- Résultats validation -->
@@ -363,15 +415,190 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 
-                                <DataGridTextColumn Header="Prod." Binding="{Binding NombreProduits}" MinWidth="50" Width="60">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                                            <Setter Property="FontWeight" Value="Medium"/>
-                                            <Setter Property="ToolTip" Value="{Binding NombreProduits, StringFormat='{}{0} produits'}"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
+                                <DataGridTemplateColumn Header="📦 Articles" Width="100" MinWidth="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#E3F2FD" CornerRadius="6">
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <materialDesign:PackIcon Kind="Package" 
+                                                                           Width="16" Height="16" 
+                                                                           Foreground="#1976D2" 
+                                                                           VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding NombreProduits}" 
+                                                             FontWeight="Medium" 
+                                                             FontSize="12"
+                                                             Foreground="#1976D2"
+                                                             VerticalAlignment="Center"
+                                                             Margin="4,0,0,0"/>
+                                                </StackPanel>
+                                                <Border.ToolTip>
+                                                    <ToolTip MaxWidth="600" Background="#FAFAFA" BorderBrush="#E0E0E0" BorderThickness="1">
+                                                        <StackPanel>
+                                                            <Grid Margin="0,0,0,8">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                
+                                                                <materialDesign:PackIcon Grid.Column="0" Kind="Package" 
+                                                                                       Width="16" Height="16" 
+                                                                                       Foreground="#1976D2" 
+                                                                                       VerticalAlignment="Center" 
+                                                                                       Margin="0,0,8,0"/>
+                                                                
+                                                                <TextBlock Grid.Column="1" Text="DÉTAIL DES ARTICLES" 
+                                                                         FontWeight="Bold" 
+                                                                         FontSize="13"
+                                                                         Foreground="#1976D2"
+                                                                         VerticalAlignment="Center"/>
+                                                                
+                                                                <Border Grid.Column="2" 
+                                                                       Background="#E3F2FD" 
+                                                                       CornerRadius="8" 
+                                                                       Padding="6,2">
+                                                                    <TextBlock Text="{Binding Produits.Count, StringFormat='{}{0} articles'}" 
+                                                                             FontSize="10" 
+                                                                             FontWeight="Medium"
+                                                                             Foreground="#1976D2"/>
+                                                                </Border>
+                                                            </Grid>
+                                                            
+                                                            <DataGrid ItemsSource="{Binding Produits}"
+                                                                     AutoGenerateColumns="False"
+                                                                     IsReadOnly="True"
+                                                                     HeadersVisibility="Column"
+                                                                     GridLinesVisibility="Horizontal"
+                                                                     AlternatingRowBackground="#F5F5F5"
+                                                                     Background="White"
+                                                                     BorderThickness="0"
+                                                                     CanUserResizeColumns="False"
+                                                                     CanUserReorderColumns="False"
+                                                                     CanUserSortColumns="False"
+                                                                     SelectionMode="Single"
+                                                                     FontSize="11"
+                                                                     RowHeight="28"
+                                                                     MaxHeight="300"
+                                                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                                                     ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                                                                
+                                                                <DataGrid.Columns>
+                                                                    <DataGridTextColumn Header="Code" Binding="{Binding CodeProduit}" Width="80" MinWidth="80">
+                                                                        <DataGridTextColumn.ElementStyle>
+                                                                            <Style TargetType="TextBlock">
+                                                                                <Setter Property="FontWeight" Value="Medium"/>
+                                                                                <Setter Property="Foreground" Value="#2196F3"/>
+                                                                                <Setter Property="Margin" Value="4,0"/>
+                                                                            </Style>
+                                                                        </DataGridTextColumn.ElementStyle>
+                                                                    </DataGridTextColumn>
+                                                                    
+                                                                    <DataGridTextColumn Header="Désignation" Binding="{Binding Designation}" Width="180" MinWidth="180">
+                                                                        <DataGridTextColumn.ElementStyle>
+                                                                            <Style TargetType="TextBlock">
+                                                                                <Setter Property="TextWrapping" Value="Wrap"/>
+                                                                                <Setter Property="Foreground" Value="#333"/>
+                                                                                <Setter Property="Margin" Value="4,0"/>
+                                                                            </Style>
+                                                                        </DataGridTextColumn.ElementStyle>
+                                                                    </DataGridTextColumn>
+                                                                    
+                                                                    <DataGridTextColumn Header="Qté" Binding="{Binding Quantite, StringFormat=N0}" Width="50" MinWidth="50">
+                                                                        <DataGridTextColumn.ElementStyle>
+                                                                            <Style TargetType="TextBlock">
+                                                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                                                <Setter Property="FontWeight" Value="Medium"/>
+                                                                                <Setter Property="Foreground" Value="#666"/>
+                                                                                <Setter Property="Margin" Value="4,0"/>
+                                                                            </Style>
+                                                                        </DataGridTextColumn.ElementStyle>
+                                                                    </DataGridTextColumn>
+                                                                    
+                                                                    <DataGridTextColumn Header="Emballage" Binding="{Binding Emballage}" Width="70" MinWidth="70">
+                                                                        <DataGridTextColumn.ElementStyle>
+                                                                            <Style TargetType="TextBlock">
+                                                                                <Setter Property="FontStyle" Value="Italic"/>
+                                                                                <Setter Property="Foreground" Value="#666"/>
+                                                                                <Setter Property="Margin" Value="4,0"/>
+                                                                            </Style>
+                                                                        </DataGridTextColumn.ElementStyle>
+                                                                    </DataGridTextColumn>
+                                                                    
+                                                                    <DataGridTextColumn Header="Prix Unit." Binding="{Binding PrixUnitaire, StringFormat=N0}" Width="80" MinWidth="80">
+                                                                        <DataGridTextColumn.ElementStyle>
+                                                                            <Style TargetType="TextBlock">
+                                                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                                                <Setter Property="FontWeight" Value="Medium"/>
+                                                                                <Setter Property="Foreground" Value="#FF9800"/>
+                                                                                <Setter Property="Margin" Value="4,0"/>
+                                                                            </Style>
+                                                                        </DataGridTextColumn.ElementStyle>
+                                                                    </DataGridTextColumn>
+                                                                    
+                                                                    <DataGridTextColumn Header="TVA" Binding="{Binding CodeTva}" Width="50" MinWidth="50">
+                                                                        <DataGridTextColumn.ElementStyle>
+                                                                            <Style TargetType="TextBlock">
+                                                                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                                                <Setter Property="FontSize" Value="10"/>
+                                                                                <Setter Property="Foreground" Value="#666"/>
+                                                                                <Setter Property="Margin" Value="4,0"/>
+                                                                            </Style>
+                                                                        </DataGridTextColumn.ElementStyle>
+                                                                    </DataGridTextColumn>
+                                                                    
+                                                                    <DataGridTextColumn Header="Total HT" Binding="{Binding MontantHt, StringFormat=N0}" Width="90" MinWidth="90">
+                                                                        <DataGridTextColumn.ElementStyle>
+                                                                            <Style TargetType="TextBlock">
+                                                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                                                <Setter Property="FontWeight" Value="Bold"/>
+                                                                                <Setter Property="Foreground" Value="#4CAF50"/>
+                                                                                <Setter Property="Margin" Value="4,0"/>
+                                                                            </Style>
+                                                                        </DataGridTextColumn.ElementStyle>
+                                                                    </DataGridTextColumn>
+                                                                </DataGrid.Columns>
+                                                                
+                                                                <DataGrid.ColumnHeaderStyle>
+                                                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                                                                        <Setter Property="Background" Value="#F5F5F5"/>
+                                                                        <Setter Property="Foreground" Value="#333"/>
+                                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                                        <Setter Property="FontSize" Value="11"/>
+                                                                        <Setter Property="Height" Value="32"/>
+                                                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                                                        <Setter Property="Padding" Value="8,0"/>
+                                                                    </Style>
+                                                                </DataGrid.ColumnHeaderStyle>
+                                                                
+                                                                <DataGrid.RowStyle>
+                                                                    <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                                                                        <Setter Property="Height" Value="28"/>
+                                                                        <Style.Triggers>
+                                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                                <Setter Property="Background" Value="#E3F2FD"/>
+                                                                            </Trigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </DataGrid.RowStyle>
+                                                            </DataGrid>
+                                                            
+                                                            <Border Background="#F0F0F0" 
+                                                                   CornerRadius="4" 
+                                                                   Padding="8,4" 
+                                                                   Margin="0,8,0,0">
+                                                                <TextBlock Text="💡 Survolez une ligne pour plus de détails"
+                                                                         FontSize="10"
+                                                                         FontStyle="Italic"
+                                                                         Foreground="#666"
+                                                                         HorizontalAlignment="Center"/>
+                                                            </Border>
+                                                        </StackPanel>
+                                                    </ToolTip>
+                                                </Border.ToolTip>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                                 
                                 <DataGridTextColumn Header="Montant" Binding="{Binding MontantEstime, StringFormat='N0'}" MinWidth="100" Width="110">
                                     <DataGridTextColumn.ElementStyle>
@@ -396,27 +623,20 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 
-                                <DataGridTextColumn Header="TVA" Binding="{Binding TypeTva}" MinWidth="60" Width="70">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                                            <Setter Property="FontWeight" Value="Medium"/>
-                                            <Setter Property="Foreground" Value="#9C27B0"/>
-                                            <Setter Property="ToolTip" Value="Type TVA: TVA (18%), TVAB (9%), TVAC (0%), TVAD (0%)"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
-                                
-                                <DataGridTemplateColumn Header="État" Width="70" MinWidth="70">
+                                <DataGridTemplateColumn Header="État" Width="85" MinWidth="85">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border Background="{Binding EstValide, Converter={StaticResource BoolToLightColorConverter}}"
-                                                   CornerRadius="10"
-                                                   Padding="6,2"
-                                                   HorizontalAlignment="Center">
+                                                   CornerRadius="8"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   MinWidth="24"
+                                                   MinHeight="24">
                                                 <materialDesign:PackIcon Kind="{Binding EstValide, Converter={StaticResource BoolToIconConverter}}"
                                                                        Foreground="{Binding EstValide, Converter={StaticResource BoolToColorConverter}}"
-                                                                       Width="14" Height="14"/>
+                                                                       Width="16" Height="16"
+                                                                       HorizontalAlignment="Center"
+                                                                       VerticalAlignment="Center"/>
                                                 <Border.ToolTip>
                                                     <TextBlock>
                                                         <Run Text="État: "/>

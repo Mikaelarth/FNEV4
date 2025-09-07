@@ -1,0 +1,23 @@
+# Fichier Excel test simple pour debug des tooltips articles
+# Structure Sage 100 v15 - Facture 556001
+
+# EN-TÊTE (Colonne A)
+A3,556001,Numéro facture
+A5,CLIENT01,Code client  
+A6,123456,NCC client
+A8,01/03/2025,Date facture
+A10,POINT1,Point de vente
+A11,CLIENT TEST SARL,Intitulé client
+A18,cash,Moyen de paiement A18
+
+# PRODUITS (ligne 20+)
+# B=Code, C=Désignation, D=Prix, E=Qté, F=Emballage, G=TVA, H=Montant
+B20,PROD001,Ordinateur portable Dell,450000,1,unité,TVA,450000
+B21,PROD002,Souris sans fil,15000,2,pcs,TVA,30000  
+B22,PROD003,Clavier mécanique,80000,1,unité,TVA,80000
+
+# INSTRUCTIONS :
+# 1. Copiez ce contenu dans Excel
+# 2. Placez les données dans les bonnes cellules (A3, A5, etc.)
+# 3. Utilisez ce fichier pour tester l'import FNEV4
+# 4. Vérifiez que les tooltips s'affichent au survol de la colonne Articles
