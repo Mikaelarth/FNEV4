@@ -1,5 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FNEV4.Presentation.Views.ImportTraitement;
+using FNEV4.Presentation.ViewModels.ImportTraitement;
+using FNEV4.Application.Services.ImportTraitement;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.ObjectModel;
@@ -16,6 +19,8 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
     /// </summary>
     public partial class ImportFichiersViewModel : ObservableObject
     {
+        private readonly IServiceProvider _serviceProvider;
+
         #region Properties
 
         /// <summary>
@@ -75,12 +80,13 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
 
         #region Constructor
 
-        public ImportFichiersViewModel()
+        public ImportFichiersViewModel(IServiceProvider serviceProvider)
         {
+            _serviceProvider = serviceProvider;
             InitializeImportTypes();
             
             // Status avec description claire des types d'import
-            StatusMessage = $"✅ {AvailableImportTypes.Count} types d'import disponibles : Standard, Exceptionnel Sage v15, Configuration";
+            StatusMessage = $"✅ {AvailableImportTypes.Count} types d'import disponibles : Standard, Exceptionnel Sage v15";
         }
 
         #endregion
@@ -141,55 +147,37 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 
                 switch (type)
                 {
-                    case "Standard":
-                        StatusMessage = "🚧 Import Standard - En cours de développement";
+                    case "FacturesStandard":
+                        StatusMessage = "🚧 Import Factures Standard - En cours de développement";
                         MessageBox.Show(
-                            "Import Standard\n\n" +
+                            "Import de Factures Standard\n\n" +
                             "Fonctionnalité en cours de développement.\n" +
-                            "Gérera les formats Excel standards avec en-têtes normalisés :\n" +
-                            "• Clients avec colonnes fixes\n" +
-                            "• Factures format conventionnel\n" +
-                            "• Données métier standardisées\n\n" +
+                            "Gérera l'import des factures depuis des fichiers Excel au format standard professionnel :\n" +
+                            "• Structure classique avec en-têtes normalisés\n" +
+                            "• Colonnes prédéfinies : N° facture, Date, Client, Montant HT, TVA, Total TTC\n" +
+                            "• Format conventionnel adapté aux systèmes de gestion standard\n" +
+                            "• Validation des données et contrôles de cohérence\n\n" +
                             "Sera disponible dans une prochaine mise à jour.",
                             "En développement",
                             MessageBoxButton.OK,
                             MessageBoxImage.Information);
                         break;
                         
-                    case "SageExceptionnel":
-                        StatusMessage = "🚧 Import Exceptionnel Sage 100 v15 - En cours de développement";
-                        MessageBox.Show(
-                            "Import Exceptionnel Sage 100 v15\n\n" +
-                            "Fonctionnalité en cours de développement.\n" +
-                            "Gérera les spécificités de Sage 100 v15 :\n" +
-                            "• Structure non-standard propriétaire\n" +
-                            "• Support du nouveau champ A18 (moyens de paiement)\n" +
-                            "• Adaptation aux formats propriétaires\n" +
-                            "• Validation spécifique v15\n\n" +
-                            "Sera disponible dans une prochaine mise à jour.",
-                            "En développement",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Information);
-                        break;
-                        
-                    case "Configuration":
-                        StatusMessage = "🚧 Import de configuration système - En cours de développement";
-                        MessageBox.Show(
-                            "Import de Configuration Système\n\n" +
-                            "Fonctionnalité en cours de développement.\n" +
-                            "Permettra l'import de :\n" +
-                            "• Paramètres de l'application\n" +
-                            "• Chemins de dossiers\n" +
-                            "• Règles métier personnalisées\n" +
-                            "• Configuration base de données\n\n" +
-                            "Sera disponible dans une prochaine mise à jour.",
-                            "En développement",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Information);
+                    case "FacturesSage100":
+                        StatusMessage = "🚀 Ouverture de l'import Sage 100 v15...";
+                        OpenSage100ImportWindow();
                         break;
                         
                     default:
-                        StatusMessage = $"❌ Type d'import non reconnu : {type}";
+                        StatusMessage = $"❌ Type d'import de factures non reconnu : {type}";
+                        MessageBox.Show(
+                            $"Type d'import non reconnu : {type}\n\n" +
+                            "Types supportés :\n" +
+                            "• FacturesStandard : Import de factures au format standard professionnel\n" +
+                            "• FacturesSage100 : Import spécialisé pour Sage 100 v15",
+                            "Erreur",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
                         break;
                 }
             }
@@ -299,55 +287,40 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         #region Private Methods
 
         /// <summary>
-        /// Initialise les types d'import disponibles avec intégration au système de chemins
+        /// Initialise les types d'import de factures disponibles
         /// </summary>
         private void InitializeImportTypes()
         {
             AvailableImportTypes.Clear();
             
-            // Import Standard - Formats normaux et standardisés
+            // Import de Factures Standard - Structure professionnelle classique
             AvailableImportTypes.Add(new ImportTypeInfo
             {
-                Type = "Standard",
-                Title = "Import Standard",
-                Description = "Import des données depuis des fichiers aux formats standards et normalisés. Prend en charge les structures Excel conventionnelles avec en-têtes fixes et colonnes prédéfinies pour clients, factures et données métier.",
-                Icon = "FileDocument", 
+                Type = "FacturesStandard",
+                Title = "Import Factures Standard",
+                Description = "Import des factures depuis des fichiers Excel au format standard professionnel. Structure classique avec en-têtes normalisés, colonnes prédéfinies et format conventionnel adapté aux systèmes de gestion standard.",
+                Icon = "FileDocumentOutline", 
                 IsEnabled = true,
                 Status = "Standard",
                 StatusColor = new SolidColorBrush(Color.FromRgb(76, 175, 80)), // Green
-                SupportedFormats = ".xlsx, .xls, .csv (formats standards avec en-têtes normalisés)",
-                ButtonText = "IMPORT STANDARD",
+                SupportedFormats = ".xlsx, .xls (format standard avec en-têtes normalisés)",
+                ButtonText = "IMPORTER STANDARD",
                 Color = new SolidColorBrush(Color.FromRgb(67, 160, 71)) // Green moderne
             });
             
-            // Import Exceptionnel Sage 100 v15 - Structure non-standard
+            // Import de Factures Sage 100 v15 - Structure spécifique selon exemple_structure_excel.py
             AvailableImportTypes.Add(new ImportTypeInfo
             {
-                Type = "SageExceptionnel",
+                Type = "FacturesSage100",
                 Title = "Import Exceptionnel Sage 100 v15",
-                Description = "Import spécialisé pour Sage 100 v15 avec structure non-standard. Gère les formats propriétaires, le nouveau champ A18 pour moyens de paiement et les spécificités techniques de cette version particulière.",
-                Icon = "AlertCircle", 
+                Description = "Import spécialisé pour les factures Sage 100 v15 selon la structure définie dans exemple_structure_excel.py. Gère les clients divers (code 1999), moyens de paiement A18, et la structure spécifique : 1 feuille = 1 facture.",
+                Icon = "AlertCircleOutline", 
                 IsEnabled = true,
-                Status = "Exceptionnel - V15",
+                Status = "Sage 100 v15",
                 StatusColor = new SolidColorBrush(Color.FromRgb(255, 193, 7)), // Amber
-                SupportedFormats = ".xlsx spécifique Sage 100 v15 (structure non-standard, champ A18)",
-                ButtonText = "IMPORT SAGE V15",
-                Color = new SolidColorBrush(Color.FromRgb(255, 87, 34)) // Deep Orange moderne
-            });
-            
-            // Import de Configuration - Paramètres système
-            AvailableImportTypes.Add(new ImportTypeInfo
-            {
-                Type = "Configuration",
-                Title = "Import Configuration Système",
-                Description = "Import des paramètres de configuration, chemins de dossiers et règles métier depuis un fichier de sauvegarde. Solution complète pour la migration entre environnements de développement et production.",
-                Icon = "Cog", 
-                IsEnabled = true,
-                Status = "Système",
-                StatusColor = new SolidColorBrush(Color.FromRgb(103, 58, 183)), // Deep Purple
-                SupportedFormats = ".json, .xml (fichiers de configuration système)",
-                ButtonText = "IMPORTER CONFIG",
-                Color = new SolidColorBrush(Color.FromRgb(156, 39, 176)) // Purple moderne
+                SupportedFormats = ".xlsx spécifique Sage 100 v15 (selon exemple_structure_excel.py)",
+                ButtonText = "IMPORTER SAGE 100",
+                Color = new SolidColorBrush(Color.FromRgb(255, 87, 34)) // Deep Orange
             });
 
             // Copier vers la collection d'affichage
@@ -358,6 +331,54 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             }
             
             OnPropertyChanged(nameof(HasResults));
+        }
+
+        #endregion
+
+        #region Private Methods - Navigation
+
+        /// <summary>
+        /// Ouvre la fenêtre d'import Sage 100 v15
+        /// </summary>
+        private void OpenSage100ImportWindow()
+        {
+            try
+            {
+                // Créer le ViewModel avec l'injection de dépendance
+                var sage100Service = _serviceProvider.GetRequiredService<ISage100ImportService>();
+                var viewModel = new Sage100ImportViewModel(sage100Service);
+                
+                // Créer la vue
+                var view = new Sage100ImportView
+                {
+                    DataContext = viewModel
+                };
+                
+                // Créer la fenêtre
+                var window = new Window
+                {
+                    Content = view,
+                    Title = "Import Exceptionnel Sage 100 v15",
+                    Width = 1000,
+                    Height = 800,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                    ResizeMode = ResizeMode.CanResize
+                };
+                
+                // Afficher la fenêtre
+                window.ShowDialog();
+                
+                StatusMessage = "Interface Sage 100 v15 fermée";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"❌ Erreur ouverture Sage 100 : {ex.Message}";
+                MessageBox.Show(
+                    $"Impossible d'ouvrir l'interface Sage 100 v15 :\n\n{ex.Message}",
+                    "Erreur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
 
         #endregion

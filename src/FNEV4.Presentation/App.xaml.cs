@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using FNEV4.Infrastructure.Data;
 using FNEV4.Infrastructure.Services;
+using FNEV4.Infrastructure.Services.ImportTraitement;
 using FNEV4.Infrastructure.Repositories;
 using FNEV4.Infrastructure.ExcelProcessing.Services;
 using FNEV4.Presentation.ViewModels.Maintenance;
@@ -14,6 +15,7 @@ using FNEV4.Presentation.Services;
 using FNEV4.Core.Interfaces;
 using FNEV4.Core.Services;
 using FNEV4.Application.UseCases.GestionClients;
+using FNEV4.Application.Services.ImportTraitement;
 using FNEV4.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
@@ -136,6 +138,10 @@ namespace FNEV4.Presentation
                     services.AddScoped<InfraLogging, LoggingService>();
                     services.AddScoped<IDiagnosticService, DiagnosticService>();
                     services.AddScoped<IBackupService, BackupService>();
+                    
+                    // Services Import Traitement
+                    services.AddScoped<ISage100ImportService>(provider => 
+                        new Sage100ImportService(provider.GetRequiredService<IClientRepository>()));
 
                     // Adaptateur pour ILoggingService (respecte l'architecture Clean)
                     services.AddScoped<FNEV4.Core.Interfaces.ILoggingService>(provider => 

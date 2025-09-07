@@ -1,0 +1,365 @@
+{
+  "file_info": {
+    "name": "factures.xlsx",
+    "sheet_count": 129,
+    "analysis_date": "2025-09-07T16:11:33.936995"
+  },
+  "invoices": [
+    {
+      "invoice_number": "556300",
+      "customer_code": "1999",
+      "date": "2025-03-01 00:00:00",
+      "point_vente": "Station TOTAL VGE KOUMASSI",
+      "customer_title": "DIVERS CLIENTS CARBURANTS",
+      "real_customer_name": "AIR COTE D'IVOIRE",
+      "products": [
+        {
+          "code": "11000_1",
+          "designation": "Gasoil",
+          "price_unit": 182.1658,
+          "quantity": 293.69,
+          "packaging": "Litre",
+          "tva": 9,
+          "amount_ht": 53500
+        },
+        {
+          "code": "11000_2",
+          "designation": "Gasoil non taxable",
+          "price_unit": 456.4393,
+          "quantity": 293.69,
+          "packaging": "Litre",
+          "tva": "",
+          "amount_ht": 134052
+        }
+      ],
+      "products_count": 2
+    },
+    {
+      "invoice_number": "556299",
+      "customer_code": "3001A",
+      "date": "2025-03-01 00:00:00",
+      "point_vente": "Station YOP AUTOROUTE",
+      "customer_title": "VENTE AU COMPTANT",
+      "real_customer_name": "AFRIPLASTI",
+      "products": [
+        {
+          "code": "10000_1",
+          "designation": "Super",
+          "price_unit": 406.5087,
+          "quantity": 79.75,
+          "packaging": "Litre",
+          "tva": 9,
+          "amount_ht": 32419
+        },
+        {
+          "code": "10000_2",
+          "designation": "Super non taxable",
+          "price_unit": 371.9055,
+          "quantity": 79.75,
+          "packaging": "Litre",
+          "tva": "",
+          "amount_ht": 29659
+        }
+      ],
+      "products_count": 2
+    },
+    {
+      "invoice_number": "556312",
+      "customer_code": "3001A",
+      "date": "2025-03-01 00:00:00",
+      "point_vente": "Station Guezon",
+      "customer_title": "VENTE AU COMPTANT",
+      "real_customer_name": "CP KAMONA",
+      "products": [
+        {
+          "code": "10000_1",
+          "designation": "Super",
+          "price_unit": 406.5087,
+          "quantity": 18.4,
+          "packaging": "Litre",
+          "tva": 9,
+          "amount_ht": 7480
+        },
+        {
+          "code": "10000_2",
+          "designation": "Super non taxable",
+          "price_unit": 371.9055,
+          "quantity": 18.4,
+          "packaging": "Litre",
+          "tva": "",
+          "amount_ht": 6843
+        }
+      ],
+      "products_count": 2
+    },
+    {
+      "invoice_number": "556280",
+      "customer_code": "2999",
+      "date": "2025-03-01 00:00:00",
+      "point_vente": "Gestoci",
+      "customer_title": "DIVERS CLIENTS SOUTES",
+      "real_customer_name": "AMOS120",
+      "products": [
+        {
+          "code": "11000_1",
+          "designation": "Gasoil",
+          "price_unit": 182.1658,
+          "quantity": 77.19,
+          "packaging": "Litre",
+          "tva": "",
+          "amount_ht": 2561433
+        },
+        {
+          "code": "11000_2",
+          "designation": "Gasoil non taxable",
+          "price_unit": 456.4393,
+          "quantity": 77.19,
+          "packaging": "Litre",
+          "tva": "",
+          "amount_ht": 35233
+        }
+      ],
+      "products_count": 2
+    },
+    {
+      "invoice_number": "556281",
+      "customer_code": "3006",
+      "ncc_normal": "0324286 H",
+      "date": "2025-03-01 00:00:00",
+      "point_vente": "Station SOCOCE 2PLTX",
+      "customer_title": "S/S SOCOCE ESPACE LATRILLE IDC",
+      "products": [
+        {
+          "code": "11000_1",
+          "designation": "Gasoil",
+          "price_unit": 182.1658,
+          "quantity": 77.19,
+          "packaging": "Litre",
+          "tva": 9,
+          "amount_ht": 14061
+        },
+        {
+          "code": "11000_2",
+          "designation": "Gasoil non taxable",
+          "price_unit": 456.4393,
+          "quantity": 77.19,
+          "packaging": "Litre",
+          "tva": "",
+          "amount_ht": 35233
+        }
+      ],
+      "products_count": 2
+    },
+    {
+      "invoice_number": "556315",
+      "customer_code": "3001A1",
+      "date": "2025-03-01 00:00:00",
+      "point_vente": "S/S IDC N'DOUCI",
+      "customer_title": "VENTES COMPTANT(5)",
+      "real_customer_name": "OUEDRAOGO SEYDOU",
+      "products": [
+        {
+          "code": "11000_1",
+          "designation": "Gasoil",
+          "price_unit": 177.5785,
+          "quantity": 650,
+          "packaging": "Litre",
+          "tva": 9,
+          "amount_ht": 115426
+        },
+        {
+          "code": "11000_2",
+          "designation": "Gasoil non taxable",
+          "price_unit": 456.4393,
+          "quantity": 650,
+          "packaging": "Litre",
+          "tva": "",
+          "amount_ht": 296686
+        }
+      ],
+      "products_count": 2
+    },
+    {
+      "invoice_number": "556316",
+      "customer_code": "3001A1",
+      "date": "2025-03-01 00:00:00",
+      "point_vente": "S/S IDC N'DOUCI",
+      "customer_title": "VENTES COMPTANT(5)",
+      "real_customer_name": "ERIDA TRADING SARL",
+      "products": [
+        {
+          "code": "11000_1",
+          "designation": "Gasoil",
+          "price_unit": 177.5786,
+          "quantity": 700,
+          "packaging": "Litre",
+          "tva": 9,
+          "amount_ht": 124305
+        },
+        {
+          "code": "11000_2",
+          "designation": "Gasoil non taxable",
+          "price_unit": 456.4393,
+          "quantity": 700,
+          "packaging": "Litre",
+          "tva": "",
+          "amount_ht": 319508
+        }
+      ],
+      "products_count": 2
+    },
+    {
+      "invoice_number": "556389",
+      "customer_code": "3001A1",
+      "date": "2025-03-01 00:00:00",
+      "point_vente": "S/S IDC N'DOUCI",
+      "customer_title": "VENTES COMPTANT(5)",
+      "real_customer_name": "M. NAZI",
+      "products": [
+        {
+          "code": "10000_1",
+          "designation": "Super",
+          "price_unit": 401.9231,
+          "quantity": 65,
+          "packaging": "Litre",
+          "tva": 9,
+          "amount_ht": 26125
+        },
+        {
+          "code": "10000_2",
+          "designation": "Super non taxable",
+          "price_unit": 371.9055,
+          "quantity": 65,
+          "packaging": "Litre",
+          "tva": "",
+          "amount_ht": 24174
+        },
+        {
+          "code": "11000_1",
+          "designation": "Gasoil",
+          "price_unit": 177.5784,
+          "quantity": 740,
+          "packaging": "Litre",
+          "tva": 9,
+          "amount_ht": 131408
+        },
+        {
+          "code": "11000_2",
+          "designation": "Gasoil non taxable",
+          "price_unit": 456.4393,
+          "quantity": 740,
+          "packaging": "Litre",
+          "tva": "",
+          "amount_ht": 337765
+        }
+      ],
+      "products_count": 4
+    },
+    {
+      "invoice_number": "556390",
+      "customer_code": "3001A1",
+      "date": "2025-03-01 00:00:00",
+      "point_vente": "S/S IDC N'DOUCI",
+      "customer_title": "VENTES COMPTANT(5)",
+      "real_customer_name": "S.P.A.D",
+      "products": [
+        {
+          "code": "10000_1",
+          "designation": "Super",
+          "price_unit": 401.9231,
+          "quantity": 52,
+          "packaging": "Litre",
+          "tva": 9,
+          "amount_ht": 20900
+        },
+        {
+          "code": "10000_2",
+          "designation": "Super non taxable",
+          "price_unit": 371.9055,
+          "quantity": 52,
+          "packaging": "Litre",
+          "tva": "",
+          "amount_ht": 19339
+        },
+        {
+          "code": "11000_1",
+          "designation": "Gasoil",
+          "price_unit": 177.5774,
+          "quantity": 575,
+          "packaging": "Litre",
+          "tva": 9,
+          "amount_ht": 102107
+        },
+        {
+          "code": "11000_2",
+          "designation": "Gasoil non taxable",
+          "price_unit": 456.4393,
+          "quantity": 575,
+          "packaging": "Litre",
+          "tva": "",
+          "amount_ht": 262453
+        }
+      ],
+      "products_count": 4
+    },
+    {
+      "invoice_number": "556297",
+      "customer_code": "3012B6",
+      "ncc_normal": "0909616 P",
+      "date": "2025-03-01 00:00:00",
+      "point_vente": "S/S TOTAL ANANI",
+      "customer_title": "ICAD",
+      "products": [
+        {
+          "code": "10000_1",
+          "designation": "Super",
+          "price_unit": 406.5087,
+          "quantity": 80,
+          "packaging": "Litre",
+          "tva": 9,
+          "amount_ht": 32521
+        },
+        {
+          "code": "10000_2",
+          "designation": "Super non taxable",
+          "price_unit": 371.9055,
+          "quantity": 80,
+          "packaging": "Litre",
+          "tva": "",
+          "amount_ht": 29752
+        },
+        {
+          "code": "11000_1",
+          "designation": "Gasoil",
+          "price_unit": 182.1658,
+          "quantity": 1205,
+          "packaging": "Litre",
+          "tva": 9,
+          "amount_ht": 219510
+        },
+        {
+          "code": "11000_2",
+          "designation": "Gasoil non taxable",
+          "price_unit": 456.4393,
+          "quantity": 1205,
+          "packaging": "Litre",
+          "tva": "",
+          "amount_ht": 550010
+        }
+      ],
+      "products_count": 4
+    }
+  ],
+  "summary": {
+    "total_invoices": 10,
+    "invoices_with_number": 10,
+    "client_1999_count": 1,
+    "normal_clients_count": 9,
+    "payment_method_empty": 10,
+    "ncc_missing": 0
+  },
+  "structure_validation": {
+    "correct_structure": 10,
+    "issues_found": []
+  }
+}
