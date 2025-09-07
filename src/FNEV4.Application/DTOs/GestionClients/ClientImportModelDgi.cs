@@ -62,6 +62,14 @@ namespace FNEV4.Application.DTOs.GestionClients
         /// </summary>
         public string Currency { get; set; } = "XOF";
 
+        /// <summary>
+        /// Moyen de paiement par défaut du client
+        /// cash, card, mobile-money, bank-transfer, check, credit
+        /// Obligatoire pour la certification des factures selon API DGI
+        /// </summary>
+        [Required(ErrorMessage = "Le moyen de paiement par défaut est obligatoire")]
+        public string PaymentMethod { get; set; } = "cash";
+
         public bool IsActive { get; set; } = true;
 
         public string Notes { get; set; } = string.Empty;
@@ -114,6 +122,13 @@ namespace FNEV4.Application.DTOs.GestionClients
             if (!validCurrencies.Contains(Currency))
             {
                 ValidationErrors.Add($"Devise non supportée. Devises valides: {string.Join(", ", validCurrencies)}");
+            }
+
+            // Validation moyen de paiement
+            var validPaymentMethods = new[] { "cash", "card", "mobile-money", "bank-transfer", "check", "credit" };
+            if (!validPaymentMethods.Contains(PaymentMethod))
+            {
+                ValidationErrors.Add($"Moyen de paiement non supporté. Moyens valides: {string.Join(", ", validPaymentMethods)}");
             }
 
             // Validation spécifique B2F (clients internationaux)
@@ -171,6 +186,7 @@ namespace FNEV4.Application.DTOs.GestionClients
                 Email = Email,
                 Country = Country,
                 DefaultCurrency = Currency,
+                DefaultPaymentMethod = PaymentMethod, // Nouveau: mapping du moyen de paiement
                 SellerName = Representative,
                 TaxIdentificationNumber = TaxNumber,
                 IsActive = IsActive,

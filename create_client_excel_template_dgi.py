@@ -53,6 +53,7 @@ def create_client_import_template_dgi():
         "Representant",         # Representative  
         "Numero_Fiscal",        # TaxNumber
         "Devise",               # Currency (XOF par défaut)
+        "Moyen_Paiement",       # PaymentMethod - Nouveau pour API DGI
         "Actif",                # IsActive (Oui/Non)
         "Notes"                 # Notes
     ]
@@ -105,25 +106,25 @@ def create_client_import_template_dgi():
         ["ENT001", "KPMG CÔTE D'IVOIRE", "B2B", "9502363N", "KPMG CI", 
          "Boulevard Angoulvant", "Abidjan", "01 BP 2651", "Côte d'Ivoire", 
          "+225 27 20 30 40 00", "info@kpmg.ci", "Directeur Général", 
-         "9502363N", "XOF", "Oui", "Cabinet d'audit international"],
+         "9502363N", "XOF", "bank-transfer", "Oui", "Cabinet d'audit international"],
         
         # Client B2C (Particulier sans NCC)  
         ["PART001", "KOUAME ARTHUR LEBLANC", "B2C", "", "Arthur Le Grand",
          "Cocody Angré", "Abidjan", "08 BP 2150", "Côte d'Ivoire",
          "+225 07 08 09 10 11", "arthur.leblanc@gmail.com", "Lui-même",
-         "", "XOF", "Oui", "Client particulier régulier"],
+         "", "XOF", "cash", "Oui", "Client particulier régulier"],
          
         # Client B2G (Gouvernemental)
         ["GOUV001", "MINISTERE DU COMMERCE", "B2G", "1000001A", "Min Commerce",
          "Plateau", "Abidjan", "BP V 65", "Côte d'Ivoire",
          "+225 27 20 25 35 00", "contact@commerce.gouv.ci", "Directeur de Cabinet",
-         "1000001A", "XOF", "Oui", "Institution gouvernementale"],
+         "1000001A", "XOF", "check", "Oui", "Institution gouvernementale"],
          
         # Client B2F (International)  
         ["INT001", "NESTLÉ FRANCE SAS", "B2F", "FR123456789", "Nestlé France",
          "7 Boulevard Pierre Carle", "Noisiel", "77446", "France",
          "+33 1 60 53 20 00", "contact@nestle.fr", "Directeur Export Afrique",
-         "FR123456789", "EUR", "Oui", "Multinationale agroalimentaire"]
+         "FR123456789", "EUR", "card", "Oui", "Multinationale agroalimentaire"]
     ]
     
     # Ajout des exemples
@@ -152,7 +153,7 @@ def create_client_import_template_dgi():
     ws_template.add_data_validation(template_validation)
     template_validation.add(f"C2:C1000")
     
-    # Validation Devise (colonne N)
+    # Validation Devise (colonne O)
     currency_validation = DataValidation(
         type="list", 
         formula1='"XOF,USD,EUR,JPY,CAD,GBP,AUD,CNH,CHF,HKD,NZD"',
@@ -161,16 +162,27 @@ def create_client_import_template_dgi():
     currency_validation.error = "Devise non supportée par l'API DGI"
     currency_validation.errorTitle = "Devise invalide"
     ws_template.add_data_validation(currency_validation)
-    currency_validation.add(f"N2:N1000")
+    currency_validation.add(f"O2:O1000")
     
-    # Validation Actif (colonne O)
+    # Validation Moyen de Paiement (colonne P)
+    payment_validation = DataValidation(
+        type="list",
+        formula1='"cash,card,mobile-money,bank-transfer,check,credit"',
+        allow_blank=False
+    )
+    payment_validation.error = "Moyen de paiement doit être: cash, card, mobile-money, bank-transfer, check ou credit"
+    payment_validation.errorTitle = "Moyen de paiement invalide"
+    ws_template.add_data_validation(payment_validation)
+    payment_validation.add(f"P2:P1000")
+    
+    # Validation Actif (colonne Q)
     active_validation = DataValidation(
         type="list",
         formula1='"Oui,Non"',
         allow_blank=False
     )
     ws_template.add_data_validation(active_validation)
-    active_validation.add(f"O2:O1000")
+    active_validation.add(f"Q2:Q1000")
     
     # === COMMENTAIRES EXPLICATIFS ===
     

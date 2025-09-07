@@ -38,6 +38,7 @@ namespace FNEV4.Infrastructure.ExcelProcessing.Services
             { "nom", nameof(ClientImportModelDgi.Name) },
             { "raison sociale", nameof(ClientImportModelDgi.Name) },
             { "template", nameof(ClientImportModelDgi.Template) },
+            { "typeclient", nameof(ClientImportModelDgi.Template) },
             { "type template", nameof(ClientImportModelDgi.Template) },
             { "template dgi", nameof(ClientImportModelDgi.Template) },
             { "ncc", nameof(ClientImportModelDgi.ClientNcc) },
@@ -49,7 +50,15 @@ namespace FNEV4.Infrastructure.ExcelProcessing.Services
             { "phone", nameof(ClientImportModelDgi.Phone) },
             { "représentant", nameof(ClientImportModelDgi.Representative) },
             { "n° fiscal", nameof(ClientImportModelDgi.TaxNumber) },
-            { "numéro fiscal", nameof(ClientImportModelDgi.TaxNumber) }
+            { "numéro fiscal", nameof(ClientImportModelDgi.TaxNumber) },
+            
+            // Moyens de paiement - formats multiples pour compatibilité
+            { "moyen de paiement", nameof(ClientImportModelDgi.PaymentMethod) },
+            { "moyenpaiement", nameof(ClientImportModelDgi.PaymentMethod) },
+            { "moyen_paiement", nameof(ClientImportModelDgi.PaymentMethod) },
+            { "payment method", nameof(ClientImportModelDgi.PaymentMethod) },
+            { "paiement", nameof(ClientImportModelDgi.PaymentMethod) },
+            { "méthode paiement", nameof(ClientImportModelDgi.PaymentMethod) }
         };
 
         /// <summary>
@@ -112,6 +121,7 @@ namespace FNEV4.Infrastructure.ExcelProcessing.Services
                             Country = c.Country,
                             Representative = c.Representative,
                             Currency = c.Currency,
+                            PaymentMethod = c.PaymentMethod, // Nouveau: mappage du moyen de paiement
                             Active = c.IsActive ? "Oui" : "Non",
                             Notes = c.Notes,
                             ValidationIssues = c.ValidationErrors.ToList()
@@ -318,6 +328,9 @@ namespace FNEV4.Infrastructure.ExcelProcessing.Services
                     client.TaxNumber = GetCellValue(worksheet, row, columnMap, nameof(ClientImportModelDgi.TaxNumber)) ?? "";
                     client.Currency = GetCellValue(worksheet, row, columnMap, nameof(ClientImportModelDgi.Currency)) ?? "XOF";
                     client.Notes = GetCellValue(worksheet, row, columnMap, nameof(ClientImportModelDgi.Notes)) ?? "";
+                    
+                    // Nouveau: lecture du moyen de paiement depuis Excel
+                    client.PaymentMethod = GetCellValue(worksheet, row, columnMap, nameof(ClientImportModelDgi.PaymentMethod)) ?? "cash";
 
                     // Traitement spécial pour IsActive avec gestion des espaces
                     var activeValue = GetCellValue(worksheet, row, columnMap, nameof(ClientImportModelDgi.IsActive))?.ToLower().Trim();
