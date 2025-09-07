@@ -69,6 +69,14 @@ namespace FNEV4.Core.Entities
         public string DefaultTemplate { get; set; } = "B2C";
 
         /// <summary>
+        /// Moyen de paiement par défaut du client (cash, card, mobile-money, bank-transfer, etc.)
+        /// Obligatoire pour la certification des factures selon l'API DGI
+        /// </summary>
+        [Required]
+        [MaxLength(20)]
+        public string DefaultPaymentMethod { get; set; } = "cash";
+
+        /// <summary>
         /// Indique si le client est actif
         /// </summary>
         public bool IsActive { get; set; } = true;

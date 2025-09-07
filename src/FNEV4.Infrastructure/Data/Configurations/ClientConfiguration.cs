@@ -33,6 +33,11 @@ namespace FNEV4.Infrastructure.Data.Configurations
                 .IsRequired()
                 .HasMaxLength(5);
 
+            builder.Property(x => x.DefaultPaymentMethod)
+                .IsRequired()
+                .HasMaxLength(20)
+                .HasDefaultValue("cash");
+
             // Index uniques
             builder.HasIndex(x => x.ClientCode)
                 .IsUnique();
@@ -42,6 +47,7 @@ namespace FNEV4.Infrastructure.Data.Configurations
             // Index pour performance
             builder.HasIndex(x => x.Name);
             builder.HasIndex(x => x.ClientType);
+            builder.HasIndex(x => x.DefaultPaymentMethod);
             builder.HasIndex(x => x.IsActive);
 
             // Relations

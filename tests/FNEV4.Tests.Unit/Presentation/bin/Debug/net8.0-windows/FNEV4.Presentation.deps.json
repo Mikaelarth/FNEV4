@@ -39,7 +39,7 @@
           }
         }
       },
-      "ClosedXML/0.102.1": {
+      "ClosedXML/0.102.2": {
         "dependencies": {
           "DocumentFormat.OpenXml": "2.20.0",
           "ExcelNumberFormat": "1.1.0",
@@ -51,8 +51,8 @@
         },
         "runtime": {
           "lib/netstandard2.1/ClosedXML.dll": {
-            "assemblyVersion": "0.102.1.0",
-            "fileVersion": "0.102.1.0"
+            "assemblyVersion": "0.102.2.0",
+            "fileVersion": "0.102.2.0"
           }
         }
       },
@@ -1833,6 +1833,7 @@
       "FNEV4.Application/1.0.0": {
         "dependencies": {
           "AutoMapper": "12.0.1",
+          "ClosedXML": "0.102.2",
           "CommunityToolkit.Mvvm": "8.2.2",
           "FNEV4.Core": "1.0.0",
           "FluentValidation": "11.8.1"
@@ -1857,7 +1858,7 @@
       },
       "FNEV4.Infrastructure/1.0.0": {
         "dependencies": {
-          "ClosedXML": "0.102.1",
+          "ClosedXML": "0.102.2",
           "DocumentFormat.OpenXml": "2.20.0",
           "FNEV4.Application": "1.0.0",
           "FNEV4.Core": "1.0.0",
@@ -1892,12 +1893,12 @@
       "path": "automapper/12.0.1",
       "hashPath": "automapper.12.0.1.nupkg.sha512"
     },
-    "ClosedXML/0.102.1": {
+    "ClosedXML/0.102.2": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-Zb0/SgczPKLqlCHpSZzMG2qzaT3HpdkFrYJU8TTFRMfC0NLTSlp8gw26tZAtJp+Do0szAhPrWjkTp9flH9Or0A==",
-      "path": "closedxml/0.102.1",
-      "hashPath": "closedxml.0.102.1.nupkg.sha512"
+      "sha512": "sha512-nsHmfPNPtWpr6vair857sQiN11OaFn80oiN2GIbTB1vDqnw9jhNMtlxS0/iYP/E+YGG5zLX2N6xeznuBuvezSQ==",
+      "path": "closedxml/0.102.2",
+      "hashPath": "closedxml.0.102.2.nupkg.sha512"
     },
     "CommunityToolkit.Mvvm/8.2.2": {
       "type": "package",

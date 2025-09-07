@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FNEV4.Application")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+997da25dacd30f20bdd01667d9362ea10ce1f62b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0acfcc9f7242109a7d15432fd8d2acd9d88a9057")]
 [assembly: System.Reflection.AssemblyProductAttribute("FNEV4.Application")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FNEV4.Application")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

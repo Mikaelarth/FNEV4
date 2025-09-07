@@ -123,6 +123,18 @@
                             MinWidth="140"
                             MinHeight="40"/>
                     
+                    <Button Content="⚠️ Import Exceptionnel"
+                            Command="{Binding ImportExceptionnelCommand}"
+                            Background="#FF9800"
+                            Foreground="White"
+                            Padding="20,12"
+                            Margin="0,0,12,0"
+                            BorderThickness="0"
+                            FontSize="14"
+                            MinWidth="160"
+                            MinHeight="40"
+                            ToolTip="Import temporaire pour format Excel spécial"/>
+                    
                     <Button Content="➕ Nouveau client"
                             Command="{Binding AddClientCommand}"
                             Background="#4CAF50"

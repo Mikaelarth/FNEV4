@@ -59,6 +59,11 @@ namespace FNEV4.Infrastructure.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DefaultPaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("DefaultTemplate")
                         .IsRequired()
                         .HasMaxLength(5)
@@ -783,6 +788,64 @@ namespace FNEV4.Infrastructure.Migrations
                     b.ToTable("ImportSessions", (string)null);
                 });
 
+            modelBuilder.Entity("FNEV4.Core.Entities.LogEntry", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExceptionDetails")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MachineName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProcessId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ThreadId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LogEntries");
+                });
+
             modelBuilder.Entity("FNEV4.Core.Entities.VatType", b =>
                 {
                     b.Property<Guid>("Id")
@@ -828,7 +891,7 @@ namespace FNEV4.Infrastructure.Migrations
                         {
                             Id = new Guid("11111111-1111-1111-1111-111111111111"),
                             Code = "TVA",
-                            CreatedAt = new DateTime(2025, 9, 4, 16, 49, 16, 299, DateTimeKind.Utc).AddTicks(7402),
+                            CreatedAt = new DateTime(2025, 9, 7, 1, 22, 38, 245, DateTimeKind.Utc).AddTicks(1701),
                             Description = "TVA normal de 18%",
                             IsActive = true,
                             IsDeleted = false,
@@ -838,7 +901,7 @@ namespace FNEV4.Infrastructure.Migrations
                         {
                             Id = new Guid("22222222-2222-2222-2222-222222222222"),
                             Code = "TVAB",
-                            CreatedAt = new DateTime(2025, 9, 4, 16, 49, 16, 299, DateTimeKind.Utc).AddTicks(7428),
+                            CreatedAt = new DateTime(2025, 9, 7, 1, 22, 38, 245, DateTimeKind.Utc).AddTicks(1721),
                             Description = "TVA réduit de 9%",
                             IsActive = true,
                             IsDeleted = false,
@@ -848,7 +911,7 @@ namespace FNEV4.Infrastructure.Migrations
                         {
                             Id = new Guid("33333333-3333-3333-3333-333333333333"),
                             Code = "TVAC",
-                            CreatedAt = new DateTime(2025, 9, 4, 16, 49, 16, 299, DateTimeKind.Utc).AddTicks(7434),
+                            CreatedAt = new DateTime(2025, 9, 7, 1, 22, 38, 245, DateTimeKind.Utc).AddTicks(1733),
                             Description = "TVA exec conv de 0%",
                             IsActive = true,
                             IsDeleted = false,

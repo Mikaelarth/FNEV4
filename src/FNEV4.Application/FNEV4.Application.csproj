@@ -24,6 +24,9 @@
     
     <!-- MVVM Community Toolkit -->
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    
+    <!-- ClosedXML pour l'import exceptionnel (TEMPORAIRE - à supprimer avec le système Special) -->
+    <PackageReference Include="ClosedXML" Version="0.102.2" />
   </ItemGroup>
 
 </Project>

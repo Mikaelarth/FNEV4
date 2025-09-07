@@ -149,6 +149,9 @@ namespace FNEV4.Presentation
                     services.AddScoped<ModificationClientUseCase>();
                     services.AddScoped<ImportClientsExcelUseCase>();
                     
+                    // Import Exceptionnel (système temporaire)
+                    services.AddScoped<FNEV4.Application.Special.ImportSpecialExcelUseCase>();
+                    
                     // Services Excel Processing
                     services.AddScoped<IClientExcelImportService, ClientExcelImportService>();
                     

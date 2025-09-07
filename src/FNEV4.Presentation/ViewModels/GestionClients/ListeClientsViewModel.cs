@@ -9,6 +9,7 @@ using FNEV4.Core.Entities;
 using FNEV4.Core.Interfaces;
 using FNEV4.Application.UseCases.GestionClients;
 using FNEV4.Presentation.Messages;
+using FNEV4.Presentation.Views.Special;
 using InfraLogging = FNEV4.Infrastructure.Services.ILoggingService;
 
 namespace FNEV4.Presentation.ViewModels.GestionClients
@@ -138,6 +139,7 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
             EditClientCommand = new RelayCommand<Client>(EditClient);
             AddClientCommand = new RelayCommand(AddClient);
             ImportClientsCommand = new RelayCommand(ImportClients);
+            ImportExceptionnelCommand = new RelayCommand(ImportExceptionnel);
 
             // Enregistrement pour recevoir les notifications d'import
             WeakReferenceMessenger.Default.Register<ClientsImportedMessage>(this);
@@ -161,6 +163,7 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
         public IRelayCommand<Client> EditClientCommand { get; }
         public IRelayCommand AddClientCommand { get; }
         public IRelayCommand ImportClientsCommand { get; }
+        public IRelayCommand ImportExceptionnelCommand { get; }
 
         #endregion
 
@@ -705,6 +708,47 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
                 
                 System.Windows.MessageBox.Show(
                     $"Erreur lors de l'ouverture de l'interface d'import:\n{ex.Message}",
+                    "Erreur",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Ouvre la fenêtre d'import exceptionnel
+        /// </summary>
+        private void ImportExceptionnel()
+        {
+            try
+            {
+                _ = _loggingService.LogInfoAsync("Ouverture de l'interface d'import exceptionnel", "GestionClients");
+
+                // Créer et afficher la fenêtre d'import exceptionnel
+                var importDialog = new ImportExceptionnelDialog();
+                importDialog.Owner = System.Windows.Application.Current.MainWindow;
+
+                var result = importDialog.ShowDialog();
+
+                // Si l'import a été réalisé avec succès, actualiser la liste
+                if (result == true)
+                {
+                    _ = _loggingService.LogInfoAsync("Import exceptionnel terminé, actualisation de la liste", "GestionClients");
+                    _ = Task.Run(RefreshAsync);
+                    
+                    // Afficher un message de succès
+                    System.Windows.MessageBox.Show(
+                        "Import exceptionnel terminé avec succès !",
+                        "Import terminé",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                _ = _loggingService.LogErrorAsync($"Erreur lors de l'ouverture de l'interface d'import exceptionnel: {ex.Message}", "GestionClients", ex);
+                
+                System.Windows.MessageBox.Show(
+                    $"Erreur lors de l'ouverture de l'interface d'import exceptionnel:\n{ex.Message}",
                     "Erreur",
                     System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Error);

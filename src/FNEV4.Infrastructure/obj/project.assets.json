@@ -18,10 +18,10 @@
           }
         }
       },
-      "ClosedXML/0.102.1": {
+      "ClosedXML/0.102.2": {
         "type": "package",
         "dependencies": {
-          "DocumentFormat.OpenXml": "2.16.0",
+          "DocumentFormat.OpenXml": "[2.16.0, 3.0.0)",
           "ExcelNumberFormat": "1.1.0",
           "SixLabors.Fonts": "1.0.0",
           "System.IO.Packaging": "6.0.0",
@@ -2551,6 +2551,7 @@
         "framework": ".NETCoreApp,Version=v8.0",
         "dependencies": {
           "AutoMapper": "12.0.1",
+          "ClosedXML": "0.102.2",
           "CommunityToolkit.Mvvm": "8.2.2",
           "FNEV4.Core": "1.0.0",
           "FluentValidation": "11.8.1"
@@ -2593,14 +2594,14 @@
         "lib/netstandard2.1/AutoMapper.xml"
       ]
     },
-    "ClosedXML/0.102.1": {
-      "sha512": "Zb0/SgczPKLqlCHpSZzMG2qzaT3HpdkFrYJU8TTFRMfC0NLTSlp8gw26tZAtJp+Do0szAhPrWjkTp9flH9Or0A==",
+    "ClosedXML/0.102.2": {
+      "sha512": "nsHmfPNPtWpr6vair857sQiN11OaFn80oiN2GIbTB1vDqnw9jhNMtlxS0/iYP/E+YGG5zLX2N6xeznuBuvezSQ==",
       "type": "package",
-      "path": "closedxml/0.102.1",
+      "path": "closedxml/0.102.2",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "closedxml.0.102.1.nupkg.sha512",
+        "closedxml.0.102.2.nupkg.sha512",
         "closedxml.nuspec",
         "lib/netstandard2.0/ClosedXML.dll",
         "lib/netstandard2.0/ClosedXML.xml",
@@ -7723,7 +7724,7 @@
   },
   "projectFileDependencyGroups": {
     "net8.0": [
-      "ClosedXML >= 0.102.1",
+      "ClosedXML >= 0.102.2",
       "DocumentFormat.OpenXml >= 2.20.0",
       "FNEV4.Application >= 1.0.0",
       "FNEV4.Core >= 1.0.0",
@@ -7788,7 +7789,7 @@
         "dependencies": {
           "ClosedXML": {
             "target": "Package",
-            "version": "[0.102.1, )"
+            "version": "[0.102.2, )"
           },
           "DocumentFormat.OpenXml": {
             "target": "Package",

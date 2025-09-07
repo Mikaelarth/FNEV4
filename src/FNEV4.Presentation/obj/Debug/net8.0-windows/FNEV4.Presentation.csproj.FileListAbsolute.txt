@@ -170,6 +170,7 @@ C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Mainte
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Maintenance\SynchronisationView.baml
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Maintenance\TableDataDialog.baml
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Maintenance\TableStructureDialog.baml
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Special\ImportExceptionnelDialog.baml
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Controls\CollapsibleMenuItem.g.cs
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Configuration\ApiFneConfigView.g.cs
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Configuration\CheminsDossiersConfigView.g.cs
@@ -186,6 +187,7 @@ C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Mainte
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Maintenance\TableDataDialog.g.cs
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Maintenance\TableStructureDialog.g.cs
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\MainWindow.g.cs
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Special\ImportExceptionnelDialog.g.cs
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\App.g.cs
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\FNEV4.Presentation_Content.g.cs
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\GeneratedInternalTypeHelper.g.cs
