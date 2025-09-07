@@ -443,18 +443,6 @@
                                                         Binding="{Binding Currency}" 
                                                         Width="60"/>
                                     
-                                    <DataGridTextColumn Header="Moyen Paiement" 
-                                                        Binding="{Binding PaymentMethod}" 
-                                                        Width="100">
-                                        <DataGridTextColumn.ElementStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="FontWeight" Value="Medium"/>
-                                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                                                <Setter Property="ToolTip" Value="{Binding PaymentMethod}"/>
-                                            </Style>
-                                        </DataGridTextColumn.ElementStyle>
-                                    </DataGridTextColumn>
-                                    
                                     <DataGridTextColumn Header="Actif" 
                                                         Binding="{Binding Active}" 
                                                         Width="50"

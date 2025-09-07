@@ -86,7 +86,6 @@ namespace FNEV4.Application.DTOs.GestionClients
         public string? Country { get; set; }
         public string? Representative { get; set; }
         public string? Currency { get; set; }
-        public string? PaymentMethod { get; set; } // Nouveau champ pour moyen de paiement
         public string? Active { get; set; }
         public string? Notes { get; set; }
         public string Status { get; set; } = "Nouveau"; // Nouveau, Doublon, Erreur, À mettre à jour

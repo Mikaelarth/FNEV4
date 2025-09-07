@@ -14,6 +14,7 @@ Ligne 11: Intitulé client          (ex: DIVERS CLIENTS CARBURANTS - si code = 1
 Ligne 13: Nom réel client divers   (ex: ARTHUR LE GRAND - si code = 1999)
 Ligne 15: NCC client divers        (ex: 1205425Z - si code = 1999)
 Ligne 17: Numéro facture avoir     (ex: FAC000 si c'est un avoir)
+Ligne 18: Moyen de paiement        (ex: cash, card, mobile-money, bank-transfer, check, credit)
 
 PRODUITS (à partir de ligne 20):
 Colonne B: Code produit     (ex: PROD001)
@@ -36,6 +37,7 @@ A11: DIVERS CLIENTS CARBURANTS
 A13: ARTHUR LE GRAND (vrai nom du client)
 A15: 1205425Z (NCC spécifique du client divers)
 A17: (vide si pas d'avoir)
+A18: cash (moyen de paiement pour cette facture)
 
 Ligne 20:
 B20: ORD001    C20: Ordinateur Dell    D20: 800000    E20: 1    F20: pcs    G20: TVA    H20: 800000
@@ -46,6 +48,7 @@ NOTES IMPORTANTES:
 - Une feuille Excel = une facture
 - CODE CLIENT 1999 = client divers (nom réel à la ligne 13, NCC spécifique à la ligne 15)
 - CODE CLIENT ≠ 1999 = client normal (NCC à la ligne 6, nom depuis base de données)
+- MOYEN DE PAIEMENT (ligne 18) = cash, card, mobile-money, bank-transfer, check, credit (obligatoire pour certification FNE)
 - Le NCC de l'entreprise émettrice DOIT être configuré dans FNEV4 (pas dans Excel!)
 - Les cellules vides sont autorisées sauf pour les champs obligatoires
 - Les montants sont en francs CFA (sans décimales)

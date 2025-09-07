@@ -9,6 +9,7 @@ using FNEV4.Infrastructure.ExcelProcessing.Services;
 using FNEV4.Presentation.ViewModels.Maintenance;
 using FNEV4.Presentation.ViewModels.Configuration;
 using FNEV4.Presentation.ViewModels.GestionClients;
+using FNEV4.Presentation.ViewModels.ImportTraitement;
 using FNEV4.Presentation.Services;
 using FNEV4.Core.Interfaces;
 using FNEV4.Core.Services;
@@ -179,6 +180,10 @@ namespace FNEV4.Presentation
                     // ViewModels Gestion Clients
                     services.AddTransient<ListeClientsViewModel>();
                     services.AddTransient<AjoutModificationClientViewModel>();
+                    services.AddTransient<ImportClientsViewModel>();
+                    
+                    // ViewModels Import & Traitement
+                    services.AddTransient<FNEV4.Presentation.ViewModels.ImportTraitement.ImportFichiersViewModel>();
 
                     // Service locator pour les ViewModels
                     services.AddSingleton<ViewModelLocator>();

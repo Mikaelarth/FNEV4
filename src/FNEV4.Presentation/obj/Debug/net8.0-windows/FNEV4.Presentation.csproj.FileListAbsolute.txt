@@ -210,3 +210,5 @@ C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\refint\FNEV4
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\FNEV4.Presentation.pdb
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\FNEV4.Presentation.genruntimeconfig.cache
 C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\ref\FNEV4.Presentation.dll
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\ImportFichiersView.g.cs
+C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\ImportFichiersView.baml

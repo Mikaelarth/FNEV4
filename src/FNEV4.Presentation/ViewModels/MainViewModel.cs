@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using FNEV4.Presentation.Views.Maintenance;
 
 namespace FNEV4.Presentation.ViewModels
@@ -82,6 +83,11 @@ namespace FNEV4.Presentation.ViewModels
         private void NavigateToImportFichiers()
         {
             CurrentModuleName = "Import - Import de fichiers";
+            
+            // Créer le ViewModel et la vue
+            var importViewModel = App.ServiceProvider.GetRequiredService<ViewModels.ImportTraitement.ImportFichiersViewModel>();
+            var importView = new Views.ImportTraitement.ImportFichiersView(importViewModel);
+            CurrentView = importView;
         }
 
         [RelayCommand]
