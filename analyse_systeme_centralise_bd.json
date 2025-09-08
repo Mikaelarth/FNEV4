@@ -1,0 +1,132 @@
+{
+  "metadata": {
+    "timestamp": "2025-09-08T16:09:45.136005",
+    "analysis_type": "Database Centralization Analysis",
+    "submenu": "Chemins & Dossiers",
+    "scope": "Configuration persistence mechanism"
+  },
+  "database_architecture": {
+    "database_provider": {
+      "service": "DatabasePathProvider",
+      "path": "C:\\wamp64\\www\\FNEV4\\data\\FNEV4.db",
+      "type": "SQLite",
+      "status": "✅ CENTRALIZED - Single database instance"
+    },
+    "dbcontext": {
+      "name": "FNEV4DbContext",
+      "entities": [
+        "Company",
+        "FneConfiguration",
+        "Client",
+        "FneInvoice",
+        "FneInvoiceItem",
+        "VatType",
+        "ImportSession",
+        "FneApiLog",
+        "LogEntry"
+      ],
+      "folder_configuration_entity": "❌ NOT INCLUDED",
+      "status": "No DbSet<FolderConfiguration> found"
+    }
+  },
+  "folder_configuration_analysis": {
+    "entity_exists": {
+      "class_name": "FolderConfiguration",
+      "file_path": "FNEV4.Core\\Entities\\FolderConfiguration.cs",
+      "inherits_from": "BaseEntity",
+      "properties": [
+        "ImportFolderPath",
+        "ExportFolderPath",
+        "ArchiveFolderPath",
+        "LogsFolderPath",
+        "BackupFolderPath"
+      ],
+      "annotations": [
+        "Required",
+        "StringLength(500)"
+      ],
+      "status": "✅ EXISTS but not in DbContext"
+    },
+    "service_interface": {
+      "name": "IFolderConfigurationService",
+      "methods": [
+        "LoadConfigurationAsync()",
+        "SaveConfigurationAsync()",
+        "ExportConfigurationAsync()",
+        "ImportConfigurationAsync()"
+      ],
+      "status": "✅ DEFINED"
+    },
+    "service_implementation": {
+      "file": "FolderConfigurationService.cs",
+      "status": "❌ EMPTY FILE",
+      "implementation": "Not implemented"
+    }
+  },
+  "current_persistence_mechanism": {
+    "service_used": "PathConfigurationService",
+    "storage_type": "IN-MEMORY ONLY",
+    "persistence": {
+      "save_method": "UpdatePaths()",
+      "mechanism": "Memory variables only",
+      "database_usage": "❌ NO DATABASE PERSISTENCE",
+      "configuration_files": "None detected"
+    },
+    "initialization": {
+      "source": "DatabasePathProvider + hardcoded relative paths",
+      "base_path": "Derived from database path directory",
+      "folders": {
+        "Import": "data/Import",
+        "Export": "data/Export",
+        "Archive": "data/Archive",
+        "Logs": "data/Logs",
+        "Backup": "data/Backup"
+      }
+    }
+  },
+  "centralization_assessment": {
+    "database_connection": {
+      "uses_central_database": "✅ YES",
+      "database_path_centralized": "✅ YES",
+      "single_database_instance": "✅ YES"
+    },
+    "configuration_persistence": {
+      "stores_config_in_database": "❌ NO",
+      "uses_database_entities": "❌ NO",
+      "persistence_mechanism": "❌ MEMORY ONLY",
+      "survives_application_restart": "❌ NO"
+    },
+    "architectural_compliance": {
+      "follows_centralized_pattern": "⚠️ PARTIAL",
+      "entity_framework_integration": "❌ NOT USED",
+      "service_layer_pattern": "✅ YES",
+      "dependency_injection": "✅ YES"
+    }
+  },
+  "recommendations": {
+    "immediate_actions": [
+      "Ajouter DbSet<FolderConfiguration> dans FNEV4DbContext",
+      "Implémenter FolderConfigurationService avec Entity Framework",
+      "Migrer PathConfigurationService vers persistance base de données",
+      "Créer migration Entity Framework pour table FolderConfiguration"
+    ],
+    "architectural_improvements": [
+      "Utiliser FolderConfiguration entity pour persistance",
+      "Intégrer avec le pattern Repository si existant",
+      "Implémenter audit trail pour modifications configuration",
+      "Ajouter validation métier via Entity Framework"
+    ],
+    "benefits_of_centralization": [
+      "Configuration survit aux redémarrages",
+      "Traçabilité des modifications",
+      "Cohérence avec autres modules",
+      "Backup automatique avec base de données"
+    ]
+  },
+  "conclusion": {
+    "database_centralization_status": "❌ INCOMPLET",
+    "summary": "Le sous-menu utilise le système centralisé pour le chemin de base de données mais PAS pour la persistance de la configuration des chemins",
+    "technical_debt": "Configuration perdue à chaque redémarrage",
+    "compliance": "Non conforme aux standards de l'application"
+  }
+}

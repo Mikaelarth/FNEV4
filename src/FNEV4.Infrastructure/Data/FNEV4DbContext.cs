@@ -62,6 +62,11 @@ namespace FNEV4.Infrastructure.Data
         /// </summary>
         public DbSet<LogEntry> LogEntries { get; set; }
 
+        /// <summary>
+        /// Configuration des chemins et dossiers de l'application
+        /// </summary>
+        public DbSet<FolderConfiguration> FolderConfigurations { get; set; }
+
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

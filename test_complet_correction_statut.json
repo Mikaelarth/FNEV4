@@ -1,0 +1,86 @@
+{
+  "timestamp": "2025-09-08T14:55:14.274152",
+  "test_type": "Test Complet - Correction Statut Figé",
+  "dispatcher_analysis": {
+    "correct_initial_message": {
+      "found": true,
+      "count": 1
+    },
+    "immediate_initialization": {
+      "found": true,
+      "count": 1
+    },
+    "dispatcher_in_update_global": {
+      "found": true,
+      "count": 4
+    },
+    "configured_folders_count_update": {
+      "found": true,
+      "count": 1
+    },
+    "status_message_variations": [
+      {
+        "variation": 1,
+        "found": false,
+        "count": 0
+      },
+      {
+        "variation": 2,
+        "found": true,
+        "count": 1
+      },
+      {
+        "variation": 3,
+        "found": true,
+        "count": 1
+      },
+      {
+        "variation": 4,
+        "found": true,
+        "count": 1
+      }
+    ]
+  },
+  "initialization_flow": {
+    "constructor_checks": {
+      "calls_initialize_immediately": true,
+      "fire_and_forget_pattern": true,
+      "no_await_in_constructor": true
+    },
+    "init_method_checks": {
+      "has_dispatcher_invoke": true,
+      "sets_initial_message": true,
+      "calls_update_all_status": false,
+      "has_error_handling": false
+    }
+  },
+  "status_update_logic": {
+    "logic_checks": {
+      "calculates_valid_count": false,
+      "calculates_warning_count": false,
+      "calculates_invalid_count": false,
+      "has_status_logic": false,
+      "uses_final_variables": false,
+      "updates_in_dispatcher": false,
+      "updates_configured_count": false,
+      "no_configuration_en_cours": true,
+      "has_configured_message": false
+    },
+    "message_states": {
+      "error_message": 0,
+      "warning_message": 0,
+      "success_message": 0,
+      "progress_message": 0
+    }
+  },
+  "runtime_simulation": {
+    "compilation_success": true,
+    "compilation_errors": "Aucune erreur",
+    "dll_status": {
+      "FNEV4.Presentation.dll": true,
+      "FNEV4.Core.dll": true,
+      "FNEV4.Application.dll": true
+    }
+  },
+  "global_score": 56.679894179894184
+}

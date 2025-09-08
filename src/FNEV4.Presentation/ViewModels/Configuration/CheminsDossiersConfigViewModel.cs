@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -82,7 +83,7 @@ namespace FNEV4.Presentation.ViewModels.Configuration
         private string backupFolderStatus = "Unknown";
 
         [ObservableProperty]
-        private string globalStatusMessage = "Vérification en cours...";
+        private string globalStatusMessage = "Initialisation en cours...";
 
         [ObservableProperty]
         private string globalStatusIcon = "Loading";
@@ -283,8 +284,8 @@ namespace FNEV4.Presentation.ViewModels.Configuration
             InitializePathsFromService();
             InitializeLoggingSettings();
             
-            // Initialisation asynchrone pour mettre à jour les statuts au chargement
-            _ = Task.Run(async () => await InitializeStatusAsync());
+            // Initialisation immédiate des statuts avec mise à jour asynchrone
+            _ = InitializeStatusImmediatelyAsync();
         }
 
         #endregion
@@ -348,6 +349,10 @@ namespace FNEV4.Presentation.ViewModels.Configuration
 
                 // Initialiser les paramètres de logging depuis le service de configuration
                 InitializeLoggingSettings();
+
+                // CORRECTION: Forcer une mise à jour des statuts après création des dossiers
+                System.Diagnostics.Debug.WriteLine("[DEBUG] Dossiers créés, forçage mise à jour des statuts...");
+                _ = Task.Run(async () => await UpdateAllStatusAsync());
 
                 UpdateNamingPreview();
             }
@@ -444,6 +449,52 @@ namespace FNEV4.Presentation.ViewModels.Configuration
             {
                 // En cas d'erreur, afficher un message d'erreur au lieu de rester figé
                 GlobalStatusMessage = "❌ Erreur lors de l'initialisation";
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de l'initialisation des statuts: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Initialise immédiatement les statuts de base puis lance la mise à jour asynchrone
+        /// </summary>
+        private async Task InitializeStatusImmediatelyAsync()
+        {
+            try
+            {
+                // Mise à jour immédiate des statuts de base
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    GlobalStatusMessage = "🔍 Vérification des dossiers...";
+                    GlobalStatusIcon = "Loading";
+                    GlobalStatusColor = Brushes.Orange;
+                    PathsConfiguredSummary = "Analyse en cours...";
+                });
+
+                // Attendre un peu pour que les dossiers soient créés
+                await Task.Delay(100);
+
+                // Puis mise à jour complète en arrière-plan
+                await Task.Run(async () =>
+                {
+                    await UpdateAllStatusAsync();
+                    await CalculateSpaceUsageAsync();
+                });
+
+                // CORRECTION: Deuxième mise à jour après un délai pour s'assurer de la cohérence
+                await Task.Delay(500);
+                await Task.Run(async () =>
+                {
+                    System.Diagnostics.Debug.WriteLine("[DEBUG] Deuxième vérification des statuts pour cohérence...");
+                    await UpdateAllStatusAsync();
+                });
+            }
+            catch (Exception ex)
+            {
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    GlobalStatusMessage = "❌ Erreur lors de l'initialisation";
+                    GlobalStatusIcon = "AlertCircle";
+                    GlobalStatusColor = Brushes.Red;
+                });
                 System.Diagnostics.Debug.WriteLine($"Erreur lors de l'initialisation des statuts: {ex.Message}");
             }
         }
@@ -622,6 +673,10 @@ namespace FNEV4.Presentation.ViewModels.Configuration
             };
 
             await Task.WhenAll(tasks);
+            
+            // Petit délai pour s'assurer que tous les statuts sont mis à jour
+            await Task.Delay(100);
+            
             await UpdateGlobalStatusAsync();
             await ShowNotificationAsync("✅ Test de tous les chemins terminé", "CheckCircle", Brushes.Green);
         }
@@ -956,22 +1011,24 @@ namespace FNEV4.Presentation.ViewModels.Configuration
 
         #region Helper Methods - Validation et Test
 
-        private async Task<bool> ValidatePathAsync(string pathType, string path)
+        private Task<bool> ValidatePathAsync(string pathType, string path)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(path))
                 {
                     SetPathStatus(pathType, "Invalid");
-                    return false;
+                    return Task.FromResult(false);
                 }
 
-                if (!Directory.Exists(path))
+                bool exists = Directory.Exists(path);
+                if (!exists)
                 {
                     SetPathStatus(pathType, "Warning");
-                    return false;
+                    return Task.FromResult(false);
                 }
 
+                // TODO: Vérification future des permissions avec _folderService
                 // if (!await _folderService.HasWritePermissionAsync(path))
                 // {
                 //     SetPathStatus(pathType, "Warning");
@@ -979,25 +1036,29 @@ namespace FNEV4.Presentation.ViewModels.Configuration
                 // }
 
                 SetPathStatus(pathType, "Valid");
-                return true;
+                return Task.FromResult(true);
             }
             catch
             {
                 SetPathStatus(pathType, "Invalid");
-                return false;
+                return Task.FromResult(false);
             }
         }
 
         private void SetPathStatus(string pathType, string status)
         {
-            switch (pathType)
+            // Mise à jour sur le thread UI pour assurer la cohérence
+            System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                case "Import": ImportFolderStatus = status; break;
-                case "Export": ExportFolderStatus = status; break;
-                case "Archive": ArchiveFolderStatus = status; break;
-                case "Logs": LogsFolderStatus = status; break;
-                case "Backup": BackupFolderStatus = status; break;
-            }
+                switch (pathType)
+                {
+                    case "Import": ImportFolderStatus = status; break;
+                    case "Export": ExportFolderStatus = status; break;
+                    case "Archive": ArchiveFolderStatus = status; break;
+                    case "Logs": LogsFolderStatus = status; break;
+                    case "Backup": BackupFolderStatus = status; break;
+                }
+            });
         }
 
         private async Task TestFolderAsync(string folderType, string folderPath)
@@ -1036,70 +1097,112 @@ namespace FNEV4.Presentation.ViewModels.Configuration
 
         private async Task UpdateAllStatusAsync()
         {
-            // Exécuter directement sur le thread UI pour mettre à jour les propriétés observables
-            await ValidatePathAsync("Import", ImportFolderPath);
-            await ValidatePathAsync("Export", ExportFolderPath);
-            await ValidatePathAsync("Archive", ArchiveFolderPath);
-            await ValidatePathAsync("Logs", LogsFolderPath);
-            await ValidatePathAsync("Backup", BackupFolderPath);
+            // Exécuter les validations puis mettre à jour l'UI sur le thread principal
+            try
+            {
+                // Validations des chemins (peuvent être faites en arrière-plan)
+                await ValidatePathAsync("Import", ImportFolderPath);
+                await ValidatePathAsync("Export", ExportFolderPath);
+                await ValidatePathAsync("Archive", ArchiveFolderPath);
+                await ValidatePathAsync("Logs", LogsFolderPath);
+                await ValidatePathAsync("Backup", BackupFolderPath);
 
-            await UpdateImportFolderInfoAsync();
-            await UpdateExportFolderInfoAsync();
-            await UpdateArchiveFolderInfoAsync();
-            await UpdateLogsFolderInfoAsync();
-            await UpdateBackupFolderInfoAsync();
+                // Mise à jour des informations - ces méthodes se chargent de leur propre dispatch
+                await UpdateImportFolderInfoAsync();
+                await UpdateExportFolderInfoAsync();
+                await UpdateArchiveFolderInfoAsync();
+                await UpdateLogsFolderInfoAsync();
+                await UpdateBackupFolderInfoAsync();
 
-            await UpdateGlobalStatusAsync();
-            await UpdateStatisticsAsync();
+                await UpdateGlobalStatusAsync();
+                await UpdateStatisticsAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur mise à jour statuts: {ex.Message}");
+                
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    GlobalStatusMessage = "❌ Erreur lors de la mise à jour";
+                    GlobalStatusIcon = "AlertCircle";
+                    GlobalStatusColor = Brushes.Red;
+                });
+            }
         }
 
-        private async Task UpdateGlobalStatusAsync()
+        private Task UpdateGlobalStatusAsync()
         {
             var statuses = new[] { ImportFolderStatus, ExportFolderStatus, ArchiveFolderStatus, LogsFolderStatus, BackupFolderStatus };
+            
+            // Debug: Afficher les statuts actuels
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] Statuts actuels: Import={ImportFolderStatus}, Export={ExportFolderStatus}, Archive={ArchiveFolderStatus}, Logs={LogsFolderStatus}, Backup={BackupFolderStatus}");
             
             var validCount = statuses.Count(s => s == "Valid");
             var warningCount = statuses.Count(s => s == "Warning");
             var invalidCount = statuses.Count(s => s == "Invalid");
+            var unknownCount = statuses.Count(s => s == "Unknown");
+
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] Compteurs: Valid={validCount}, Warning={warningCount}, Invalid={invalidCount}, Unknown={unknownCount}");
+
+            string finalMessage;
+            string finalIcon;
+            Brush finalColor;
 
             if (invalidCount > 0)
             {
-                GlobalStatusMessage = $"❌ {invalidCount} dossier(s) avec erreurs";
-                GlobalStatusIcon = "AlertCircle";
-                GlobalStatusColor = Brushes.Red;
+                finalMessage = $"❌ {invalidCount} dossier(s) avec erreurs";
+                finalIcon = "AlertCircle";
+                finalColor = Brushes.Red;
             }
             else if (warningCount > 0)
             {
-                GlobalStatusMessage = $"⚠️ {warningCount} dossier(s) avec avertissements";
-                GlobalStatusIcon = "Alert";
-                GlobalStatusColor = Brushes.Orange;
+                finalMessage = $"⚠️ {warningCount} dossier(s) avec avertissements";
+                finalIcon = "Alert";
+                finalColor = Brushes.Orange;
             }
             else if (validCount == 5)
             {
-                GlobalStatusMessage = "✅ Tous les dossiers sont configurés";
-                GlobalStatusIcon = "CheckCircle";
-                GlobalStatusColor = Brushes.Green;
+                finalMessage = "✅ Tous les dossiers sont configurés";
+                finalIcon = "CheckCircle";
+                finalColor = Brushes.Green;
             }
             else
             {
-                GlobalStatusMessage = "🔍 Configuration en cours...";
-                GlobalStatusIcon = "Loading";
-                GlobalStatusColor = Brushes.Blue;
+                finalMessage = $"� {validCount}/5 dossiers configurés";
+                finalIcon = "Settings";
+                finalColor = Brushes.Blue;
             }
 
-            PathsConfiguredSummary = $"{validCount}/5 dossiers configurés correctement";
+            string finalSummary = $"{validCount}/5 dossiers configurés correctement";
+            int finalCount = validCount;
+
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] Message final: {finalMessage}");
+
+            // Mise à jour sur le thread UI
+            System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                GlobalStatusMessage = finalMessage;
+                GlobalStatusIcon = finalIcon;
+                GlobalStatusColor = finalColor;
+                PathsConfiguredSummary = finalSummary;
+                ConfiguredFoldersCount = finalCount;
+            });
+            
+            return Task.CompletedTask;
         }
 
-        private async Task UpdateStatisticsAsync()
+        private Task UpdateStatisticsAsync()
         {
-            ConfiguredFoldersCount = new[] { ImportFolderStatus, ExportFolderStatus, ArchiveFolderStatus, LogsFolderStatus, BackupFolderStatus }
-                .Count(s => s == "Valid");
-
+            // ConfiguredFoldersCount est maintenant mis à jour dans UpdateGlobalStatusAsync()
+            
             // Compter les surveillances actives
             ActiveWatchersCount = 0;
             if (ImportFolderWatchEnabled && ImportFolderStatus == "Valid") ActiveWatchersCount++;
             if (ExportAutoOrganizeEnabled && ExportFolderStatus == "Valid") ActiveWatchersCount++;
             if (ArchiveAutoEnabled && ArchiveFolderStatus == "Valid") ActiveWatchersCount++;
             if (BackupAutoEnabled && BackupFolderStatus == "Valid") ActiveWatchersCount++;
+            
+            return Task.CompletedTask;
         }
 
         private async Task UpdateImportFolderInfoAsync()
@@ -1686,7 +1789,7 @@ namespace FNEV4.Presentation.ViewModels.Configuration
         private void OpenBackupManager()
         {
             // TODO: Implémenter le gestionnaire de sauvegardes avec fenêtre dédiée
-            ShowNotificationAsync("🛠️ Gestionnaire de sauvegardes en développement", "Information", Brushes.Blue);
+            _ = ShowNotificationAsync("🛠️ Gestionnaire de sauvegardes en développement", "Information", Brushes.Blue);
         }
 
         /// <summary>

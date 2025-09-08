@@ -1,0 +1,70 @@
+{
+  "timestamp": "2025-09-08T15:05:38.687074",
+  "diagnostic_type": "Analyse Incohérence Statut vs Interface",
+  "status_logic_analysis": {
+    "status_defaults": {
+      "ImportFolderStatus": "Unknown",
+      "ExportFolderStatus": "Unknown",
+      "ArchiveFolderStatus": "Unknown",
+      "LogsFolderStatus": "Unknown",
+      "BackupFolderStatus": "Unknown"
+    },
+    "counting_logic": {
+      "uses_status_array": true,
+      "counts_valid": false,
+      "counts_warning": false,
+      "counts_invalid": false,
+      "handles_unknown": false
+    },
+    "message_conditions": [],
+    "update_content_preview": "\n            var statuses = new[] { ImportFolderStatus, ExportFolderStatus, ArchiveFolderStatus, LogsFolderStatus, BackupFolderStatus "
+  },
+  "initialization_analysis": {
+    "constructor_calls": [
+      "Timer",
+      "Timer",
+      "InitializeCollections",
+      "InitializePathsFromService",
+      "InitializeLoggingSettings",
+      "InitializeStatusImmediatelyAsync"
+    ],
+    "init_methods": {
+      "InitializeCollections": true,
+      "InitializePathsFromService": true,
+      "InitializeLoggingSettings": true,
+      "InitializeStatusImmediatelyAsync": true
+    }
+  },
+  "scenario_simulations": {
+    "scenario1_defaults": {
+      "statuses": {
+        "ImportFolderStatus": "Unknown",
+        "ExportFolderStatus": "Unknown",
+        "ArchiveFolderStatus": "Unknown",
+        "LogsFolderStatus": "Unknown",
+        "BackupFolderStatus": "Unknown"
+      },
+      "expected_message": "⚙️ 0/5 dossiers configurés"
+    },
+    "scenario2_interface": {
+      "statuses": {
+        "ImportFolderStatus": "Valid",
+        "ExportFolderStatus": "Valid",
+        "ArchiveFolderStatus": "Valid",
+        "LogsFolderStatus": "Unknown",
+        "BackupFolderStatus": "Unknown"
+      },
+      "expected_message": "⚙️ 3/5 dossiers configurés"
+    },
+    "scenario3_test_success": {
+      "statuses": {
+        "ImportFolderStatus": "Valid",
+        "ExportFolderStatus": "Valid",
+        "ArchiveFolderStatus": "Valid",
+        "LogsFolderStatus": "Valid",
+        "BackupFolderStatus": "Warning"
+      },
+      "expected_message": "⚠️ 1 dossier(s) avec avertissements"
+    }
+  }
+}

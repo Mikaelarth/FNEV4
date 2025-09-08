@@ -1,0 +1,49 @@
+{
+  "timestamp": "2025-09-08T15:44:15.480738",
+  "base_path": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Presentation",
+  "folder_analysis": {
+    "ImportFolder": {
+      "path": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Presentation\\Data\\Import",
+      "status": "Warning",
+      "reason": "Dossier n'existe pas",
+      "exists": false,
+      "visual_color": "🟠 ORANGE"
+    },
+    "ExportFolder": {
+      "path": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Presentation\\Data\\Export",
+      "status": "Warning",
+      "reason": "Dossier n'existe pas",
+      "exists": false,
+      "visual_color": "🟠 ORANGE"
+    },
+    "ArchiveFolder": {
+      "path": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Presentation\\Data\\Archive",
+      "status": "Warning",
+      "reason": "Dossier n'existe pas",
+      "exists": false,
+      "visual_color": "🟠 ORANGE"
+    },
+    "LogsFolder": {
+      "path": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Presentation\\Data\\Logs",
+      "status": "Warning",
+      "reason": "Dossier n'existe pas",
+      "exists": false,
+      "visual_color": "🟠 ORANGE"
+    },
+    "BackupFolder": {
+      "path": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Presentation\\Data\\Backup",
+      "status": "Warning",
+      "reason": "Dossier n'existe pas",
+      "exists": false,
+      "visual_color": "🟠 ORANGE"
+    }
+  },
+  "expected_vs_actual": {
+    "valid_count": 0,
+    "warning_count": 5,
+    "invalid_count": 0,
+    "counter_shows": "0/5",
+    "visually_appears": "5/5"
+  },
+  "potential_cause": "Counter mismatch suggests timing or initialization issue"
+}

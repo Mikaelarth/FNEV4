@@ -1,0 +1,57 @@
+{
+  "timestamp": "2025-09-08T15:56:36.849264",
+  "database_provider_analysis": {
+    "env_path": null,
+    "dev_path": "C:\\wamp64\\www\\FNEV4\\data\\FNEV4.db",
+    "dev_dir_exists": true,
+    "final_database_path": "C:\\wamp64\\www\\FNEV4\\data\\FNEV4.db",
+    "final_data_root": "C:\\wamp64\\www\\FNEV4\\data"
+  },
+  "real_folders_status": {
+    "Import": {
+      "path": "C:\\wamp64\\www\\FNEV4\\data\\Import",
+      "status": "Valid",
+      "reason": "Opérationnel (1 fichiers)",
+      "exists": true
+    },
+    "Export": {
+      "path": "C:\\wamp64\\www\\FNEV4\\data\\Export",
+      "status": "Valid",
+      "reason": "Opérationnel (0 fichiers)",
+      "exists": true
+    },
+    "Archive": {
+      "path": "C:\\wamp64\\www\\FNEV4\\data\\Archive",
+      "status": "Valid",
+      "reason": "Opérationnel (4 fichiers)",
+      "exists": true
+    },
+    "Logs": {
+      "path": "C:\\wamp64\\www\\FNEV4\\data\\Logs",
+      "status": "Valid",
+      "reason": "Opérationnel (7 fichiers)",
+      "exists": true
+    },
+    "Backup": {
+      "path": "C:\\wamp64\\www\\FNEV4\\data\\Backup",
+      "status": "Valid",
+      "reason": "Opérationnel (0 fichiers)",
+      "exists": true
+    }
+  },
+  "expected_paths_from_code": {},
+  "discrepancy_analysis": {
+    "real_valid_count": 5,
+    "interface_shows": "4/5",
+    "discrepancy": "Interface shows outdated count - all folders exist",
+    "explanation": "Check if interface uses different data source or has caching issue"
+  },
+  "appsettings_analysis": {
+    "UsePortableMode": true,
+    "ImportFolder": "Data\\Import",
+    "ExportFolder": "Data\\Export",
+    "ArchiveFolder": "Data\\Archive",
+    "LogsFolder": "Data\\Logs",
+    "BackupFolder": "Data\\Backup"
+  }
+}

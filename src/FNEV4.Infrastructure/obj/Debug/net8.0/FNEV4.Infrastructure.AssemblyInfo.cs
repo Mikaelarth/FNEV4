@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FNEV4.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a5780ab83b651c9793e35b25ff077a8875649487")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+464cd5b07f41617914ae7a7d1e173afd8ff68c36")]
 [assembly: System.Reflection.AssemblyProductAttribute("FNEV4.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FNEV4.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -16,6 +16,13 @@ namespace FNEV4.Presentation.Converters
             {
                 return status switch
                 {
+                    // Valeurs du ViewModel
+                    "Valid" => Brushes.Green,
+                    "Warning" => Brushes.Orange,
+                    "Invalid" => Brushes.Red,
+                    "Unknown" => Brushes.LightGray,
+                    
+                    // Valeurs formatées héritées (pour compatibilité)
                     "✅ Configuré" => Brushes.Green,
                     "✅ Actif" => Brushes.LimeGreen,
                     "✅ Connecté" => Brushes.Green,

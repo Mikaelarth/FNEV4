@@ -156,7 +156,9 @@ namespace FNEV4.Presentation
                     services.AddSingleton<IPathConfigurationService>(provider =>
                         new PathConfigurationService(
                             provider.GetRequiredService<IConfiguration>(),
-                            provider.GetRequiredService<IDatabasePathProvider>()));
+                            provider.GetRequiredService<IDatabasePathProvider>(),
+                            provider.GetRequiredService<FNEV4DbContext>(),
+                            provider.GetRequiredService<ILogger<PathConfigurationService>>()));
                     
                     // Configuration Entity Framework avec SINGLETON pour éviter les bases multiples
                     services.AddDbContext<FNEV4DbContext>((serviceProvider, options) =>

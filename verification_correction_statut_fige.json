@@ -1,0 +1,42 @@
+{
+  "timestamp": "2025-09-08T14:52:38.343663",
+  "verification_type": "Correction du statut figé - Chemins & Dossiers",
+  "viewmodel_fixes": {
+    "using_system_windows": true,
+    "initialize_status_immediately_method": true,
+    "dispatcher_invoke_async": true,
+    "proper_async_initialization": true,
+    "ui_thread_updates": true,
+    "method_initializestatusimmediatelyasync": true,
+    "method_updateallstatusasync": true,
+    "method_updateglobalstatus": false,
+    "global_status_message_ui_thread": true,
+    "global_status_icon_ui_thread": true,
+    "global_status_color_ui_thread": true,
+    "configured_folders_count_ui_thread": true
+  },
+  "compilation_status": {
+    "FNEV4.Presentation.dll": true,
+    "FNEV4.Core.dll": true,
+    "FNEV4.Application.dll": true
+  },
+  "threading_patterns": {
+    "correct_constructor_call": {
+      "found": true,
+      "count": 1
+    },
+    "dispatcher_usage": {
+      "found": true,
+      "count": 3
+    },
+    "async_initialization": {
+      "found": true,
+      "count": 1
+    },
+    "ui_property_updates": {
+      "found": true,
+      "count": 1
+    }
+  },
+  "fix_success_rate": 91.66666666666666
+}

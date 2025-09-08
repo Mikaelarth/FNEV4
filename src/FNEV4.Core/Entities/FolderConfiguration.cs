@@ -12,6 +12,27 @@ namespace FNEV4.Core.Entities
     /// </summary>
     public class FolderConfiguration : BaseEntity
     {
+        #region Métadonnées Configuration
+
+        /// <summary>
+        /// Nom de la configuration.
+        /// </summary>
+        [StringLength(100)]
+        public string Name { get; set; } = "Configuration par défaut";
+
+        /// <summary>
+        /// Description de la configuration.
+        /// </summary>
+        [StringLength(500)]
+        public string Description { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Indique si cette configuration est active.
+        /// </summary>
+        public bool IsActive { get; set; } = false;
+
+        #endregion
+
         #region Chemins Principaux
 
         /// <summary>

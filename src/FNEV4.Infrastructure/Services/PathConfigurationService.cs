@@ -1,7 +1,13 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using FNEV4.Core.Interfaces;
+using FNEV4.Core.Entities;
+using FNEV4.Infrastructure.Data;
 
 namespace FNEV4.Infrastructure.Services
 {
@@ -12,6 +18,8 @@ namespace FNEV4.Infrastructure.Services
     {
         private readonly IConfiguration _configuration;
         private readonly IDatabasePathProvider _databasePathProvider;
+        private readonly FNEV4DbContext _context;
+        private readonly ILogger<PathConfigurationService> _logger;
         private string _dataRootPath = string.Empty;
         private string _importFolderPath = string.Empty;
         private string _exportFolderPath = string.Empty;
@@ -21,10 +29,12 @@ namespace FNEV4.Infrastructure.Services
         private string _databasePath = string.Empty;
         private string _databaseConfigPath = string.Empty;
 
-        public PathConfigurationService(IConfiguration configuration, IDatabasePathProvider databasePathProvider)
+        public PathConfigurationService(IConfiguration configuration, IDatabasePathProvider databasePathProvider, FNEV4DbContext context, ILogger<PathConfigurationService> logger)
         {
             _configuration = configuration;
             _databasePathProvider = databasePathProvider;
+            _context = context;
+            _logger = logger;
             InitializeDefaultPaths();
         }
 
@@ -33,6 +43,8 @@ namespace FNEV4.Infrastructure.Services
         {
             _configuration = configuration;
             _databasePathProvider = new DatabasePathProvider(); // Instance temporaire
+            _context = null!; // Pas de base de données en mode fallback
+            _logger = null!;
             InitializeDefaultPaths();
         }
 
@@ -53,12 +65,21 @@ namespace FNEV4.Infrastructure.Services
             // Déduire le répertoire data depuis le chemin de la base
             _dataRootPath = Path.GetDirectoryName(_databasePath) ?? Path.Combine(GetProjectRootPath(), "data");
 
-            // Configuration des sous-dossiers (relatifs au data fixe)
-            _importFolderPath = Path.Combine(_dataRootPath, "Import");
-            _exportFolderPath = Path.Combine(_dataRootPath, "Export"); 
-            _archiveFolderPath = Path.Combine(_dataRootPath, "Archive");
-            _logsFolderPath = Path.Combine(_dataRootPath, "Logs");
-            _backupFolderPath = Path.Combine(_dataRootPath, "Backup");
+            // Essayer de charger depuis la base de données d'abord
+            if (_context != null)
+            {
+                LoadFromDatabaseAsync().GetAwaiter().GetResult();
+            }
+
+            // Configuration des sous-dossiers (relatifs au data fixe) - fallback si pas en base
+            if (string.IsNullOrEmpty(_importFolderPath))
+            {
+                _importFolderPath = Path.Combine(_dataRootPath, "Import");
+                _exportFolderPath = Path.Combine(_dataRootPath, "Export"); 
+                _archiveFolderPath = Path.Combine(_dataRootPath, "Archive");
+                _logsFolderPath = Path.Combine(_dataRootPath, "Logs");
+                _backupFolderPath = Path.Combine(_dataRootPath, "Backup");
+            }
 
             // Configuration du fichier de config de base
             _databaseConfigPath = Path.Combine(_dataRootPath, "database-config.json");
@@ -67,6 +88,44 @@ namespace FNEV4.Infrastructure.Services
             System.Diagnostics.Debug.WriteLine($"[PathConfigurationService] Configuration centralisée:");
             System.Diagnostics.Debug.WriteLine($"[PathConfigurationService] Base de données: {_databasePath}");
             System.Diagnostics.Debug.WriteLine($"[PathConfigurationService] Dossier data: {_dataRootPath}");
+        }
+
+        /// <summary>
+        /// Charge la configuration depuis la base de données
+        /// </summary>
+        private async Task LoadFromDatabaseAsync()
+        {
+            try
+            {
+                if (_context == null) return;
+
+                _logger?.LogDebug("Chargement de la configuration des chemins depuis la base de données");
+                
+                var config = await _context.FolderConfigurations
+                    .Where(f => f.IsActive && !f.IsDeleted)
+                    .OrderByDescending(f => f.UpdatedAt ?? f.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                if (config != null)
+                {
+                    _importFolderPath = config.ImportFolderPath;
+                    _exportFolderPath = config.ExportFolderPath;
+                    _archiveFolderPath = config.ArchiveFolderPath;
+                    _logsFolderPath = config.LogsFolderPath;
+                    _backupFolderPath = config.BackupFolderPath;
+
+                    _logger?.LogInformation("Configuration des chemins chargée depuis la base: {ConfigName}", config.Name);
+                }
+                else
+                {
+                    _logger?.LogInformation("Aucune configuration trouvée en base, utilisation des chemins par défaut");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Erreur lors du chargement de la configuration depuis la base");
+                // Continuer avec les chemins par défaut
+            }
         }
 
         /// <summary>
@@ -130,6 +189,75 @@ namespace FNEV4.Infrastructure.Services
             if (!string.IsNullOrWhiteSpace(backupPath)) _backupFolderPath = backupPath;
 
             EnsureDirectoriesExist();
+            
+            // Persister en base de données si le contexte est disponible
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    if (_context != null)
+                    {
+                        await SaveToDatabase();
+                        _logger?.LogInformation("Configuration des chemins sauvegardée en base de données");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Erreur lors de la sauvegarde de la configuration en base");
+                }
+            });
+        }
+
+        /// <summary>
+        /// Sauvegarde la configuration actuelle en base de données
+        /// </summary>
+        private async Task SaveToDatabase()
+        {
+            if (_context == null) return;
+
+            try
+            {
+                // Chercher une configuration active existante
+                var existingConfig = await _context.FolderConfigurations
+                    .Where(f => f.IsActive && !f.IsDeleted)
+                    .FirstOrDefaultAsync();
+
+                if (existingConfig != null)
+                {
+                    // Mettre à jour la configuration existante
+                    existingConfig.ImportFolderPath = _importFolderPath;
+                    existingConfig.ExportFolderPath = _exportFolderPath;
+                    existingConfig.ArchiveFolderPath = _archiveFolderPath;
+                    existingConfig.LogsFolderPath = _logsFolderPath;
+                    existingConfig.BackupFolderPath = _backupFolderPath;
+                    existingConfig.UpdatedAt = DateTime.UtcNow;
+                }
+                else
+                {
+                    // Créer une nouvelle configuration
+                    var newConfig = new FolderConfiguration
+                    {
+                        Name = "Configuration Automatique",
+                        Description = "Configuration créée automatiquement par PathConfigurationService",
+                        ImportFolderPath = _importFolderPath,
+                        ExportFolderPath = _exportFolderPath,
+                        ArchiveFolderPath = _archiveFolderPath,
+                        LogsFolderPath = _logsFolderPath,
+                        BackupFolderPath = _backupFolderPath,
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _context.FolderConfigurations.Add(newConfig);
+                }
+
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Erreur lors de la sauvegarde en base de données");
+                throw;
+            }
         }
 
         public bool ValidatePath(string path)

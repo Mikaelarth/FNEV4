@@ -1,0 +1,48 @@
+{
+  "timestamp": "2025-09-08T15:28:20.460751",
+  "database_analysis": {},
+  "folder_status": {
+    "ImportFolderPath": {
+      "path": null,
+      "real_status": "Unknown",
+      "reason": "Pas configuré dans la base",
+      "exists": false,
+      "writable": false
+    },
+    "ExportFolderPath": {
+      "path": null,
+      "real_status": "Unknown",
+      "reason": "Pas configuré dans la base",
+      "exists": false,
+      "writable": false
+    },
+    "ArchiveFolderPath": {
+      "path": null,
+      "real_status": "Unknown",
+      "reason": "Pas configuré dans la base",
+      "exists": false,
+      "writable": false
+    },
+    "LogsFolderPath": {
+      "path": null,
+      "real_status": "Unknown",
+      "reason": "Pas configuré dans la base",
+      "exists": false,
+      "writable": false
+    },
+    "BackupFolderPath": {
+      "path": null,
+      "real_status": "Unknown",
+      "reason": "Pas configuré dans la base",
+      "exists": false,
+      "writable": false
+    }
+  },
+  "visual_vs_counter_analysis": {
+    "visual_configured": 0,
+    "counter_configured": 0,
+    "difference": 0,
+    "explanation": "Les dossiers avec Warning apparaissent configurés visuellement mais ne sont pas comptés"
+  },
+  "recommendations": []
+}

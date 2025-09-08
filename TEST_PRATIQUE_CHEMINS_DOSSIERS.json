@@ -1,0 +1,53 @@
+{
+  "test_date": "2025-09-08T14:32:51.454944",
+  "component": "Chemins & Dossiers - Test Pratique",
+  "compilation_success": true,
+  "global_test_score": 100.0,
+  "detailed_scores": {
+    "interface_elements": 100.0,
+    "services": 100.0,
+    "entity_features": 100.0
+  },
+  "functionality_details": {
+    "interface_elements": {
+      "total_checked": 8,
+      "found": 8,
+      "missing": [],
+      "success_rate": 100.0
+    },
+    "services": {
+      "path_configuration_service": true,
+      "backup_service": true,
+      "database_provider": true,
+      "logging_service": true
+    },
+    "path_service_details": {
+      "checks": {
+        "centralized_database": true,
+        "ensure_directories": true,
+        "update_paths_method": true,
+        "validate_path_method": true,
+        "calculate_size_method": true,
+        "fallback_handling": true
+      },
+      "score": 100.0
+    },
+    "entity_features": {
+      "data_annotations": true,
+      "validation_methods": true,
+      "utility_methods": true,
+      "folder_paths": true,
+      "archive_settings": true,
+      "backup_settings": true
+    }
+  },
+  "error_log": [],
+  "recommendations": [],
+  "test_summary": {
+    "status": "🎉 PARFAIT",
+    "message": "Le sous-menu fonctionne parfaitement",
+    "compilation_ok": true,
+    "errors_count": 0,
+    "recommendations_count": 0
+  }
+}
