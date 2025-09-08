@@ -26,20 +26,19 @@ namespace FNEV4.Infrastructure.Repositories
         {
             var query = _context.Clients.AsQueryable();
 
-            // Filtrage par terme de recherche
+            // Filtrage par terme de recherche - utilisation d'EF.Functions pour plus d'efficacité
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                var lowerSearchTerm = searchTerm.ToLower();
                 query = query.Where(c => 
-                    c.Name.ToLower().Contains(lowerSearchTerm) ||
-                    c.ClientCode.ToLower().Contains(lowerSearchTerm) ||
-                    (c.ClientNcc != null && c.ClientNcc.ToLower().Contains(lowerSearchTerm)) ||
-                    (c.CompanyName != null && c.CompanyName.ToLower().Contains(lowerSearchTerm)) ||
-                    (c.Email != null && c.Email.ToLower().Contains(lowerSearchTerm)));
+                    EF.Functions.Like(c.Name, $"%{searchTerm}%") ||
+                    EF.Functions.Like(c.ClientCode, $"%{searchTerm}%") ||
+                    (c.ClientNcc != null && EF.Functions.Like(c.ClientNcc, $"%{searchTerm}%")) ||
+                    (c.CompanyName != null && EF.Functions.Like(c.CompanyName, $"%{searchTerm}%")) ||
+                    (c.Email != null && EF.Functions.Like(c.Email, $"%{searchTerm}%")));
             }
 
             // Filtrage par type de client
-            if (!string.IsNullOrWhiteSpace(clientType))
+            if (!string.IsNullOrWhiteSpace(clientType) && clientType != "Tous")
             {
                 query = query.Where(c => c.ClientType == clientType);
             }
@@ -50,11 +49,12 @@ namespace FNEV4.Infrastructure.Repositories
                 query = query.Where(c => c.IsActive == isActive.Value);
             }
 
-            // Compter le total avant pagination
+            // Compter le total avant pagination avec une requête séparée pour l'optimisation
             var totalCount = await query.CountAsync();
 
-            // Pagination et tri
+            // Pagination et tri avec AsNoTracking pour de meilleures performances
             var clients = await query
+                .AsNoTracking()
                 .OrderBy(c => c.Name)
                 .ThenBy(c => c.ClientCode)
                 .Skip((pageNumber - 1) * pageSize)

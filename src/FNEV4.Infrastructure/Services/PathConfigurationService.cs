@@ -11,6 +11,7 @@ namespace FNEV4.Infrastructure.Services
     public class PathConfigurationService : IPathConfigurationService
     {
         private readonly IConfiguration _configuration;
+        private readonly IDatabasePathProvider _databasePathProvider;
         private string _dataRootPath = string.Empty;
         private string _importFolderPath = string.Empty;
         private string _exportFolderPath = string.Empty;
@@ -20,9 +21,18 @@ namespace FNEV4.Infrastructure.Services
         private string _databasePath = string.Empty;
         private string _databaseConfigPath = string.Empty;
 
+        public PathConfigurationService(IConfiguration configuration, IDatabasePathProvider databasePathProvider)
+        {
+            _configuration = configuration;
+            _databasePathProvider = databasePathProvider;
+            InitializeDefaultPaths();
+        }
+
+        // Constructeur de fallback pour compatibilité (sera supprimé après migration)
         public PathConfigurationService(IConfiguration configuration)
         {
             _configuration = configuration;
+            _databasePathProvider = new DatabasePathProvider(); // Instance temporaire
             InitializeDefaultPaths();
         }
 
@@ -37,13 +47,11 @@ namespace FNEV4.Infrastructure.Services
 
         private void InitializeDefaultPaths()
         {
-            // Configuration des chemins de base : CHEMIN FIXE POUR ÉVITER LA DISPERSION
-            var usePortableMode = bool.Parse(_configuration["PathSettings:UsePortableMode"] ?? "true");
+            // SOLUTION CENTRALISÉE: Utiliser le provider centralisé pour la base de données
+            _databasePath = _databasePathProvider.DatabasePath;
             
-            // SOLUTION: Toujours utiliser le répertoire racine du projet
-            // Cela évite la création de bases multiples selon le répertoire de travail
-            var projectRoot = GetProjectRootPath();
-            _dataRootPath = Path.Combine(projectRoot, "data");
+            // Déduire le répertoire data depuis le chemin de la base
+            _dataRootPath = Path.GetDirectoryName(_databasePath) ?? Path.Combine(GetProjectRootPath(), "data");
 
             // Configuration des sous-dossiers (relatifs au data fixe)
             _importFolderPath = Path.Combine(_dataRootPath, "Import");
@@ -52,9 +60,13 @@ namespace FNEV4.Infrastructure.Services
             _logsFolderPath = Path.Combine(_dataRootPath, "Logs");
             _backupFolderPath = Path.Combine(_dataRootPath, "Backup");
 
-            // Configuration de la base de données : CHEMIN ABSOLU FIXE
-            _databasePath = Path.Combine(_dataRootPath, "FNEV4.db");
+            // Configuration du fichier de config de base
             _databaseConfigPath = Path.Combine(_dataRootPath, "database-config.json");
+            
+            // Log pour diagnostic
+            System.Diagnostics.Debug.WriteLine($"[PathConfigurationService] Configuration centralisée:");
+            System.Diagnostics.Debug.WriteLine($"[PathConfigurationService] Base de données: {_databasePath}");
+            System.Diagnostics.Debug.WriteLine($"[PathConfigurationService] Dossier data: {_dataRootPath}");
         }
 
         /// <summary>

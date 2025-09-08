@@ -1,0 +1,29 @@
+{
+  "enterprise_config_view": {
+    "uses_dependency_injection": true,
+    "uses_centralized_database": false,
+    "properly_configured": true,
+    "details": [
+      "✅ Utilise l'injection de dépendances",
+      "⚠️ Fallback présent pour l'injection"
+    ]
+  },
+  "view_model": {
+    "uses_idatabase_service": true,
+    "accesses_centralized_connection": true,
+    "injection_configured": true,
+    "details": [
+      "✅ Utilise IDatabaseService",
+      "✅ Accède à la chaîne de connexion centralisée",
+      "✅ Constructeur configuré pour l'injection"
+    ]
+  },
+  "dependency_injection": {
+    "registered_in_container": true,
+    "correct_parameters": true,
+    "details": [
+      "✅ ViewModel enregistré dans le conteneur DI",
+      "✅ Paramètres d'injection corrects"
+    ]
+  }
+}

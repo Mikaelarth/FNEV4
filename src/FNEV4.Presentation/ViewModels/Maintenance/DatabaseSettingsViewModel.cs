@@ -250,9 +250,10 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
 
         #endregion
 
-        public DatabaseSettingsViewModel() : this(CreateDefaultDatabaseService())
-        {
-        }
+        // SUPPRESSION du constructeur par défaut pour forcer l'injection de dépendances
+        // public DatabaseSettingsViewModel() : this(CreateDefaultDatabaseService())
+        // {
+        // }
 
         public DatabaseSettingsViewModel(IDatabaseService databaseService, IDatabaseConfigurationNotificationService? notificationService = null)
         {
@@ -260,45 +261,24 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             _notificationService = notificationService;
 
             // Initialisation des commandes
-            TestConnectionCommand = new SimpleCommand(TestConnection);
-            ResetSettingsCommand = new SimpleCommand(ResetSettings);
-            CancelCommand = new SimpleCommand(Cancel);
-            ApplySettingsCommand = new SimpleCommand(ApplySettings);
-            BrowseDatabasePathCommand = new SimpleCommand(BrowseDatabasePath);
-            ResetDatabasePathCommand = new SimpleCommand(ResetDatabasePath);
-            BrowseBackupDirectoryCommand = new SimpleCommand(BrowseBackupDirectory);
-            TestBackupCommand = new SimpleCommand(TestBackup);
-            TestAlertsCommand = new SimpleCommand(TestAlerts);
-            CheckAlertsNowCommand = new SimpleCommand(CheckAlertsNow);
-            RefreshPreviewCommand = new SimpleCommand(RefreshPreview);
-            TestAutoRefreshCommand = new SimpleCommand(TestAutoRefresh);
+            TestConnectionCommand = new RelayCommand(TestConnection);
+            ResetSettingsCommand = new RelayCommand(ResetSettings);
+            CancelCommand = new RelayCommand(Cancel);
+            ApplySettingsCommand = new RelayCommand(ApplySettings);
+            BrowseDatabasePathCommand = new RelayCommand(BrowseDatabasePath);
+            ResetDatabasePathCommand = new RelayCommand(ResetDatabasePath);
+            BrowseBackupDirectoryCommand = new RelayCommand(BrowseBackupDirectory);
+            TestBackupCommand = new RelayCommand(TestBackup);
+            TestAlertsCommand = new RelayCommand(TestAlerts);
+            CheckAlertsNowCommand = new RelayCommand(CheckAlertsNow);
+            RefreshPreviewCommand = new RelayCommand(RefreshPreview);
+            TestAutoRefreshCommand = new RelayCommand(TestAutoRefresh);
 
             // Charger les paramètres depuis la configuration
             LoadSettingsFromConfig();
             
             // Initialiser l'aperçu
             RefreshPreview();
-        }
-
-        private static IDatabaseService CreateDefaultDatabaseService()
-        {
-            try
-            {
-                // Utiliser le PathConfigurationService pour obtenir le chemin fixe de la base
-                var pathService = new PathConfigurationService(new ConfigurationBuilder().Build());
-                pathService.EnsureDirectoriesExist();
-                var connectionString = $"Data Source={pathService.DatabasePath}";
-                var options = new DbContextOptionsBuilder<FNEV4DbContext>()
-                    .UseSqlite(connectionString)
-                    .Options;
-                
-                var context = new FNEV4DbContext(options);
-                return new DatabaseService(context);
-            }
-            catch
-            {
-                return null!;
-            }
         }
 
         #region Méthodes publiques
@@ -1243,5 +1223,24 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Commande simple pour ce ViewModel
+    /// </summary>
+    public class SimpleCommand : ICommand
+    {
+        private readonly Action _execute;
+
+        public SimpleCommand(Action execute)
+        {
+            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+        }
+
+        public event EventHandler? CanExecuteChanged;
+
+        public bool CanExecute(object? parameter) => true;
+
+        public void Execute(object? parameter) => _execute();
     }
 }

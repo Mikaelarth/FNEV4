@@ -11,14 +11,51 @@
         <!-- Convertisseurs -->
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         
-        <!-- Animations -->
-        <Storyboard x:Key="FadeInAnimation">
-            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.5"/>
-        </Storyboard>
+        <!-- Style principal pour les cartes de cette vue -->
+        <Style x:Key="DatabaseCardStyle" TargetType="materialDesign:Card" BasedOn="{StaticResource MainCardStyle}">
+            <Setter Property="Margin" Value="0,0,0,16"/>
+            <Setter Property="Padding" Value="24"/>
+            <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth2"/>
+        </Style>
         
-        <Storyboard x:Key="SlideInAnimation">
-            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" 
-                           From="20" To="0" Duration="0:0:0.3"/>
+        <!-- Style pour les cartes de statistiques -->
+        <Style x:Key="DatabaseStatsCardStyle" TargetType="materialDesign:Card" BasedOn="{StaticResource StatsCardStyle}">
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="MinHeight" Value="140"/>
+            <Setter Property="Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
+        </Style>
+        
+        <!-- Style pour les icônes d'en-tête -->
+        <Style x:Key="HeaderIconStyle" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="24"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
+            <Setter Property="Margin" Value="0,0,12,0"/>
+        </Style>
+        
+        <!-- Style pour les boutons d'action -->
+        <Style x:Key="ActionButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="MinWidth" Value="120"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+        </Style>
+        
+        <!-- Style pour les boutons secondaires -->
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+            <Setter Property="MinWidth" Value="120"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+        </Style>
+        
+        <!-- Animation pour les cartes -->
+        <Storyboard x:Key="CardFadeIn" TargetProperty="Opacity">
+            <DoubleAnimation From="0" To="1" Duration="0:0:0.3">
+                <DoubleAnimation.EasingFunction>
+                    <QuadraticEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
         </Storyboard>
         
         <Style x:Key="SectionHeaderStyle" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignHeadline6TextBlock}">
@@ -33,84 +70,7 @@
             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
         </Style>
 
-        <Style x:Key="InfoCardStyle" TargetType="materialDesign:Card">
-            <Setter Property="Padding" Value="20"/>
-            <Setter Property="Margin" Value="0,0,0,16"/>
-            <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth2"/>
-            <Setter Property="RenderTransform">
-                <Setter.Value>
-                    <TranslateTransform/>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <EventTrigger RoutedEvent="Loaded">
-                    <BeginStoryboard Storyboard="{StaticResource SlideInAnimation}"/>
-                </EventTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="SubCardStyle" TargetType="materialDesign:Card">
-            <Setter Property="Padding" Value="15"/>
-            <Setter Property="Margin" Value="0,0,0,8"/>
-            <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth1"/>
-            <Setter Property="Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth3"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- Style pour les champs avec validation en temps réel -->
-        <Style x:Key="ValidatedTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding Path=(Validation.HasError), RelativeSource={RelativeSource Self}}" Value="True">
-                    <Setter Property="BorderBrush" Value="Red"/>
-                    <Setter Property="BorderThickness" Value="2"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Path=(Validation.HasError), RelativeSource={RelativeSource Self}}" Value="False">
-                    <Setter Property="BorderBrush" Value="Green"/>
-                    <Setter Property="BorderThickness" Value="1"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- Style pour les boutons avec animations -->
-        <Style x:Key="AnimatedButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
-            <Setter Property="RenderTransform">
-                <Setter.Value>
-                    <ScaleTransform ScaleX="1" ScaleY="1"/>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Trigger.EnterActions>
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" 
-                                               To="1.05" Duration="0:0:0.1"/>
-                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" 
-                                               To="1.05" Duration="0:0:0.1"/>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </Trigger.EnterActions>
-                    <Trigger.ExitActions>
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" 
-                                               To="1" Duration="0:0:0.1"/>
-                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" 
-                                               To="1" Duration="0:0:0.1"/>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </Trigger.ExitActions>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-    </UserControl.Resources>
-
-    <Grid Margin="24">
+    </UserControl.Resources>    <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -127,11 +87,9 @@
             
             <materialDesign:PackIcon Grid.Column="0" 
                                    Kind="Domain" 
-                                   Width="32" Height="32"
-                                   VerticalAlignment="Center"
-                                   Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                   Style="{StaticResource HeaderIconStyle}"/>
             
-            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
                 <TextBlock Text="Configuration Entreprise" 
                          FontSize="24" 
                          FontWeight="Bold"
@@ -143,7 +101,7 @@
             </StackPanel>
             
             <Button Grid.Column="2" 
-                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Style="{StaticResource SecondaryButtonStyle}"
                     VerticalAlignment="Center"
                     Command="{Binding ResetCommand}">
                 <StackPanel Orientation="Horizontal">
@@ -154,7 +112,7 @@
         </Grid>
 
         <!-- Statut Configuration avec indicateur de progression -->
-        <materialDesign:Card Grid.Row="1" Margin="0,0,0,16" Padding="20">
+        <materialDesign:Card Grid.Row="1" Style="{StaticResource DatabaseCardStyle}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -170,9 +128,7 @@
                             VerticalAlignment="Center"
                             Background="{Binding StatusColor}"/>
                     <materialDesign:PackIcon Kind="{Binding StatusIcon}" 
-                                           Width="24" Height="24"
-                                           VerticalAlignment="Center" 
-                                           Margin="0,0,12,0"
+                                           Style="{StaticResource HeaderIconStyle}"
                                            Foreground="{Binding StatusColor}"/>
                     <TextBlock Text="{Binding StatusMessage}" 
                              VerticalAlignment="Center"
@@ -217,14 +173,11 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Colonne Gauche : Informations Entreprise -->
-                <materialDesign:Card Grid.Column="0" Style="{StaticResource InfoCardStyle}">
+                <materialDesign:Card Grid.Column="0" Style="{StaticResource DatabaseCardStyle}">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
                             <materialDesign:PackIcon Kind="OfficeBuilding" 
-                                                   Width="24" Height="24"
-                                                   VerticalAlignment="Center" 
-                                                   Margin="0,0,12,0" 
-                                                   Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                                   Style="{StaticResource HeaderIconStyle}"/>
                             <TextBlock Text="Informations Entreprise" 
                                      Style="{StaticResource SectionHeaderStyle}"
                                      Margin="0"/>
@@ -254,7 +207,7 @@
                                          MaxLength="8"
                                          FontFamily="Consolas"
                                          FontSize="14"
-                                         Style="{StaticResource ValidatedTextBoxStyle}">
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}">
                                     <TextBox.InputBindings>
                                         <KeyBinding Key="Enter" Command="{Binding ValidateNccCommand}"/>
                                     </TextBox.InputBindings>
@@ -411,7 +364,7 @@
                                 </StackPanel>
                                 <TextBox Text="{Binding PhoneNumber, UpdateSourceTrigger=PropertyChanged}"
                                          materialDesign:HintAssist.Hint="Ex: +225 01 23 45 67 89"
-                                         Style="{StaticResource ValidatedTextBoxStyle}"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                          MaxLength="20">
                                     <TextBox.InputBindings>
                                         <KeyBinding Key="Enter" Command="{Binding FormatPhoneCommand}"/>
@@ -442,7 +395,7 @@
                                 </StackPanel>
                                 <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
                                          materialDesign:HintAssist.Hint="Ex: contact@entreprise.ci"
-                                         Style="{StaticResource ValidatedTextBoxStyle}"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                          MaxLength="100"/>
                                 <!-- Message de validation email -->
                                 <TextBlock Text="{Binding EmailValidationMessage}"
@@ -463,14 +416,11 @@
                 <!-- Colonne Droite : Points de Vente et Actions -->
                 <StackPanel Grid.Column="2">
                     <!-- Point de vente simplifié - Aligné DGI -->
-                    <materialDesign:Card Style="{StaticResource InfoCardStyle}">
+                    <materialDesign:Card Style="{StaticResource DatabaseCardStyle}">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                                 <materialDesign:PackIcon Kind="Store" 
-                                                       Width="24" Height="24"
-                                                       VerticalAlignment="Center" 
-                                                       Margin="0,0,12,0" 
-                                                       Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                                       Style="{StaticResource HeaderIconStyle}"/>
                                 <StackPanel>
                                     <TextBlock Text="Point de vente" 
                                              Style="{StaticResource SectionHeaderStyle}"
@@ -484,7 +434,7 @@
                             <!-- Champ point de vente simple -->
                             <TextBox Text="{Binding DefaultPointOfSale, UpdateSourceTrigger=PropertyChanged}"
                                      materialDesign:HintAssist.Hint="Point de vente (ex: 23, Station IDC Williamsville, Boutique Promo Plus)"
-                                     Style="{StaticResource ValidatedTextBoxStyle}"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      Margin="0,0,0,8"/>
                             
                             <!-- Message de validation -->
@@ -520,21 +470,18 @@
                     </materialDesign:Card>
 
                     <!-- Actions principales avec options avancées -->
-                    <materialDesign:Card Style="{StaticResource InfoCardStyle}">
+                    <materialDesign:Card Style="{StaticResource DatabaseCardStyle}">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                                 <materialDesign:PackIcon Kind="ContentSave" 
-                                                       Width="24" Height="24"
-                                                       VerticalAlignment="Center" 
-                                                       Margin="0,0,12,0" 
-                                                       Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                                       Style="{StaticResource HeaderIconStyle}"/>
                                 <TextBlock Text="Actions" 
                                          Style="{StaticResource SectionHeaderStyle}"
                                          Margin="0"/>
                             </StackPanel>
                             
                             <!-- Bouton principal de sauvegarde -->
-                            <Button Style="{StaticResource AnimatedButtonStyle}"
+                            <Button Style="{StaticResource ActionButtonStyle}"
                                     Command="{Binding SaveCommand}"
                                     IsEnabled="{Binding CanSave}"
                                     Height="56"
@@ -568,7 +515,7 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <Button Grid.Column="0"
-                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Style="{StaticResource SecondaryButtonStyle}"
                                         Command="{Binding ExportConfigurationCommand}"
                                         Height="40">
                                     <StackPanel Orientation="Horizontal">
@@ -581,7 +528,7 @@
                                 </Button>
                                 
                                 <Button Grid.Column="2"
-                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Style="{StaticResource SecondaryButtonStyle}"
                                         Command="{Binding ImportConfigurationCommand}"
                                         Height="40">
                                     <StackPanel Orientation="Horizontal">
@@ -619,15 +566,11 @@
                     </materialDesign:Card>
 
                     <!-- Informations importantes avec design interactif -->
-                    <materialDesign:Card Style="{StaticResource InfoCardStyle}"
-                                       Background="{DynamicResource MaterialDesignCardBackground}">
+                    <materialDesign:Card Style="{StaticResource DatabaseCardStyle}">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                                 <materialDesign:PackIcon Kind="InformationVariant" 
-                                                       Width="24" Height="24"
-                                                       VerticalAlignment="Center" 
-                                                       Margin="0,0,12,0"
-                                                       Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                                       Style="{StaticResource HeaderIconStyle}"/>
                                 <TextBlock Text="Guide &amp; Assistance" 
                                          Style="{StaticResource SectionHeaderStyle}"
                                          Margin="0"/>

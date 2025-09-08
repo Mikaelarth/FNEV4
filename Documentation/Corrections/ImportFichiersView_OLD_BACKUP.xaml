@@ -1,0 +1,178 @@
+<UserControl x:Class="FNEV4.Presentation.Views.ImportTraitement.ImportFichiersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:FNEV4.Presentation.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="900">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisConverter"/>
+        
+        <!-- Styles -->
+        <Style x:Key="SectionHeaderStyle" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignHeadline6TextBlock}">
+            <Setter Property="Margin" Value="0,0,0,15"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        
+        <Style x:Key="ImportCardStyle" TargetType="materialDesign:Card">
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+            <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth3"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tête moderne avec icône -->
+        <Grid Grid.Row="0" Margin="0,0,0,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <materialDesign:PackIcon Grid.Column="0" 
+                                   Kind="FileImport" 
+                                   Width="32" Height="32"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+            
+            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="Import de Factures" 
+                         FontSize="24" 
+                         FontWeight="Bold"
+                         Foreground="{DynamicResource MaterialDesignBody}"/>
+                <TextBlock Text="Sélectionnez le type d'import adapté à vos fichiers de factures" 
+                         FontSize="14" 
+                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                         Margin="0,4,0,0"/>
+            </StackPanel>
+            
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                        VerticalAlignment="Center"
+                        Margin="0,0,8,0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="History" Width="16" Height="16" Margin="0,0,8,0"/>
+                        <TextBlock Text="Historique"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                        VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="HelpCircle" Width="16" Height="16" Margin="0,0,8,0"/>
+                        <TextBlock Text="Aide"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Résumé de statut global -->
+        <materialDesign:Card Grid.Row="1" Margin="0,0,0,16" Padding="20">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="Information" 
+                                       Width="24" Height="24"
+                                       VerticalAlignment="Center" 
+                                       Margin="0,0,12,0"
+                                       Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="2 types d'import de factures disponibles" 
+                             Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                             FontWeight="Medium"/>
+                    <TextBlock Text="Choisissez entre le format standard professionnel ou le format spécifique Sage 100 v15" 
+                             Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                             Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                </StackPanel>
+            </StackPanel>
+        </materialDesign:Card>
+
+        <!-- Zone de contenu avec les types d'import -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding ImportTypes}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <materialDesign:Card Style="{StaticResource ImportCardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <materialDesign:PackIcon Grid.Column="0" 
+                                                       Kind="{Binding Icon}" 
+                                                       Width="48" Height="48"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{Binding Color}"
+                                                       Margin="0,0,16,0"/>
+                                
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0"
+                                                 Text="{Binding Title}" 
+                                                 Style="{StaticResource SectionHeaderStyle}"
+                                                 Margin="0,0,0,4"/>
+                                        
+                                        <Border Grid.Column="1" 
+                                              Background="{Binding StatusColor}" 
+                                              CornerRadius="10"
+                                              Padding="8,2"
+                                              VerticalAlignment="Top">
+                                            <TextBlock Text="{Binding Status}" 
+                                                     Foreground="White" 
+                                                     FontSize="10"
+                                                     FontWeight="Medium"/>
+                                        </Border>
+                                    </Grid>
+                                    
+                                    <TextBlock Text="{Binding Description}" 
+                                             Style="{StaticResource MaterialDesignBody1TextBlock}"
+                                             Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                             TextWrapping="Wrap"
+                                             Margin="0,0,0,8"/>
+                                    
+                                    <TextBlock Text="{Binding SupportedFormats}" 
+                                             Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                             Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                             FontStyle="Italic"/>
+                                </StackPanel>
+                                
+                                <Button Grid.Column="2" 
+                                      Content="{Binding ButtonText}"
+                                      Style="{StaticResource MaterialDesignRaisedButton}"
+                                      Background="{Binding Color}"
+                                      BorderBrush="{Binding Color}"
+                                      Command="{Binding DataContext.OpenImportCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                      CommandParameter="{Binding Type}"
+                                      VerticalAlignment="Center"
+                                      Width="140"
+                                      Height="36"/>
+                            </Grid>
+                        </materialDesign:Card>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

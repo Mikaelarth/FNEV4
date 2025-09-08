@@ -12,6 +12,7 @@ using FNEV4.Infrastructure.Data;
 using FNEV4.Infrastructure.Services;
 using FNEV4.Presentation.Services;
 using FNEV4.Core.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FNEV4.Presentation.ViewModels.Maintenance
 {
@@ -23,6 +24,7 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
         private readonly IDatabaseService _databaseService;
         private readonly IDatabaseConfigurationNotificationService? _notificationService;
         private readonly IPathConfigurationService _pathConfigurationService = null!;
+        private readonly IServiceProvider? _serviceProvider;
 
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -174,11 +176,12 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             InitializeCommands();
         }
 
-        public BaseDonneesViewModel(IDatabaseService databaseService, IDatabaseConfigurationNotificationService? notificationService = null, IPathConfigurationService pathConfigurationService = null)
+        public BaseDonneesViewModel(IDatabaseService databaseService, IDatabaseConfigurationNotificationService? notificationService = null, IPathConfigurationService pathConfigurationService = null, IServiceProvider? serviceProvider = null)
         {
             _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
             _notificationService = notificationService;
             _pathConfigurationService = pathConfigurationService ?? App.GetService<IPathConfigurationService>();
+            _serviceProvider = serviceProvider ?? App.ServiceProvider;
             
             // Initialiser le chemin de base de données depuis le service centralisé
             DatabasePath = _pathConfigurationService.DatabasePath;
@@ -312,7 +315,10 @@ namespace FNEV4.Presentation.ViewModels.Maintenance
             try
             {
                 var settingsDialog = new Views.Maintenance.DatabaseSettingsDialog();
-                var settingsViewModel = new DatabaseSettingsViewModel(_databaseService);
+                
+                // Utiliser l'injection de dépendances au lieu de créer directement l'instance
+                var settingsViewModel = _serviceProvider?.GetService<DatabaseSettingsViewModel>() 
+                                     ?? new DatabaseSettingsViewModel(_databaseService);
                 
                 settingsDialog.DataContext = settingsViewModel;
                 settingsViewModel.SetDialogWindow(settingsDialog);

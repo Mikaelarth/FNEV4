@@ -26,6 +26,7 @@ namespace FNEV4.Presentation.ViewModels.Configuration
     public class ApiFneConfigViewModel : INotifyPropertyChanged
     {
         private readonly IDatabaseService _databaseService;
+        private readonly FNEV4DbContext _context;
         private readonly HttpClient _httpClient;
 
         #region Properties - Configuration FNE
@@ -282,9 +283,10 @@ namespace FNEV4.Presentation.ViewModels.Configuration
 
         #region Constructor
 
-        public ApiFneConfigViewModel(IDatabaseService? databaseService = null)
+        public ApiFneConfigViewModel(IDatabaseService? databaseService = null, FNEV4DbContext? context = null)
         {
             _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
+            _context = context ?? throw new ArgumentNullException(nameof(context));
             _httpClient = new HttpClient();
 
             InitializeCollections();
@@ -552,66 +554,51 @@ namespace FNEV4.Presentation.ViewModels.Configuration
                     ModifiedBy = "System"
                 };
 
-                // Utiliser la chaîne de connexion configurée pour créer un contexte
-                var connectionString = _databaseService.GetConnectionString();
-                
-                if (string.IsNullOrWhiteSpace(connectionString))
+                // Utiliser le contexte EF injecté directement
+                // Vérifier si une configuration avec ce nom existe déjà
+                var existingConfig = await _context.FneConfigurations
+                    .FirstOrDefaultAsync(c => c.ConfigurationName == config.ConfigurationName);
+
+                if (existingConfig != null)
                 {
-                    StatusMessage = "❌ Aucune base de données configurée";
-                    ShowNotification("❌ Aucune base de données configurée", false);
-                    return;
+                    // Mettre à jour la configuration existante
+                    existingConfig.Environment = config.Environment;
+                    existingConfig.BaseUrl = config.BaseUrl;
+                    existingConfig.WebUrl = config.WebUrl;
+                    existingConfig.ApiKey = config.ApiKey;
+                    existingConfig.BearerToken = config.BearerToken;
+                    existingConfig.SupportEmail = config.SupportEmail;
+                    existingConfig.RequestTimeoutSeconds = config.RequestTimeoutSeconds;
+                    existingConfig.MaxRetryAttempts = config.MaxRetryAttempts;
+                    existingConfig.RetryDelaySeconds = config.RetryDelaySeconds;
+                    existingConfig.IsActive = config.IsActive;
+                    existingConfig.IsValidatedByDgi = config.IsValidatedByDgi;
+                    existingConfig.ValidationDate = config.ValidationDate;
+                    existingConfig.LastModifiedDate = config.LastModifiedDate;
+                    existingConfig.ModifiedBy = config.ModifiedBy;
+                    
+                    _context.FneConfigurations.Update(existingConfig);
+                }
+                else
+                {
+                    // Ajouter une nouvelle configuration
+                    _context.FneConfigurations.Add(config);
                 }
 
-                var optionsBuilder = new DbContextOptionsBuilder<FNEV4DbContext>();
-                optionsBuilder.UseSqlite(connectionString);
-
-                using (var context = new FNEV4DbContext(optionsBuilder.Options))
-                {
-                    // Vérifier si une configuration avec ce nom existe déjà
-                    var existingConfig = await context.FneConfigurations
-                        .FirstOrDefaultAsync(c => c.ConfigurationName == config.ConfigurationName);
-
-                    if (existingConfig != null)
-                    {
-                        // Mettre à jour la configuration existante
-                        existingConfig.Environment = config.Environment;
-                        existingConfig.BaseUrl = config.BaseUrl;
-                        existingConfig.WebUrl = config.WebUrl;
-                        existingConfig.ApiKey = config.ApiKey;
-                        existingConfig.BearerToken = config.BearerToken;
-                        existingConfig.SupportEmail = config.SupportEmail;
-                        existingConfig.RequestTimeoutSeconds = config.RequestTimeoutSeconds;
-                        existingConfig.MaxRetryAttempts = config.MaxRetryAttempts;
-                        existingConfig.RetryDelaySeconds = config.RetryDelaySeconds;
-                        existingConfig.IsActive = config.IsActive;
-                        existingConfig.IsValidatedByDgi = config.IsValidatedByDgi;
-                        existingConfig.ValidationDate = config.ValidationDate;
-                        existingConfig.LastModifiedDate = config.LastModifiedDate;
-                        existingConfig.ModifiedBy = config.ModifiedBy;
-                        
-                        context.FneConfigurations.Update(existingConfig);
-                    }
-                    else
-                    {
-                        // Ajouter une nouvelle configuration
-                        context.FneConfigurations.Add(config);
-                    }
-
-                    var changesCount = await context.SaveChangesAsync();
+                var changesCount = await _context.SaveChangesAsync();
                     
-                    if (changesCount > 0)
-                    {
-                        StatusMessage = "✅ Configuration sauvegardée avec succès";
-                        ShowNotification("💾 Configuration API FNE sauvegardée avec succès !", true);
-                        
-                        // Recharger les configurations disponibles
-                        await LoadAvailableConfigurationsAsync();
-                    }
-                    else
-                    {
-                        StatusMessage = "⚠️ Aucune modification détectée";
-                        ShowNotification("⚠️ Aucune modification n'a été détectée", false);
-                    }
+                if (changesCount > 0)
+                {
+                    StatusMessage = "✅ Configuration sauvegardée avec succès";
+                    ShowNotification("💾 Configuration API FNE sauvegardée avec succès !", true);
+                    
+                    // Recharger les configurations disponibles
+                    await LoadAvailableConfigurationsAsync();
+                }
+                else
+                {
+                    StatusMessage = "⚠️ Aucune modification détectée";
+                    ShowNotification("⚠️ Aucune modification n'a été détectée", false);
                 }
             }
             catch (Exception ex)
@@ -1019,26 +1006,14 @@ namespace FNEV4.Presentation.ViewModels.Configuration
 
                 StatusMessage = "🗑️ Suppression en cours...";
 
-                var connectionString = _databaseService.GetConnectionString();
-                if (string.IsNullOrWhiteSpace(connectionString))
+                // Utiliser le contexte EF injecté directement
+                var configToDelete = await _context.FneConfigurations
+                    .FirstOrDefaultAsync(c => c.ConfigurationName == ConfigurationName);
+
+                if (configToDelete != null)
                 {
-                    StatusMessage = "❌ Aucune base de données configurée";
-                    ShowNotification("❌ Aucune base de données configurée", false);
-                    return;
-                }
-
-                var optionsBuilder = new DbContextOptionsBuilder<FNEV4DbContext>();
-                optionsBuilder.UseSqlite(connectionString);
-
-                using (var context = new FNEV4DbContext(optionsBuilder.Options))
-                {
-                    var configToDelete = await context.FneConfigurations
-                        .FirstOrDefaultAsync(c => c.ConfigurationName == ConfigurationName);
-
-                    if (configToDelete != null)
-                    {
-                        context.FneConfigurations.Remove(configToDelete);
-                        var changesCount = await context.SaveChangesAsync();
+                    _context.FneConfigurations.Remove(configToDelete);
+                    var changesCount = await _context.SaveChangesAsync();
 
                         if (changesCount > 0)
                         {
@@ -1064,23 +1039,22 @@ namespace FNEV4.Presentation.ViewModels.Configuration
                             ValidateAllFields();
                             CalculateConfigurationProgress();
 
-                            // Recharger la liste des configurations
-                            await LoadAvailableConfigurationsAsync();
+                        // Recharger la liste des configurations
+                        await LoadAvailableConfigurationsAsync();
 
-                            // Rafraîchir les commandes
-                            RefreshCommandCanExecute();
-                        }
-                        else
-                        {
-                            StatusMessage = "⚠️ Suppression échouée";
-                            ShowNotification("⚠️ La suppression n'a pas pu être effectuée", false);
-                        }
+                        // Rafraîchir les commandes
+                        RefreshCommandCanExecute();
                     }
                     else
                     {
-                        StatusMessage = "❌ Configuration introuvable";
-                        ShowNotification($"❌ Configuration '{ConfigurationName}' introuvable en base", false);
+                        StatusMessage = "⚠️ Suppression échouée";
+                        ShowNotification("⚠️ La suppression n'a pas pu être effectuée", false);
                     }
+                }
+                else
+                {
+                    StatusMessage = "❌ Configuration introuvable";
+                    ShowNotification($"❌ Configuration '{ConfigurationName}' introuvable en base", false);
                 }
             }
             catch (Exception ex)
@@ -1102,64 +1076,52 @@ namespace FNEV4.Presentation.ViewModels.Configuration
                 // Nettoyer le nom de configuration (enlever les suffixes comme "(Actif)")
                 var cleanConfigName = configName.Replace(" (Actif)", "").Trim();
                 
-                var connectionString = _databaseService.GetConnectionString();
-                if (string.IsNullOrWhiteSpace(connectionString))
+                // Utiliser le contexte EF injecté directement
+                var config = await _context.FneConfigurations
+                    .FirstOrDefaultAsync(c => c.ConfigurationName == cleanConfigName);
+
+                if (config != null)
                 {
-                    StatusMessage = "❌ Aucune base de données configurée";
-                    return;
+                    // Charger les données dans le ViewModel
+                    ConfigurationName = config.ConfigurationName;
+                    Environment = config.Environment ?? "Test";
+                    BaseUrl = config.BaseUrl ?? "";
+                    WebUrl = config.WebUrl ?? "";
+                    ApiKey = config.ApiKey ?? "";
+                    BearerToken = config.BearerToken ?? "";
+                    SupportEmail = config.SupportEmail ?? "";
+                    RequestTimeoutSeconds = config.RequestTimeoutSeconds;
+                    MaxRetryAttempts = config.MaxRetryAttempts;
+                    RetryDelaySeconds = config.RetryDelaySeconds;
+                    IsActive = config.IsActive;
+                    IsValidatedByDgi = config.IsValidatedByDgi;
+                    ValidationDate = config.ValidationDate;
+
+                    StatusMessage = $"✅ Configuration '{cleanConfigName}' chargée";
+                    ShowNotification($"📥 Configuration '{cleanConfigName}' chargée avec succès !", true);
                 }
-
-                var optionsBuilder = new DbContextOptionsBuilder<FNEV4DbContext>();
-                optionsBuilder.UseSqlite(connectionString);
-
-                using (var context = new FNEV4DbContext(optionsBuilder.Options))
+                else
                 {
-                    var config = await context.FneConfigurations
-                        .FirstOrDefaultAsync(c => c.ConfigurationName == cleanConfigName);
-
-                    if (config != null)
+                    // Fallback pour les configurations prédéfinies
+                    if (cleanConfigName == "Test DGI")
                     {
-                        // Charger les données dans le ViewModel
-                        ConfigurationName = config.ConfigurationName;
-                        Environment = config.Environment ?? "Test";
-                        BaseUrl = config.BaseUrl ?? "";
-                        WebUrl = config.WebUrl ?? "";
-                        ApiKey = config.ApiKey ?? "";
-                        BearerToken = config.BearerToken ?? "";
-                        SupportEmail = config.SupportEmail ?? "";
-                        RequestTimeoutSeconds = config.RequestTimeoutSeconds;
-                        MaxRetryAttempts = config.MaxRetryAttempts;
-                        RetryDelaySeconds = config.RetryDelaySeconds;
-                        IsActive = config.IsActive;
-                        IsValidatedByDgi = config.IsValidatedByDgi;
-                        ValidationDate = config.ValidationDate;
-
-                        StatusMessage = $"✅ Configuration '{cleanConfigName}' chargée";
-                        ShowNotification($"📥 Configuration '{cleanConfigName}' chargée avec succès !", true);
+                        ConfigurationName = "Test DGI";
+                        Environment = "Test";
+                        BaseUrl = "http://54.247.95.108/ws";
+                        WebUrl = "http://54.247.95.108";
+                        SupportEmail = "support.fne@dgi.gouv.ci";
+                        ApiKey = "";
+                        BearerToken = "";
+                        IsActive = true;
+                        IsValidatedByDgi = false;
+                        
+                        StatusMessage = $"✅ Configuration prédéfinie '{cleanConfigName}' chargée";
+                        ShowNotification($"📥 Configuration prédéfinie '{cleanConfigName}' chargée !", true);
                     }
                     else
                     {
-                        // Fallback pour les configurations prédéfinies
-                        if (cleanConfigName == "Test DGI")
-                        {
-                            ConfigurationName = "Test DGI";
-                            Environment = "Test";
-                            BaseUrl = "http://54.247.95.108/ws";
-                            WebUrl = "http://54.247.95.108";
-                            SupportEmail = "support.fne@dgi.gouv.ci";
-                            ApiKey = "";
-                            BearerToken = "";
-                            IsActive = true;
-                            IsValidatedByDgi = false;
-                            
-                            StatusMessage = $"✅ Configuration prédéfinie '{cleanConfigName}' chargée";
-                            ShowNotification($"📥 Configuration prédéfinie '{cleanConfigName}' chargée !", true);
-                        }
-                        else
-                        {
-                            StatusMessage = $"❌ Configuration '{cleanConfigName}' introuvable";
-                            ShowNotification($"❌ Configuration '{cleanConfigName}' introuvable", false);
-                        }
+                        StatusMessage = $"❌ Configuration '{cleanConfigName}' introuvable";
+                        ShowNotification($"❌ Configuration '{cleanConfigName}' introuvable", false);
                     }
                 }
 
@@ -1210,37 +1172,28 @@ namespace FNEV4.Presentation.ViewModels.Configuration
                 // Toujours ajouter les configurations par défaut
                 allConfigurations.AddRange(new[] { "Test DGI", "Production DGI" });
                 
-                var connectionString = _databaseService.GetConnectionString();
-                if (!string.IsNullOrWhiteSpace(connectionString))
+                // Utiliser le contexte EF injecté directement
+                var configs = await _context.FneConfigurations
+                    .OrderByDescending(c => c.LastModifiedDate)
+                    .Select(c => new { c.ConfigurationName, c.IsActive })
+                    .ToListAsync();
+
+                // Ajouter les configurations de base de données (non par défaut)
+                var dbConfigs = configs
+                    .Where(c => !allConfigurations.Contains(c.ConfigurationName))
+                    .Select(c => c.IsActive ? $"{c.ConfigurationName} (Actif)" : c.ConfigurationName)
+                    .ToList();
+                
+                allConfigurations.AddRange(dbConfigs);
+                
+                // Marquer les configurations par défaut comme actives si elles existent en base
+                for (int i = 0; i < allConfigurations.Count; i++)
                 {
-                    var optionsBuilder = new DbContextOptionsBuilder<FNEV4DbContext>();
-                    optionsBuilder.UseSqlite(connectionString);
-
-                    using (var context = new FNEV4DbContext(optionsBuilder.Options))
+                    var configName = allConfigurations[i];
+                    var dbConfig = configs.FirstOrDefault(c => c.ConfigurationName == configName);
+                    if (dbConfig != null && dbConfig.IsActive && !configName.Contains("(Actif)"))
                     {
-                        var configs = await context.FneConfigurations
-                            .OrderByDescending(c => c.LastModifiedDate)
-                            .Select(c => new { c.ConfigurationName, c.IsActive })
-                            .ToListAsync();
-
-                        // Ajouter les configurations de base de données (non par défaut)
-                        var dbConfigs = configs
-                            .Where(c => !allConfigurations.Contains(c.ConfigurationName))
-                            .Select(c => c.IsActive ? $"{c.ConfigurationName} (Actif)" : c.ConfigurationName)
-                            .ToList();
-                        
-                        allConfigurations.AddRange(dbConfigs);
-                        
-                        // Marquer les configurations par défaut comme actives si elles existent en base
-                        for (int i = 0; i < allConfigurations.Count; i++)
-                        {
-                            var configName = allConfigurations[i];
-                            var dbConfig = configs.FirstOrDefault(c => c.ConfigurationName == configName);
-                            if (dbConfig != null && dbConfig.IsActive && !configName.Contains("(Actif)"))
-                            {
-                                allConfigurations[i] = $"{configName} (Actif)";
-                            }
-                        }
+                        allConfigurations[i] = $"{configName} (Actif)";
                     }
                 }
 

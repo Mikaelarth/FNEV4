@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FNEV4.Application.Services.ImportTraitement;
 using FNEV4.Core.Models.ImportTraitement;
+using FNEV4.Core.Interfaces;
 using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
@@ -21,9 +22,7 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
     public partial class Sage100ImportViewModel : ObservableObject
     {
         private readonly ISage100ImportService _sage100ImportService;
-
-        // Référence à la fenêtre pour pouvoir la fermer
-        public Window? ParentWindow { get; set; }
+        private readonly IPathConfigurationService _pathService;
 
         #region Properties
 
@@ -131,6 +130,17 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         public bool CanImport => HasValidationResult && PreviewFactures.Any(f => f.EstValide);
         public bool CanExecuteImport => CanImport && !IsProcessing;
 
+        // Intégration avec la configuration des dossiers
+        public string ImportFolderPath => _pathService?.ImportFolderPath ?? "Non configuré";
+        public string ExportFolderPath => _pathService?.ExportFolderPath ?? "Non configuré";
+        public string ArchiveFolderPath => _pathService?.ArchiveFolderPath ?? "Non configuré";
+
+        [ObservableProperty]
+        private bool _autoArchiveEnabled = true;
+
+        [ObservableProperty]
+        private bool _hasConfiguredFolders = false;
+
         private Sage100ValidationResult? _lastValidation;
         private Sage100ImportResult? _lastImportResult;
 
@@ -138,9 +148,10 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
 
         #region Constructor
 
-        public Sage100ImportViewModel(ISage100ImportService sage100ImportService)
+        public Sage100ImportViewModel(ISage100ImportService sage100ImportService, IPathConfigurationService pathService)
         {
             _sage100ImportService = sage100ImportService;
+            _pathService = pathService;
         }
 
         #endregion
@@ -317,6 +328,12 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             {
                 _lastImportResult = await _sage100ImportService.ImportSage100FileAsync(SelectedFilePath);
                 
+                // Post-traitement avec intégration des dossiers configurés
+                if (_lastImportResult.IsSuccess && _lastImportResult.FacturesImportees > 0 && AutoArchiveEnabled)
+                {
+                    await ArchiveProcessedFile(SelectedFilePath, _lastImportResult);
+                }
+                
                 UpdateImportResultUI(_lastImportResult);
                 
                 ImportedFactures.Clear();
@@ -385,29 +402,8 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         [RelayCommand]
         private void GoBack()
         {
-            // Fermer la fenêtre pour retourner au menu principal
-            try
-            {
-                ParentWindow?.Close();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur lors de la fermeture : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-
-        [RelayCommand]
-        private void CloseWindow()
-        {
-            // Commande explicite pour fermer la fenêtre
-            try
-            {
-                ParentWindow?.Close();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur lors de la fermeture : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            // TODO: Implémenter la navigation retour
+            // Peut fermer la fenêtre ou naviguer vers le menu principal
         }
 
         [RelayCommand]
@@ -432,6 +428,77 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 "Aide - Import Sage 100 v15",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
+        }
+
+        [RelayCommand]
+        private async Task ScanImportFolder()
+        {
+            try
+            {
+                var importPath = _pathService.ImportFolderPath;
+                
+                if (!Directory.Exists(importPath))
+                {
+                    MessageBox.Show($"Le dossier d'import n'existe pas :\n{importPath}\n\nVeuillez configurer les chemins dans 'Configuration > Chemins & Dossiers'", 
+                                  "Dossier introuvable", 
+                                  MessageBoxButton.OK, 
+                                  MessageBoxImage.Warning);
+                    return;
+                }
+
+                var excelFiles = Directory.GetFiles(importPath, "*.xlsx");
+                
+                if (excelFiles.Length == 0)
+                {
+                    MessageBox.Show($"Aucun fichier Excel trouvé dans :\n{importPath}", 
+                                  "Dossier vide", 
+                                  MessageBoxButton.OK, 
+                                  MessageBoxImage.Information);
+                    return;
+                }
+
+                var result = MessageBox.Show(
+                    $"📁 Dossier d'import : {importPath}\n\n" +
+                    $"🔍 {excelFiles.Length} fichier(s) Excel trouvé(s)\n\n" +
+                    "Voulez-vous traiter automatiquement tous ces fichiers ?\n\n" +
+                    "⚠️ Cette opération va :\n" +
+                    "• Traiter chaque fichier selon le format Sage 100 v15\n" +
+                    "• Archiver automatiquement les fichiers traités\n" +
+                    "• Générer des logs détaillés",
+                    "Import automatique depuis dossier configuré",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    await ProcessAllFilesInImportFolder(excelFiles);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du scan du dossier d'import :\n{ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand]
+        private void OpenConfiguredFolders()
+        {
+            try
+            {
+                var importPath = _pathService.ImportFolderPath;
+                if (Directory.Exists(importPath))
+                {
+                    System.Diagnostics.Process.Start("explorer.exe", importPath);
+                }
+                else
+                {
+                    MessageBox.Show($"Le dossier d'import n'existe pas :\n{importPath}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Impossible d'ouvrir le dossier :\n{ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         #endregion
@@ -571,6 +638,140 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             OnPropertyChanged(nameof(HasSelectedFile));
             OnPropertyChanged(nameof(CanImport));
             OnPropertyChanged(nameof(CanExecuteImport));
+        }
+
+        private async Task ProcessAllFilesInImportFolder(string[] files)
+        {
+            IsProcessing = true;
+            var totalFiles = files.Length;
+            var successCount = 0;
+            var failureCount = 0;
+            var totalInvoices = 0;
+
+            try
+            {
+                foreach (var file in files)
+                {
+                    try
+                    {
+                        var fileName = Path.GetFileName(file);
+                        ValidationMessage = $"Traitement de {fileName}...";
+                        ValidationDetails = $"Fichier {Array.IndexOf(files, file) + 1}/{totalFiles}";
+
+                        var result = await _sage100ImportService.ImportSage100FileAsync(file);
+                        
+                        if (result.IsSuccess && result.FacturesImportees > 0)
+                        {
+                            successCount++;
+                            totalInvoices += result.FacturesImportees;
+                            
+                            // Archivage automatique si activé
+                            if (AutoArchiveEnabled)
+                            {
+                                await ArchiveProcessedFile(file, result);
+                            }
+                        }
+                        else
+                        {
+                            failureCount++;
+                            await MoveToErrorFolder(file, result.Message);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        failureCount++;
+                        await MoveToErrorFolder(file, ex.Message);
+                    }
+                }
+
+                // Affichage du résultat final
+                var message = $"Traitement terminé !\n\n" +
+                             $"✅ {successCount} fichier(s) traité(s) avec succès\n" +
+                             $"❌ {failureCount} fichier(s) en erreur\n" +
+                             $"📄 {totalInvoices} facture(s) importée(s) au total";
+
+                MessageBox.Show(message, "Import automatique terminé", MessageBoxButton.OK, 
+                              successCount > 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
+            }
+            finally
+            {
+                IsProcessing = false;
+                ValidationMessage = "";
+                ValidationDetails = "";
+            }
+        }
+
+        private async Task ArchiveProcessedFile(string filePath, Sage100ImportResult result)
+        {
+            try
+            {
+                var fileName = Path.GetFileName(filePath);
+                var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+                var archiveFileName = $"{timestamp}_{result.FacturesImportees}factures_{fileName}";
+                var archivePath = Path.Combine(_pathService.ArchiveFolderPath, archiveFileName);
+
+                // Créer le dossier d'archive s'il n'existe pas
+                Directory.CreateDirectory(_pathService.ArchiveFolderPath);
+
+                // Déplacer le fichier vers l'archive
+                File.Move(filePath, archivePath);
+
+                // Créer un fichier de log associé
+                var logFileName = Path.ChangeExtension(archiveFileName, ".log");
+                var logPath = Path.Combine(_pathService.LogsFolderPath, logFileName);
+                
+                Directory.CreateDirectory(_pathService.LogsFolderPath);
+                
+                var logContent = $"Import automatique - {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n" +
+                               $"Fichier source: {fileName}\n" +
+                               $"Factures importées: {result.FacturesImportees}\n" +
+                               $"Factures échouées: {result.FacturesEchouees}\n" +
+                               $"Durée: {result.DureeTraitement.TotalSeconds:F1}s\n" +
+                               $"Archivé vers: {archivePath}\n";
+
+                if (result.Errors.Any())
+                {
+                    logContent += $"\nErreurs:\n{string.Join("\n", result.Errors)}";
+                }
+
+                await File.WriteAllTextAsync(logPath, logContent);
+            }
+            catch (Exception ex)
+            {
+                // Log silencieux - ne pas perturber le processus principal
+                System.Diagnostics.Debug.WriteLine($"Erreur archivage : {ex.Message}");
+            }
+        }
+
+        private async Task MoveToErrorFolder(string filePath, string errorMessage)
+        {
+            try
+            {
+                var fileName = Path.GetFileName(filePath);
+                var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+                var errorFileName = $"{timestamp}_ERREUR_{fileName}";
+                var errorFolderPath = Path.Combine(_pathService.ArchiveFolderPath, "Erreurs");
+                var errorFilePath = Path.Combine(errorFolderPath, errorFileName);
+
+                // Créer le dossier d'erreur
+                Directory.CreateDirectory(errorFolderPath);
+
+                // Déplacer le fichier en erreur
+                File.Move(filePath, errorFilePath);
+
+                // Créer un fichier d'erreur détaillé
+                var errorLogPath = Path.ChangeExtension(errorFilePath, ".error.log");
+                var errorLogContent = $"Erreur d'import - {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n" +
+                                    $"Fichier: {fileName}\n" +
+                                    $"Erreur: {errorMessage}\n" +
+                                    $"Fichier déplacé vers: {errorFilePath}\n";
+
+                await File.WriteAllTextAsync(errorLogPath, errorLogContent);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur déplacement fichier erreur : {ex.Message}");
+            }
         }
 
         #endregion

@@ -2,6 +2,8 @@ using ClosedXML.Excel;
 using FNEV4.Application.Services.ImportTraitement;
 using FNEV4.Core.Models.ImportTraitement;
 using FNEV4.Core.Interfaces;
+using FNEV4.Core.Entities;
+using FNEV4.Infrastructure.Data;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -18,10 +20,17 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
     public class Sage100ImportService : ISage100ImportService
     {
         private readonly IClientRepository _clientRepository;
+        private readonly FNEV4DbContext _context;
+        private readonly ILoggingService _loggingService;
 
-        public Sage100ImportService(IClientRepository clientRepository)
+        public Sage100ImportService(
+            IClientRepository clientRepository, 
+            FNEV4DbContext context,
+            ILoggingService loggingService)
         {
             _clientRepository = clientRepository;
+            _context = context;
+            _loggingService = loggingService;
         }
         public async Task<Sage100ImportResult> ImportSage100FileAsync(string filePath)
         {
@@ -49,8 +58,22 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                         var factureData = await ParseFactureFromWorksheetAsync(worksheet);
                         if (factureData != null)
                         {
-                            // TODO: Intégrer en base de données
-                            // await _factureService.CreateFactureAsync(factureData);
+                            // TODO CRITIQUE: INTÉGRER EN BASE DE DONNÉES
+                            // PROBLÈME IDENTIFIÉ: Les factures ne sont pas sauvegardées !
+                            // SOLUTION: Implémenter ConvertToFneInvoiceAsync avec les bonnes entités
+                            // 
+                            // var fneInvoice = await ConvertToFneInvoiceAsync(factureData, worksheet.Name);
+                            // if (fneInvoice != null)
+                            // {
+                            //     await _context.FneInvoices.AddAsync(fneInvoice);
+                            //     await _context.SaveChangesAsync();
+                            // }
+                            
+                            // LOG TEMPORAIRE pour debugging
+                            await _loggingService.LogErrorAsync(
+                                $"ATTENTION: Facture {factureData.NumeroFacture} SIMULÉE (non sauvegardée en base)", 
+                                "Sage100Import", 
+                                null);
                             
                             result.FacturesImportees++;
                             result.FacturesDetaillees.Add(new Sage100FactureImportee

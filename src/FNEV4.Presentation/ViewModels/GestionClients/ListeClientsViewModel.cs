@@ -435,7 +435,7 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
             IsActiveFilter = true;
             CurrentPage = 1;
             
-            _ = Task.Run(LoadClientsAsync);
+            LoadClientsCommand.ExecuteAsync(null);
         }
 
         private async Task NextPageAsync()
@@ -510,16 +510,20 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
 
         partial void OnPageSizeChanged(int value)
         {
+            if (IsLoading) return; // Éviter les rechargements inutiles
+            
             CurrentPage = 1; // Retourner à la première page quand on change la taille
             OnPropertyChanged(nameof(PaginationInfo));
-            _ = Task.Run(LoadClientsAsync);
+            LoadClientsCommand.ExecuteAsync(null);
         }
 
         partial void OnSelectedClientTypeChanged(string? value)
         {
+            if (IsLoading) return; // Éviter les rechargements inutiles
+            
             CurrentPage = 1;
             OnPropertyChanged(nameof(ActiveFiltersInfo));
-            _ = Task.Run(LoadClientsAsync);
+            LoadClientsCommand.ExecuteAsync(null);
         }
 
         partial void OnSelectedStatusOptionChanged(StatusOption? value)
@@ -534,7 +538,7 @@ namespace FNEV4.Presentation.ViewModels.GestionClients
         {
             CurrentPage = 1;
             OnPropertyChanged(nameof(ActiveFiltersInfo));
-            _ = Task.Run(LoadClientsAsync);
+            LoadClientsCommand.ExecuteAsync(null);
         }
 
         partial void OnSearchTermChanged(string value)

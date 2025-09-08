@@ -10,7 +10,16 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
-        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisConverter"/>
+        
+        <!-- Animations -->
+        <Storyboard x:Key="FadeInAnimation">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.5"/>
+        </Storyboard>
+        
+        <Storyboard x:Key="SlideInAnimation">
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" 
+                           From="20" To="0" Duration="0:0:0.3"/>
+        </Storyboard>
         
         <!-- Styles -->
         <Style x:Key="SectionHeaderStyle" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignHeadline6TextBlock}">
@@ -20,14 +29,20 @@
         </Style>
         
         <Style x:Key="ImportCardStyle" TargetType="materialDesign:Card">
+            <Setter Property="Margin" Value="0,0,0,20"/>
             <Setter Property="Padding" Value="20"/>
-            <Setter Property="Margin" Value="0,0,0,16"/>
-            <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth2"/>
-            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="materialDesign:ElevationAssist.Elevation" Value="Dp2"/>
+            <Setter Property="Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <TranslateTransform Y="0"/>
+                </Setter.Value>
+            </Setter>
             <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth3"/>
-                </Trigger>
+                <EventTrigger RoutedEvent="Loaded">
+                    <BeginStoryboard Storyboard="{StaticResource FadeInAnimation}"/>
+                    <BeginStoryboard Storyboard="{StaticResource SlideInAnimation}"/>
+                </EventTrigger>
             </Style.Triggers>
         </Style>
     </UserControl.Resources>
@@ -104,75 +119,160 @@
 
         <!-- Zone de contenu avec les types d'import -->
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding ImportTypes}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <materialDesign:Card Style="{StaticResource ImportCardStyle}">
+            <StackPanel>
+                <!-- Import Standard -->
+                <materialDesign:Card Style="{StaticResource ImportCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <materialDesign:PackIcon Grid.Column="0" 
+                                               Kind="FileDocument" 
+                                               Width="48" Height="48"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                               Margin="0,0,16,0"/>
+                        
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Import Standard" 
+                                     Style="{StaticResource SectionHeaderStyle}"
+                                     Margin="0,0,0,4"/>
+                            
+                            <TextBlock Text="Importation des fichiers factures au format Excel standard ou CSV" 
+                                     Style="{StaticResource MaterialDesignBody1TextBlock}"
+                                     Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                     TextWrapping="Wrap"
+                                     Margin="0,0,0,8"/>
+                            
+                            <TextBlock Text="Formats supportés : Excel (.xlsx), CSV" 
+                                     Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                     Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                     FontStyle="Italic"/>
+                        </StackPanel>
+                        
+                        <Button Grid.Column="2" 
+                              Content="Importer"
+                              Style="{StaticResource MaterialDesignRaisedButton}"
+                              Command="{Binding OpenImportCommand}"
+                              CommandParameter="{Binding ImportTypes[0]}"
+                              VerticalAlignment="Center"
+                              Width="140"
+                              Height="36"/>
+                    </Grid>
+                </materialDesign:Card>
+
+                <!-- Import Sage 100 v15 -->
+                <materialDesign:Card Style="{StaticResource ImportCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <materialDesign:PackIcon Grid.Column="0" 
+                                               Kind="FileDocumentOutline" 
+                                               Width="48" Height="48"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource SecondaryAccentBrush}"
+                                               Margin="0,0,16,0"/>
+                        
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 
-                                <materialDesign:PackIcon Grid.Column="0" 
-                                                       Kind="{Binding Icon}" 
-                                                       Width="48" Height="48"
-                                                       VerticalAlignment="Center"
-                                                       Foreground="{Binding Color}"
-                                                       Margin="0,0,16,0"/>
+                                <TextBlock Grid.Column="0"
+                                         Text="Import Sage 100 v15" 
+                                         Style="{StaticResource SectionHeaderStyle}"
+                                         Margin="0,0,0,4"/>
                                 
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        
-                                        <TextBlock Grid.Column="0"
-                                                 Text="{Binding Title}" 
-                                                 Style="{StaticResource SectionHeaderStyle}"
-                                                 Margin="0,0,0,4"/>
-                                        
-                                        <Border Grid.Column="1" 
-                                              Background="{Binding StatusColor}" 
-                                              CornerRadius="10"
-                                              Padding="8,2"
-                                              VerticalAlignment="Top">
-                                            <TextBlock Text="{Binding Status}" 
-                                                     Foreground="White" 
-                                                     FontSize="10"
-                                                     FontWeight="Medium"/>
-                                        </Border>
-                                    </Grid>
-                                    
-                                    <TextBlock Text="{Binding Description}" 
-                                             Style="{StaticResource MaterialDesignBody1TextBlock}"
-                                             Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                             TextWrapping="Wrap"
-                                             Margin="0,0,0,8"/>
-                                    
-                                    <TextBlock Text="{Binding SupportedFormats}" 
-                                             Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                                             Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                             FontStyle="Italic"/>
-                                </StackPanel>
-                                
-                                <Button Grid.Column="2" 
-                                      Content="{Binding ButtonText}"
-                                      Style="{StaticResource MaterialDesignRaisedButton}"
-                                      Background="{Binding Color}"
-                                      BorderBrush="{Binding Color}"
-                                      Command="{Binding DataContext.OpenImportCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                      CommandParameter="{Binding Type}"
-                                      VerticalAlignment="Center"
-                                      Width="140"
-                                      Height="36"/>
+                                <Border Grid.Column="1" 
+                                      Background="{DynamicResource SecondaryAccentBrush}" 
+                                      CornerRadius="10"
+                                      Padding="8,2"
+                                      VerticalAlignment="Top">
+                                    <TextBlock Text="SPÉCIALISÉ" 
+                                             Foreground="White" 
+                                             FontSize="10"
+                                             FontWeight="Medium"/>
+                                </Border>
                             </Grid>
-                        </materialDesign:Card>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                            
+                            <TextBlock Text="Importation spécialisée pour les fichiers factures exportés depuis Sage 100 version 15" 
+                                     Style="{StaticResource MaterialDesignBody1TextBlock}"
+                                     Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                     TextWrapping="Wrap"
+                                     Margin="0,0,0,8"/>
+                            
+                            <TextBlock Text="Format spécifique : Excel Sage 100 v15 (.xlsx)" 
+                                     Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                     Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                     FontStyle="Italic"/>
+                        </StackPanel>
+                        
+                        <Button Grid.Column="2" 
+                              Content="Importer"
+                              Style="{StaticResource MaterialDesignRaisedButton}"
+                              Background="{DynamicResource SecondaryAccentBrush}"
+                              BorderBrush="{DynamicResource SecondaryAccentBrush}"
+                              Command="{Binding OpenImportCommand}"
+                              CommandParameter="{Binding ImportTypes[1]}"
+                              VerticalAlignment="Center"
+                              Width="140"
+                              Height="36"/>
+                    </Grid>
+                </materialDesign:Card>
+
+                <!-- Configuration -->
+                <materialDesign:Card Style="{StaticResource ImportCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <materialDesign:PackIcon Grid.Column="0" 
+                                               Kind="Settings" 
+                                               Width="48" Height="48"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                               Margin="0,0,16,0"/>
+                        
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Configuration Import" 
+                                     Style="{StaticResource SectionHeaderStyle}"
+                                     Margin="0,0,0,4"/>
+                            
+                            <TextBlock Text="Configuration des paramètres d'importation et mapping des colonnes" 
+                                     Style="{StaticResource MaterialDesignBody1TextBlock}"
+                                     Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                     TextWrapping="Wrap"
+                                     Margin="0,0,0,8"/>
+                            
+                            <TextBlock Text="Gestion des templates et paramètres avancés" 
+                                     Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                     Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                     FontStyle="Italic"/>
+                        </StackPanel>
+                        
+                        <Button Grid.Column="2" 
+                              Content="Configurer"
+                              Style="{StaticResource MaterialDesignOutlinedButton}"
+                              Command="{Binding OpenImportCommand}"
+                              CommandParameter="{Binding ImportTypes[2]}"
+                              VerticalAlignment="Center"
+                              Width="140"
+                              Height="36"/>
+                    </Grid>
+                </materialDesign:Card>
+            </StackPanel>
         </ScrollViewer>
     </Grid>
 </UserControl>

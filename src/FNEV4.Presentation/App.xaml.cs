@@ -66,6 +66,9 @@ namespace FNEV4.Presentation
                 // Initialiser les dossiers du service centralisé
                 await InitializePathConfiguration();
                 
+                // NOUVEAU: Initialiser et migrer la base de données unique
+                await InitializeCentralizedDatabase();
+                
                 System.Diagnostics.Debug.WriteLine("Application démarrée avec succès");
             }
             catch (Exception ex)
@@ -106,6 +109,32 @@ namespace FNEV4.Presentation
             }
         }
 
+        private async Task InitializeCentralizedDatabase()
+        {
+            try
+            {
+                // S'assurer que le répertoire de la base existe
+                var databasePathProvider = ServiceProvider.GetRequiredService<IDatabasePathProvider>();
+                databasePathProvider.EnsureDatabaseDirectoryExists();
+                
+                // Appliquer les migrations et initialiser la base
+                using (var scope = ServiceProvider.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<FNEV4DbContext>();
+                    
+                    // Créer la base si elle n'existe pas et appliquer les migrations
+                    await context.Database.EnsureCreatedAsync();
+                    
+                    System.Diagnostics.Debug.WriteLine($"Base de données centralisée initialisée: {databasePathProvider.DatabasePath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de l'initialisation de la base de données: {ex.Message}");
+                throw; // Faire planter si la base de données ne peut pas être initialisée
+            }
+        }
+
         protected override void OnExit(ExitEventArgs e)
         {
             _host?.Dispose();
@@ -122,15 +151,32 @@ namespace FNEV4.Presentation
                 .ConfigureServices((context, services) =>
                 {
                     // Configuration du service centralisé des chemins en premier
-                    services.AddSingleton<IPathConfigurationService, PathConfigurationService>();
+                    // Configuration centralisée des chemins et base de données
+                    services.AddSingleton<IDatabasePathProvider, DatabasePathProvider>();
+                    services.AddSingleton<IPathConfigurationService>(provider =>
+                        new PathConfigurationService(
+                            provider.GetRequiredService<IConfiguration>(),
+                            provider.GetRequiredService<IDatabasePathProvider>()));
                     
-                    // Configuration Entity Framework avec le service centralisé
+                    // Configuration Entity Framework avec SINGLETON pour éviter les bases multiples
                     services.AddDbContext<FNEV4DbContext>((serviceProvider, options) =>
                     {
-                        var pathService = serviceProvider.GetRequiredService<IPathConfigurationService>();
-                        var connectionString = $"Data Source={pathService.DatabasePath}";
-                        options.UseSqlite(connectionString);
-                    }, ServiceLifetime.Transient); // Force une nouvelle instance à chaque injection
+                        var databasePathProvider = serviceProvider.GetRequiredService<IDatabasePathProvider>();
+                        var connectionString = databasePathProvider.GetConnectionString();
+                        options.UseSqlite(connectionString, sqliteOptions =>
+                        {
+                            // Configuration SQLite pour de meilleures performances
+                            sqliteOptions.CommandTimeout(30);
+                        });
+                        
+                        // Optimisations de performance Entity Framework
+                        options.EnableSensitiveDataLogging(false);
+                        options.EnableServiceProviderCaching(true);
+                        options.EnableDetailedErrors(false);
+                        
+                        // Log pour diagnostic
+                        System.Diagnostics.Debug.WriteLine($"[DbContext] Connexion DB: {connectionString}");
+                    }, ServiceLifetime.Scoped); // CHANGÉ: Scoped au lieu de Transient
 
                     // Services Infrastructure
                     services.AddScoped<IDatabaseService, DatabaseService>();
@@ -141,7 +187,10 @@ namespace FNEV4.Presentation
                     
                     // Services Import Traitement
                     services.AddScoped<ISage100ImportService>(provider => 
-                        new Sage100ImportService(provider.GetRequiredService<IClientRepository>()));
+                        new Sage100ImportService(
+                            provider.GetRequiredService<IClientRepository>(),
+                            provider.GetRequiredService<FNEV4DbContext>(),
+                            provider.GetRequiredService<InfraLogging>()));
 
                     // Adaptateur pour ILoggingService (respecte l'architecture Clean)
                     services.AddScoped<FNEV4.Core.Interfaces.ILoggingService>(provider => 
@@ -174,13 +223,26 @@ namespace FNEV4.Presentation
                     services.AddScoped<IDatabaseConfigurationLoader, DatabaseConfigurationLoader>();
 
                     // ViewModels avec injection
-                    services.AddTransient<BaseDonneesViewModel>();
+                    services.AddTransient<BaseDonneesViewModel>(provider =>
+                        new BaseDonneesViewModel(
+                            provider.GetRequiredService<IDatabaseService>(),
+                            provider.GetService<IDatabaseConfigurationNotificationService>(),
+                            provider.GetRequiredService<IPathConfigurationService>(),
+                            provider));
                     services.AddTransient<LogsDiagnosticsViewModel>();
+                    services.AddTransient<DatabaseSettingsViewModel>(provider =>
+                        new DatabaseSettingsViewModel(
+                            provider.GetRequiredService<IDatabaseService>(),
+                            provider.GetService<IDatabaseConfigurationNotificationService>()));
                     services.AddTransient<EntrepriseConfigViewModel>(provider =>
                         new EntrepriseConfigViewModel(
                             provider.GetService<IDgiService>(),
-                            provider.GetRequiredService<IDatabaseService>()));
-                    services.AddTransient<ApiFneConfigViewModel>();
+                            provider.GetRequiredService<IDatabaseService>(),
+                            provider.GetRequiredService<FNEV4DbContext>()));
+                    services.AddTransient<ApiFneConfigViewModel>(provider =>
+                        new ApiFneConfigViewModel(
+                            provider.GetRequiredService<IDatabaseService>(),
+                            provider.GetRequiredService<FNEV4DbContext>()));
                     services.AddTransient<CheminsDossiersConfigViewModel>();
                     
                     // ViewModels Gestion Clients
@@ -190,7 +252,6 @@ namespace FNEV4.Presentation
                     
                     // ViewModels Import & Traitement
                     services.AddTransient<FNEV4.Presentation.ViewModels.ImportTraitement.ImportFichiersViewModel>();
-                    services.AddTransient<FNEV4.Presentation.ViewModels.ImportTraitement.Sage100ImportViewModel>();
 
                     // Service locator pour les ViewModels
                     services.AddSingleton<ViewModelLocator>();

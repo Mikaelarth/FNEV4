@@ -26,6 +26,7 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
 {
     private readonly IDgiService _dgiService;
     private readonly IDatabaseService _databaseService;
+    private readonly FNEV4DbContext _context;
 
     #region Propriétés principales de l'entreprise
     private string _companyName = string.Empty;
@@ -281,10 +282,11 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
     #endregion
 
     #region Constructeur
-    public EntrepriseConfigViewModel(IDgiService? dgiService = null, IDatabaseService? databaseService = null)
+    public EntrepriseConfigViewModel(IDgiService? dgiService = null, IDatabaseService? databaseService = null, FNEV4DbContext? context = null)
     {
         _dgiService = dgiService ?? CreateDefaultDgiService();
         _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
+        _context = context ?? throw new ArgumentNullException(nameof(context));
         InitializeCommands();
         InitializeData();
         UpdateStatus();
@@ -332,26 +334,11 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
     {
         try
         {
-            // Utiliser la chaîne de connexion configurée pour créer un contexte
-            var connectionString = _databaseService.GetConnectionString();
-            
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                // Pas de base de données configurée, initialiser avec des valeurs vides
-                InitializeEmptyConfiguration();
-                StatusMessage = "Nouvelle configuration - veuillez saisir les informations";
-                return;
-            }
-
-            var optionsBuilder = new DbContextOptionsBuilder<FNEV4DbContext>();
-            optionsBuilder.UseSqlite(connectionString);
-
-            using var context = new FNEV4DbContext(optionsBuilder.Options);
-            
+            // Utiliser le contexte EF injecté directement
             // S'assurer que la base de données et les tables existent
-            await context.Database.EnsureCreatedAsync();
+            await _context.Database.EnsureCreatedAsync();
             
-            var existingCompany = await context.Companies.FirstOrDefaultAsync();
+            var existingCompany = await _context.Companies.FirstOrDefaultAsync();
             
             if (existingCompany != null)
             {
@@ -879,24 +866,11 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
                 IsValidated = false // Sera validé plus tard via l'API DGI
             };
 
-            // Utiliser la chaîne de connexion configurée pour créer un contexte
-            var connectionString = _databaseService.GetConnectionString();
-            
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                StatusMessage = "❌ Aucune base de données configurée";
-                return;
-            }
-
-            var optionsBuilder = new DbContextOptionsBuilder<FNEV4DbContext>();
-            optionsBuilder.UseSqlite(connectionString);
-
-            using var context = new FNEV4DbContext(optionsBuilder.Options);
-            
+            // Utiliser le contexte EF injecté directement
             // S'assurer que la base de données et les tables existent
-            await context.Database.EnsureCreatedAsync();
+            await _context.Database.EnsureCreatedAsync();
             
-            var existingCompany = await context.Companies.FirstOrDefaultAsync();
+            var existingCompany = await _context.Companies.FirstOrDefaultAsync();
             
             if (existingCompany != null)
             {
@@ -912,23 +886,23 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
                 existingCompany.Environment = company.Environment;
                 existingCompany.UpdatedAt = DateTime.UtcNow;
                 
-                context.Companies.Update(existingCompany);
+                _context.Companies.Update(existingCompany);
                 StatusMessage = "Mise à jour de la configuration...";
             }
             else
             {
                 // Créer une nouvelle configuration
-                context.Companies.Add(company);
+                _context.Companies.Add(company);
                 StatusMessage = "Création de la configuration...";
             }
             
             // Sauvegarder les changements
-            var savedCount = await context.SaveChangesAsync();
+            var savedCount = await _context.SaveChangesAsync();
             
             if (savedCount > 0)
             {
                 StatusMessage = "✅ Configuration sauvegardée avec succès dans la base de données";
-                System.Diagnostics.Debug.WriteLine($"Configuration sauvegardée dans: {connectionString}");
+                System.Diagnostics.Debug.WriteLine($"Configuration sauvegardée dans la base de données centralisée");
                 
                 // Afficher la notification de succès
                 ShowNotification("✅ Configuration sauvegardée avec succès !", true);
