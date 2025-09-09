@@ -50,49 +50,61 @@ namespace FNEV4.Core.Models.ImportTraitement
     /// </summary>
     public class Sage100FactureData
     {
-        // En-tête facture
-        public string NumeroFacture { get; set; } = string.Empty;
-        public string CodeClient { get; set; } = string.Empty;
-        public string NccClient { get; set; } = string.Empty;
-        public DateTime DateFacture { get; set; }
-        public string PointDeVente { get; set; } = string.Empty;
-        public string IntituleClient { get; set; } = string.Empty;
+        // En-tête facture (selon structure Excel officielle)
+        public string NumeroFacture { get; set; } = string.Empty;           // A3
+        public string CodeClient { get; set; } = string.Empty;              // A5  
+        public string NccClientNormal { get; set; } = string.Empty;         // A6 (si code ≠ 1999)
+        public DateTime DateFacture { get; set; }                           // A8
+        public string PointDeVente { get; set; } = string.Empty;            // A10
+        public string IntituleClient { get; set; } = string.Empty;          // A11
         
         // Spécifique clients divers (code 1999)
-        public string NomReelClientDivers { get; set; } = string.Empty;
-        public string NccClientDivers { get; set; } = string.Empty;
+        public string NomReelClientDivers { get; set; } = string.Empty;     // A13 (si code = 1999)
+        public string NccClientDivers { get; set; } = string.Empty;         // A15 (si code = 1999)
         
         // Autres infos
-        public string NumeroFactureAvoir { get; set; } = string.Empty;
+        public string NumeroFactureAvoir { get; set; } = string.Empty;      // A17
+        public string MoyenPaiement { get; set; } = string.Empty;           // A18
         
-        /// <summary>
-        /// Moyen de paiement de la facture (A18 Excel)
-        /// Si vide, utilise le moyen de paiement par défaut du client
-        /// Pour clients divers (1999), utilise "cash" par défaut
-        /// </summary>
-        public string MoyenPaiement { get; set; } = string.Empty;
-        
-        // Produits
+        // Produits (à partir ligne 20)
         public List<Sage100ProduitData> Produits { get; set; } = new();
         
         // Métadonnées
         public string NomFeuille { get; set; } = string.Empty;
+        public string NomFichierSource { get; set; } = string.Empty;
+        
+        // Propriétés calculées
         public bool EstClientDivers => CodeClient == "1999";
+        public bool EstAvoir => !string.IsNullOrWhiteSpace(NumeroFactureAvoir);
+        
+        // Validation selon la structure Excel officielle
+        public string GetNccClient() => EstClientDivers ? NccClientDivers : NccClientNormal;
+        public string GetNomClient() => EstClientDivers ? NomReelClientDivers : IntituleClient;
     }
 
     /// <summary>
-    /// Données d'un produit Sage 100 v15
+    /// Données d'un produit Sage 100 v15 (selon structure Excel officielle)
     /// </summary>
     public class Sage100ProduitData
     {
-        public string CodeProduit { get; set; } = string.Empty;
-        public string Designation { get; set; } = string.Empty;
-        public decimal PrixUnitaire { get; set; }
-        public decimal Quantite { get; set; }
-        public string Emballage { get; set; } = string.Empty;
-        public string CodeTva { get; set; } = string.Empty;
-        public decimal MontantHt { get; set; }
-        public int NumeroLigne { get; set; }
+        public string CodeProduit { get; set; } = string.Empty;              // Colonne B (ex: "ORD001")
+        public string Designation { get; set; } = string.Empty;             // Colonne C (ex: "Ordinateur Dell")
+        public decimal PrixUnitaire { get; set; }                           // Colonne D (ex: 800000)
+        public decimal Quantite { get; set; }                               // Colonne E (ex: 1)
+        public string Emballage { get; set; } = string.Empty;               // Colonne F (ex: "pcs")
+        public string CodeTva { get; set; } = string.Empty;                 // Colonne G (ex: "TVA")
+        public decimal MontantHt { get; set; }                              // Colonne H (ex: 800000)
+        public int NumeroLigne { get; set; }                                // Numéro de ligne dans Excel (≥ 20)
+        
+        // Propriétés calculées
+        public decimal MontantTva => CodeTva == "TVA" ? MontantHt * 0.18m : 0;
+        public decimal MontantTtc => MontantHt + MontantTva;
+        
+        // Validation
+        public bool EstValide => !string.IsNullOrWhiteSpace(Designation) && 
+                                PrixUnitaire > 0 && 
+                                Quantite > 0 && 
+                                MontantHt > 0;
     }
 
     /// <summary>
@@ -114,52 +126,44 @@ namespace FNEV4.Core.Models.ImportTraitement
     /// </summary>
     public class Sage100FacturePreview
     {
+        // Métadonnées fichier
         public string NomFeuille { get; set; } = string.Empty;
-        public string NomFichierSource { get; set; } = string.Empty; // Nouveau: nom du fichier Excel source
+        public string NomFichierSource { get; set; } = string.Empty;
         
-        // Alias pour compatibilité avec l'interface
-        public string FichierSource => NomFichierSource;
+        // Données de base facture (selon structure Excel)
+        public string NumeroFacture { get; set; } = string.Empty;           // A3
+        public string CodeClient { get; set; } = string.Empty;              // A5
+        public DateTime DateFacture { get; set; }                           // A8
+        public string PointDeVente { get; set; } = string.Empty;            // A10 (ex: "Gestoci")
+        public string MoyenPaiement { get; set; } = string.Empty;           // A18 (ex: "cash", "card")
         
-        public string NumeroFacture { get; set; } = string.Empty;
-        public string CodeClient { get; set; } = string.Empty;
-        public string NomClient { get; set; } = string.Empty;
+        // Client (dépend du type)
+        public string NccClient { get; set; } = string.Empty;               // A6 ou A15
+        public string NomClient { get; set; } = string.Empty;               // A11 ou A13
         
-        // Alias pour compatibilité avec l'interface
-        public string IntituleClient => NomClient;
-        
-        public DateTime DateFacture { get; set; }
-        public string MoyenPaiement { get; set; } = string.Empty;
-        
-        // Alias pour compatibilité avec l'interface
-        public string PointDeVente => MoyenPaiement;
-        
+        // Données calculées
         public int NombreProduits { get; set; }
-        public decimal MontantEstime { get; set; }
+        public decimal MontantHT { get; set; }                              // Calculé depuis produits
+        public decimal MontantTTC { get; set; }                             // Calculé depuis produits  
+        public decimal MontantTVA => MontantTTC - MontantHT;
         
-        // Aliases pour compatibilité avec l'interface
-        public decimal MontantHT => MontantEstime * 0.83m; // Estimation HT (TVA 20%)
-        public decimal MontantTTC => MontantEstime;
-        
+        // Validation et statut
         public bool EstValide { get; set; }
         public bool ClientTrouve { get; set; }
         public List<string> Erreurs { get; set; } = new();
+        public string Statut => EstValide ? "Valide" : "Erreur";
         
         // Liste des produits pour affichage détaillé
         public List<Sage100ProduitData> Produits { get; set; } = new();
         
-        // Nouvelles propriétés pour certification FNE
-        public string TypeFacture { get; set; } = "B2B"; // B2B, B2C, B2G, B2F
-        public string TypeTva { get; set; } = "TVA"; // TVA, TVAB, TVAC, TVAD
-        public string ConflitDonnees { get; set; } = string.Empty;
-        public string ConflitDetails { get; set; } = string.Empty;
+        // Propriétés FNE
+        public string TypeFacture { get; set; } = "B2B";                    // B2B, B2C, B2G, B2F
+        public bool EstClientDivers => CodeClient == "1999";
+        public bool EstAvoir { get; set; }
         
-        // Propriétés additionnelles pour comparaison source de vérité
-        public string NomClientExcel { get; set; } = string.Empty; // Nom du client dans Excel
-        public string NomClientBDD { get; set; } = string.Empty;   // Nom du client dans BDD
-        public string TelephoneClientExcel { get; set; } = string.Empty;
-        public string TelephoneClientBDD { get; set; } = string.Empty;
-        public string EmailClientExcel { get; set; } = string.Empty;
-        public string EmailClientBDD { get; set; } = string.Empty;
+        // Alias pour compatibilité interface
+        public string FichierSource => NomFichierSource;
+        public string IntituleClient => NomClient;
     }
 
     /// <summary>

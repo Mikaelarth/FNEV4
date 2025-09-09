@@ -34,9 +34,9 @@ namespace FNEV4.Presentation.Converters
         {
             if (value is bool boolValue)
             {
-                return boolValue ? "#4CAF50" : "#F44336"; // Green or Red
+                return boolValue ? new SolidColorBrush(Color.FromRgb(76, 175, 80)) : new SolidColorBrush(Color.FromRgb(244, 67, 54)); // Green or Red
             }
-            return "#9E9E9E"; // Gray
+            return new SolidColorBrush(Color.FromRgb(158, 158, 158)); // Gray
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

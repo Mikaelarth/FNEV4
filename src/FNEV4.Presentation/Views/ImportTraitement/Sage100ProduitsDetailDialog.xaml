@@ -1,0 +1,176 @@
+<Window x:Class="FNEV4.Presentation.Views.ImportTraitement.Sage100ProduitsDetailDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Détail des Produits"
+        Height="600" Width="900"
+        ResizeMode="CanResize"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource MaterialDesignPaper}"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        FontFamily="{DynamicResource MaterialDesignFont}">
+    
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tête -->
+        <TextBlock Grid.Row="0" 
+                   Text="{Binding TitreDialog}" 
+                   Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                   Margin="0,0,0,16"
+                   HorizontalAlignment="Center"/>
+
+        <!-- DataGrid des produits -->
+        <DataGrid Grid.Row="1" 
+                  x:Name="ProduitsDataGrid"
+                  ItemsSource="{Binding Produits}"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  IsReadOnly="True"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  AlternatingRowBackground="{DynamicResource MaterialDesignDivider}"
+                  RowBackground="{DynamicResource MaterialDesignBackground}"
+                  Background="{DynamicResource MaterialDesignBackground}"
+                  BorderBrush="{DynamicResource MaterialDesignDivider}"
+                  BorderThickness="1"
+                  ColumnHeaderStyle="{StaticResource MaterialDesignDataGridColumnHeader}"
+                  CellStyle="{StaticResource MaterialDesignDataGridCell}"
+                  FontSize="12"
+                  Margin="0,0,0,16">
+            
+            <DataGrid.Columns>
+                <!-- Code Produit -->
+                <DataGridTextColumn Header="Code Produit" 
+                                    Binding="{Binding CodeProduit}" 
+                                    Width="120"
+                                    MinWidth="100">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBodyLight}"/>
+                            <Setter Property="Padding" Value="8,6"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Désignation -->
+                <DataGridTextColumn Header="Désignation" 
+                                    Binding="{Binding Designation}" 
+                                    Width="*"
+                                    MinWidth="200">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="TextWrapping" Value="Wrap"/>
+                            <Setter Property="Padding" Value="8,6"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Quantité -->
+                <DataGridTextColumn Header="Quantité" 
+                                    Binding="{Binding Quantite}" 
+                                    Width="80"
+                                    MinWidth="70">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Padding" Value="8,6"/>
+                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Prix Unitaire -->
+                <DataGridTextColumn Header="Prix Unitaire" 
+                                    Binding="{Binding PrixUnitaire, StringFormat=N2}" 
+                                    Width="110"
+                                    MinWidth="100">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                            <Setter Property="Padding" Value="8,6"/>
+                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Montant HT -->
+                <DataGridTextColumn Header="Montant HT" 
+                                    Binding="{Binding MontantHt, StringFormat=N2}" 
+                                    Width="110"
+                                    MinWidth="100">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Padding" Value="8,6"/>
+                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Code TVA -->
+                <DataGridTextColumn Header="Code TVA" 
+                                    Binding="{Binding CodeTva}" 
+                                    Width="80"
+                                    MinWidth="70">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="Padding" Value="8,6"/>
+                            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Résumé -->
+        <Border Grid.Row="2" 
+                Background="{DynamicResource MaterialDesignDivider}"
+                CornerRadius="4"
+                Padding="12,8"
+                Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0"
+                           Text="{Binding ResumeProduits}"
+                           FontWeight="Bold"
+                           VerticalAlignment="Center"/>
+                           
+                <TextBlock Grid.Column="1"
+                           Text="{Binding TotalHT, StringFormat='Total HT: {0:N2}'}"
+                           FontWeight="Bold"
+                           FontSize="14"
+                           Foreground="{DynamicResource MaterialDesignBody}"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- Boutons -->
+        <StackPanel Grid.Row="3" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center">
+                    
+            <Button x:Name="FermerButton"
+                    Content="FERMER"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    IsDefault="True"
+                    Padding="16,8"
+                    Click="FermerButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

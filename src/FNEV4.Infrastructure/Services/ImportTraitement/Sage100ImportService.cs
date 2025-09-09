@@ -4,6 +4,7 @@ using FNEV4.Core.Models.ImportTraitement;
 using FNEV4.Core.Interfaces;
 using FNEV4.Core.Entities;
 using FNEV4.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -344,13 +345,24 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                 NomFeuille = worksheet.Name,
                 NumeroFacture = GetCellValue(worksheet, "A3"),
                 CodeClient = GetCellValue(worksheet, "A5"),
-                NccClient = GetCellValue(worksheet, "A6"),
-                PointDeVente = GetCellValue(worksheet, "A10"),
+                NccClientNormal = GetCellValue(worksheet, "A6"),
                 IntituleClient = GetCellValue(worksheet, "A11"),
                 NomReelClientDivers = GetCellValue(worksheet, "A13"),
                 NccClientDivers = GetCellValue(worksheet, "A15"),
                 NumeroFactureAvoir = GetCellValue(worksheet, "A17")
             };
+
+            // Gestion du point de vente avec logique de fallback
+            var pointDeVenteExcel = GetCellValue(worksheet, "A10");
+            if (!string.IsNullOrWhiteSpace(pointDeVenteExcel))
+            {
+                facture.PointDeVente = pointDeVenteExcel;
+            }
+            else
+            {
+                var company = await _context.Companies.FirstOrDefaultAsync();
+                facture.PointDeVente = company?.DefaultPointOfSale ?? "01";
+            }
 
             // Gestion du moyen de paiement avec logique métier
             var moyenPaiementExcel = GetCellValue(worksheet, "A18");
@@ -445,30 +457,82 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                 preview.NumeroFacture = GetCellValue(worksheet, "A3");
                 preview.CodeClient = GetCellValue(worksheet, "A5");
 
-                // Déterminer le nom du client
+                // Déterminer le nom du client avec DEBUG
                 var codeClient = preview.CodeClient;
+                Console.WriteLine($"[DEBUG] Feuille {worksheet.Name} - Code client A5: '{codeClient}'");
+                
                 if (codeClient == "1999")
                 {
                     preview.NomClient = GetCellValue(worksheet, "A13"); // Nom réel client divers
+                    var nomGenerique = GetCellValue(worksheet, "A11"); // Intitulé générique
+                    Console.WriteLine($"[DEBUG] Client divers 1999 - A11 générique: '{nomGenerique}', A13 réel: '{preview.NomClient}'");
                 }
                 else
                 {
                     preview.NomClient = GetCellValue(worksheet, "A11"); // Intitulé client
+                    Console.WriteLine($"[DEBUG] Client normal {codeClient} - A11: '{preview.NomClient}'");
                 }
 
-                // Gestion du moyen de paiement avec logique métier
+                // Récupérer le point de vente avec logique de fallback ET DEBUG
+                var pointDeVenteExcel = GetCellValue(worksheet, "A10");
+                
+                // DEBUG: Afficher les valeurs extraites pour diagnostic
+                Console.WriteLine($"[DEBUG] Feuille {worksheet.Name} - A10 Point de Vente Excel: '{pointDeVenteExcel}'");
+                
+                if (!string.IsNullOrWhiteSpace(pointDeVenteExcel))
+                {
+                    // Priorité 1: Utiliser la valeur de A10 si présente
+                    preview.PointDeVente = pointDeVenteExcel;
+                    Console.WriteLine($"[DEBUG] Point de vente utilisé depuis Excel A10: '{pointDeVenteExcel}'");
+                }
+                else
+                {
+                    // Priorité 2: Chercher dans les attributs du client par code client
+                    if (codeClient != "1999")
+                    {
+                        var client = await _clientRepository.GetByClientCodeAsync(codeClient);
+                        if (client != null && !string.IsNullOrWhiteSpace(client.DefaultPointOfSale))
+                        {
+                            preview.PointDeVente = client.DefaultPointOfSale;
+                            Console.WriteLine($"[DEBUG] Point de vente utilisé depuis client {codeClient}: '{client.DefaultPointOfSale}'");
+                        }
+                        else
+                        {
+                            // Priorité 3: Utiliser le point de vente par défaut de l'entreprise
+                            var company = await _context.Companies.FirstOrDefaultAsync();
+                            preview.PointDeVente = company?.DefaultPointOfSale ?? "01"; // "01" par défaut si aucune config
+                            Console.WriteLine($"[DEBUG] Point de vente utilisé depuis Company par défaut: '{preview.PointDeVente}'");
+                        }
+                    }
+                    else
+                    {
+                        // Pour client divers (1999), utiliser directement le point de vente de l'entreprise
+                        var company = await _context.Companies.FirstOrDefaultAsync();
+                        preview.PointDeVente = company?.DefaultPointOfSale ?? "01";
+                        Console.WriteLine($"[DEBUG] Point de vente utilisé depuis Company pour client divers: '{preview.PointDeVente}'");
+                    }
+                }
+
+                // Gestion du moyen de paiement avec logique métier ET DEBUG
                 var moyenPaiementExcel = GetCellValue(worksheet, "A18");
+                
+                // DEBUG: Afficher les valeurs extraites pour diagnostic
+                Console.WriteLine($"[DEBUG] Feuille {worksheet.Name} - A18 Moyen Paiement Excel: '{moyenPaiementExcel}'");
+                
                 if (!string.IsNullOrWhiteSpace(moyenPaiementExcel))
                 {
                     preview.MoyenPaiement = moyenPaiementExcel;
+                    Console.WriteLine($"[DEBUG] Moyen paiement utilisé depuis Excel A18: '{moyenPaiementExcel}'");
                 }
                 else
                 {
                     // A18 vide -> utiliser le moyen de paiement par défaut
+                    Console.WriteLine($"[DEBUG] A18 vide, utilisation fallback pour client {codeClient}");
                     if (codeClient == "1999")
                     {
                         preview.MoyenPaiement = "cash (par défaut)";
                         preview.ClientTrouve = true; // Client 1999 toujours valide
+                        Console.WriteLine($"[DEBUG] Client divers 1999: moyen paiement = cash par défaut");
                     }
                     else
                     {
@@ -477,11 +541,13 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                         {
                             preview.MoyenPaiement = $"{client.DefaultPaymentMethod} (par défaut client)";
                             preview.ClientTrouve = true;
+                            Console.WriteLine($"[DEBUG] Client {codeClient} trouvé: moyen paiement = {client.DefaultPaymentMethod}");
                         }
                         else
                         {
                             preview.MoyenPaiement = "Client inexistant";
                             preview.ClientTrouve = false;
+                            Console.WriteLine($"[DEBUG] Client {codeClient} NON trouvé en base");
                         }
                     }
                 }
@@ -543,10 +609,13 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
 
                 preview.NombreProduits = nombreProduits;
                 preview.Produits = produits;
-                preview.MontantEstime = montantTotal;
+                
+                // Calcul des montants (approximation 18% TVA)
+                preview.MontantHT = montantTotal;
+                preview.MontantTTC = montantTotal * 1.18m;
 
                 // Analyse des informations pour certification FNE et détection des conflits
-                await AnalyzerInformationsFNE(preview, worksheet, codeClient);
+                await AnalyzerInformationsClientFNE(preview, codeClient);
 
                 // Validation avec vérification d'existence du client
                 var validation = await ValidateWorksheetStructureAsync(worksheet);
@@ -567,13 +636,6 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
         /// </summary>
         private async Task AnalyzerInformationsFNE(Sage100FacturePreview preview, IXLWorksheet worksheet, string codeClient)
         {
-            var conflits = new List<string>();
-            
-            // Récupération des données Excel
-            preview.NomClientExcel = preview.NomClient;
-            preview.TelephoneClientExcel = GetCellValue(worksheet, "A14"); // Exemple cellule téléphone
-            preview.EmailClientExcel = GetCellValue(worksheet, "A15"); // Exemple cellule email
-            
             // Détermination du type de facturation FNE basé sur le code client
             if (codeClient == "1999")
             {
@@ -589,56 +651,146 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
             }
             else
             {
-                preview.TypeFacture = "B2B"; // Entreprise (défaut)
+                preview.TypeFacture = "B2B"; // Entreprise/B2B par défaut
             }
-            
-            // Détermination du type de TVA (à partir des produits ou configuration)
-            preview.TypeTva = DeterminerTypeTVA(worksheet);
-            
-            // Comparaison avec les données de la base si client trouvé
-            if (preview.ClientTrouve && codeClient != "1999")
+        }
+
+        /// <summary>
+        /// Convertit les données Sage100 vers le format JSON FNE pour certification
+        /// Selon la documentation FNE-procedureapi.md et exemple_structure_excel.py
+        /// </summary>
+        public async Task<object> ConvertToFneApiJsonAsync(Sage100FactureData factureData)
+        {
+            try
             {
-                var clientBDD = await _clientRepository.GetByClientCodeAsync(codeClient);
-                if (clientBDD != null)
+                // Récupérer la configuration entreprise pour l'establishment
+                var company = await _context.Companies.FirstOrDefaultAsync();
+                if (company == null)
                 {
-                    preview.NomClientBDD = clientBDD.Name ?? string.Empty;
-                    preview.TelephoneClientBDD = clientBDD.Phone ?? string.Empty;
-                    preview.EmailClientBDD = clientBDD.Email ?? string.Empty;
-                    
-                    // Détection des conflits (Source de vérité : Excel prioritaire sauf moyens de paiement)
-                    if (!string.IsNullOrEmpty(preview.NomClientExcel) && 
-                        !string.IsNullOrEmpty(preview.NomClientBDD) &&
-                        !preview.NomClientExcel.Equals(preview.NomClientBDD, StringComparison.OrdinalIgnoreCase))
-                    {
-                        conflits.Add($"Nom: Excel='{preview.NomClientExcel}' ≠ BDD='{preview.NomClientBDD}'");
-                    }
-                    
-                    if (!string.IsNullOrEmpty(preview.TelephoneClientExcel) && 
-                        !string.IsNullOrEmpty(preview.TelephoneClientBDD) &&
-                        preview.TelephoneClientExcel != preview.TelephoneClientBDD)
-                    {
-                        conflits.Add($"Tél: Excel='{preview.TelephoneClientExcel}' ≠ BDD='{preview.TelephoneClientBDD}'");
-                    }
-                    
-                    if (!string.IsNullOrEmpty(preview.EmailClientExcel) && 
-                        !string.IsNullOrEmpty(preview.EmailClientBDD) &&
-                        !preview.EmailClientExcel.Equals(preview.EmailClientBDD, StringComparison.OrdinalIgnoreCase))
-                    {
-                        conflits.Add($"Email: Excel='{preview.EmailClientExcel}' ≠ BDD='{preview.EmailClientBDD}'");
-                    }
+                    throw new InvalidOperationException("Configuration entreprise manquante");
                 }
+
+                // Déterminer le template et les données client selon le code client
+                string template;
+                string clientNcc;
+                string clientCompanyName;
+
+                if (factureData.CodeClient == "1999")
+                {
+                    // CLIENT DIVERS (B2C)
+                    template = "B2C";
+                    clientNcc = factureData.NccClientDivers ?? ""; // A15
+                    clientCompanyName = factureData.NomReelClientDivers ?? ""; // A13
+                }
+                else
+                {
+                    // CLIENT NORMAL (B2B/B2G/B2F)
+                    template = "B2B"; // Par défaut, peut être affiné selon la logique métier
+                    clientNcc = factureData.NccClientNormal ?? ""; // A6
+                    
+                    // Récupérer le nom du client depuis la base de données
+                    var client = await _clientRepository.GetByClientCodeAsync(factureData.CodeClient);
+                    clientCompanyName = client?.Name ?? factureData.IntituleClient ?? "";
+                }
+
+                // Construire la structure JSON FNE
+                var fneJson = new
+                {
+                    invoiceType = "sale",
+                    paymentMethod = factureData.MoyenPaiement, // A18
+                    template = template,
+                    clientNcc = clientNcc,
+                    clientCompanyName = clientCompanyName,
+                    pointOfSale = factureData.PointDeVente, // A10 ou fallback
+                    establishment = company.CompanyName,
+                    commercialMessage = "", // Peut être ajouté si nécessaire
+                    footer = "", // Peut être ajouté si nécessaire
+                    foreignCurrency = "", // Vide par défaut (francs CFA)
+                    foreignCurrencyRate = 0,
+                    items = factureData.Produits.Select(p => new
+                    {
+                        taxes = new[] { p.CodeTva }, // G{row} - TVA, TVAB, TVAC, TVAD
+                        customTaxes = new object[0], // Vide par défaut
+                        reference = p.CodeProduit, // B{row}
+                        description = p.Designation, // C{row}
+                        quantity = p.Quantite, // E{row}
+                        amount = p.PrixUnitaire, // D{row} - Prix unitaire HT
+                        discount = 0, // Pas de remise par défaut
+                        measurementUnit = p.Emballage ?? "pcs" // F{row}
+                    }).ToArray(),
+                    customTaxes = new object[0], // Taxes personnalisées au niveau facture (vide par défaut)
+                    discount = 0 // Remise globale (vide par défaut)
+                };
+
+                return fneJson;
             }
-            
-            // Formatage des conflits pour affichage
-            if (conflits.Any())
+            catch (Exception ex)
             {
-                preview.ConflitDonnees = "⚠️ Conflits détectés";
-                preview.ConflitDetails = $"Conflits de données (Source de vérité = Excel):\n{string.Join("\n", conflits)}";
+                await _loggingService.LogErrorAsync($"Erreur conversion JSON FNE: {ex.Message}", "Sage100Import", ex);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Certifie une facture via l'API FNE
+        /// </summary>
+        public async Task<object> CertifyInvoiceAsync(Sage100FactureData factureData)
+        {
+            try
+            {
+                // Convertir vers le format JSON FNE
+                var fneJson = await ConvertToFneApiJsonAsync(factureData);
+
+                // TODO: Implémenter l'appel à l'API FNE
+                // POST http://54.247.95.108/ws/external/invoices/sign
+                // Headers: Authorization: Bearer {API_KEY}, Content-Type: application/json
+                // Body: fneJson
+
+                await _loggingService.LogInfoAsync(
+                    $"JSON FNE généré pour facture {factureData.NumeroFacture}: {System.Text.Json.JsonSerializer.Serialize(fneJson)}", 
+                    "Sage100Import");
+
+                return fneJson;
+            }
+            catch (Exception ex)
+            {
+                await _loggingService.LogErrorAsync($"Erreur certification facture {factureData.NumeroFacture}: {ex.Message}", "Sage100Import", ex);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Analyse et valide les informations client pour la certification FNE
+        /// </summary>
+        private async Task AnalyzerInformationsClientFNE(Sage100FacturePreview preview, string codeClient)
+        {
+            // Détermination du type de facturation FNE basé sur le code client
+            if (codeClient == "1999")
+            {
+                preview.TypeFacture = "B2C"; // Client divers/particulier
+            }
+            else if (codeClient.StartsWith("GOV") || codeClient.StartsWith("ETAT"))
+            {
+                preview.TypeFacture = "B2G"; // Gouvernement/État
+            }
+            else if (codeClient.StartsWith("INT") || codeClient.StartsWith("EXT"))
+            {
+                preview.TypeFacture = "B2F"; // International
             }
             else
             {
-                preview.ConflitDonnees = "✅ Cohérent";
-                preview.ConflitDetails = "Aucun conflit détecté entre Excel et base de données";
+                preview.TypeFacture = "B2B"; // Entreprise (défaut)
+            }
+            
+            // Validation client
+            if (codeClient != "1999")
+            {
+                var clientBDD = await _clientRepository.GetByClientCodeAsync(codeClient);
+                preview.ClientTrouve = clientBDD != null;
+            }
+            else
+            {
+                preview.ClientTrouve = true; // Client divers est toujours "trouvé"
             }
         }
         
@@ -754,7 +906,7 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                 if (factureData.CodeClient == "1999")
                 {
                     // Client divers - chercher par NCC ou créer
-                    var clientDivers = await _clientRepository.GetByNccAsync(factureData.NccClient);
+                    var clientDivers = await _clientRepository.GetByNccAsync(factureData.GetNccClient());
                     if (clientDivers == null)
                     {
                         // Créer nouveau client divers
@@ -763,7 +915,7 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                             Id = Guid.NewGuid(),
                             ClientCode = "1999",
                             CompanyName = factureData.NomReelClientDivers ?? factureData.IntituleClient,
-                            ClientNcc = factureData.NccClient,
+                            ClientNcc = factureData.GetNccClient(),
                             ClientType = "divers",
                             DefaultPaymentMethod = factureData.MoyenPaiement,
                             IsActive = true,

@@ -1,30 +1,27 @@
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Windows.Input;
-using System.Threading.Tasks;
-using System;
-using FNEV4.Core.Models.ImportTraitement;
-using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using FNEV4.Core.Models.ImportTraitement;
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace FNEV4.Presentation.ViewModels.ImportTraitement
 {
-    /// <summary>
-    /// ViewModel pour la fenêtre d'aperçu des factures Sage 100
-    /// </summary>
     public partial class Sage100PreviewViewModel : ObservableObject
     {
-        private readonly Sage100ImportViewModel _parentViewModel;
-
         #region Properties
 
-        public ObservableCollection<Sage100FacturePreview> InvoicesPreviews { get; set; }
+        private readonly Sage100ImportViewModel _parentViewModel;
 
         [ObservableProperty]
-        private int _totalFiles;
+        private ObservableCollection<Sage100FacturePreview> _facturesImportees = new();
+
+        [ObservableProperty]
+        private ObservableCollection<Sage100FacturePreview> _filteredFactures = new();
+
+        [ObservableProperty]
+        private string _searchText = string.Empty;
 
         [ObservableProperty]
         private int _validFiles;
@@ -32,24 +29,9 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         [ObservableProperty]
         private int _invalidFiles;
 
-        [ObservableProperty]
-        private int _totalInvoices;
-
-        private List<string> _errors = new();
-        public List<string> Errors
-        {
-            get => _errors;
-            set
-            {
-                _errors = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(ErrorsCount));
-                OnPropertyChanged(nameof(HasErrors));
-            }
-        }
-
-        public int ErrorsCount => Errors?.Count ?? 0;
-        public bool HasErrors => ErrorsCount > 0;
+        public int TotalFactures => FacturesImportees?.Count ?? 0;
+        public int FacturesTraitees => ValidFiles;
+        public int FacturesEnErreur => InvalidFiles;
 
         #endregion
 
@@ -58,39 +40,80 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         public Sage100PreviewViewModel(Sage100ImportViewModel parentViewModel = null)
         {
             _parentViewModel = parentViewModel;
-            InvoicesPreviews = new ObservableCollection<Sage100FacturePreview>();
+            FacturesImportees = new ObservableCollection<Sage100FacturePreview>();
+            FilteredFactures = new ObservableCollection<Sage100FacturePreview>();
+        }
+
+        #endregion
+
+        #region Filter Methods
+
+        partial void OnSearchTextChanged(string value)
+        {
+            ApplyFilters();
+        }
+
+        partial void OnFacturesImporteesChanged(ObservableCollection<Sage100FacturePreview> value)
+        {
+            ApplyFilters();
+        }
+
+        private void ApplyFilters()
+        {
+            if (FacturesImportees == null)
+                return;
+
+            FilteredFactures.Clear();
+            
+            var filtered = FacturesImportees.AsEnumerable();
+
+            // Filtre de recherche rapide sur plusieurs champs
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                filtered = filtered.Where(f =>
+                    (f.NumeroFacture?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true) ||
+                    (f.NomClient?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true) ||
+                    (f.CodeClient?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true) ||
+                    (f.PointDeVente?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true) ||
+                    (f.MoyenPaiement?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true) ||
+                    (f.Produits?.Any(p => p.Designation?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true) == true) ||
+                    (f.Produits?.Any(p => p.CodeProduit?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true) == true));
+            }
+
+            foreach (var facture in filtered)
+            {
+                FilteredFactures.Add(facture);
+            }
+
+            // Notifier les propriétés calculées
+            OnPropertyChanged(nameof(TotalFactures));
         }
 
         #endregion
 
         #region Public Methods
 
-        /// <summary>
-        /// Charge les données d'aperçu
-        /// </summary>
-        public void LoadPreviewData(
-            List<Sage100FacturePreview> invoices, 
-            int totalFiles, 
-            int validFiles, 
-            int invalidFiles, 
-            List<string> errors = null)
+        public void LoadPreviewData(Sage100PreviewResult previewResult)
         {
-            // Mise à jour des statistiques
-            TotalFiles = totalFiles;
-            ValidFiles = validFiles;
-            InvalidFiles = invalidFiles;
-            TotalInvoices = invoices?.Count ?? 0;
-            Errors = errors ?? new List<string>();
+            if (previewResult == null) return;
 
-            // Chargement des factures
-            InvoicesPreviews.Clear();
-            if (invoices != null)
+            FacturesImportees.Clear();
+            
+            foreach (var facture in previewResult.Apercu)
             {
-                foreach (var invoice in invoices)
-                {
-                    InvoicesPreviews.Add(invoice);
-                }
+                FacturesImportees.Add(facture);
             }
+
+            ValidFiles = previewResult.Apercu.Count(f => f.EstValide);
+            InvalidFiles = previewResult.Apercu.Count(f => !f.EstValide);
+            
+            // Déclencher le filtrage pour remplir FilteredFactures
+            ApplyFilters();
+            
+            // Notifier les propriétés calculées
+            OnPropertyChanged(nameof(TotalFactures));
+            OnPropertyChanged(nameof(FacturesTraitees));
+            OnPropertyChanged(nameof(FacturesEnErreur));
         }
 
         #endregion
@@ -98,14 +121,37 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         #region Commands
 
         [RelayCommand]
-        private void ExportPreview()
+        private void ClearSearch()
         {
-            // TODO: Implémenter l'export Excel de l'aperçu
-            // Pour l'instant, on peut afficher un message
+            SearchText = string.Empty;
+        }
+
+        [RelayCommand]
+        private void ShowProductDetails(Sage100FacturePreview facture)
+        {
+            if (facture == null) return;
+            
+            var produitDetails = string.Empty;
+            if (facture.Produits?.Any() == true)
+            {
+                produitDetails = string.Join("\n", facture.Produits.Select(p => 
+                    $"• {p.Designation} - Qté: {p.Quantite} - Prix: {p.PrixUnitaire:N2} - Total: {p.MontantHt:N2}"));
+            }
+            else
+            {
+                produitDetails = "Aucun produit détaillé disponible";
+            }
+            
             System.Windows.MessageBox.Show(
-                "Fonctionnalité d'export Excel à implémenter", 
-                "Export", 
-                System.Windows.MessageBoxButton.OK, 
+                $"Détails de la facture {facture.NumeroFacture}:\n\n" +
+                $"Client: {facture.NomClient}\n" +
+                $"Date: {facture.DateFacture:dd/MM/yyyy}\n" +
+                $"Nombre de produits: {facture.NombreProduits}\n" +
+                $"Montant HT: {facture.MontantHT:N2}\n" +
+                $"Montant TTC: {facture.MontantTTC:N2}\n\n" +
+                $"Produits:\n{produitDetails}",
+                "Détails de la facture",
+                System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Information);
         }
 
@@ -124,13 +170,13 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                     return;
                 }
 
-                var validInvoices = InvoicesPreviews.Where(f => f.EstValide).Count();
-                var invalidInvoices = InvoicesPreviews.Where(f => !f.EstValide).Count();
+                var validInvoices = FacturesImportees.Where(f => f.EstValide).Count();
+                var totalInvoices = FacturesImportees.Count;
 
                 var confirmMessage = $"📋 CONFIRMATION D'IMPORT\n\n" +
-                                   $"✅ Factures valides à importer: {validInvoices}\n" +
-                                   $"❌ Factures avec erreurs (ignorées): {invalidInvoices}\n\n" +
-                                   $"Voulez-vous procéder à l'import des {validInvoices} factures valides ?";
+                                   $"✅ Factures à importer: {totalInvoices}\n" +
+                                   $"✅ Factures valides: {validInvoices}\n\n" +
+                                   $"Voulez-vous procéder à l'import ?";
 
                 var result = System.Windows.MessageBox.Show(
                     confirmMessage,
@@ -160,9 +206,6 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                     System.Windows.MessageBoxImage.Error);
             }
         }
-
-        private bool CanExportPreview => InvoicesPreviews?.Count > 0;
-        private bool CanImportInvoices => InvoicesPreviews?.Any(f => f.EstValide) == true;
 
         #endregion
     }

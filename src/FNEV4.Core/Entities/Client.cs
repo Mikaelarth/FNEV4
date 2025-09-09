@@ -77,6 +77,13 @@ namespace FNEV4.Core.Entities
         public string DefaultPaymentMethod { get; set; } = "cash";
 
         /// <summary>
+        /// Point de vente par défaut du client (ex: "01", "Gestoci")
+        /// Utilisé comme fallback si A10 est vide dans Excel
+        /// </summary>
+        [MaxLength(50)]
+        public string? DefaultPointOfSale { get; set; }
+
+        /// <summary>
         /// Indique si le client est actif
         /// </summary>
         public bool IsActive { get; set; } = true;

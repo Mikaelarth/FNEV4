@@ -711,13 +711,15 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 var previewViewModel = new Sage100PreviewViewModel(this); // Passer une référence de ce ViewModel
                 
                 // Chargement des données
-                previewViewModel.LoadPreviewData(
-                    invoices: PreviewFactures.ToList(),
-                    totalFiles: _lastScanTotalFiles, // Nombre réel de fichiers trouvés
-                    validFiles: PreviewFactures.Count(f => f.EstValide),
-                    invalidFiles: PreviewFactures.Count(f => !f.EstValide),
-                    errors: _lastScanErrors // Erreurs du dernier scan
-                );
+                var previewResult = new Sage100PreviewResult
+                {
+                    IsSuccess = true,
+                    FacturesDetectees = PreviewFactures.Count,
+                    Apercu = PreviewFactures.ToList(),
+                    Errors = _lastScanErrors
+                };
+                
+                previewViewModel.LoadPreviewData(previewResult);
                 
                 previewWindow.DataContext = previewViewModel;
                 previewWindow.Owner = System.Windows.Application.Current.MainWindow;
@@ -821,7 +823,7 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 var searchLower = SearchText.ToLower();
                 if (!facture.NumeroFacture.ToLower().Contains(searchLower) &&
                     !facture.NomClient.ToLower().Contains(searchLower) &&
-                    !facture.MontantEstime.ToString().Contains(searchLower) &&
+                    !facture.MontantTTC.ToString().Contains(searchLower) &&
                     !facture.MoyenPaiement.ToLower().Contains(searchLower))
                 {
                     return false;
