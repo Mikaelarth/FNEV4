@@ -179,7 +179,7 @@ namespace FNEV4.Presentation
                     }, ServiceLifetime.Scoped); // CHANGÉ: Scoped au lieu de Transient
 
                     // Services Infrastructure
-                    services.AddScoped<IDatabaseService, DatabaseService>();
+                    services.AddScoped<FNEV4.Infrastructure.Services.IDatabaseService, DatabaseService>();
                     services.AddScoped<ILoggingConfigurationService, LoggingConfigurationService>();
                     services.AddScoped<InfraLogging, LoggingService>();
                     services.AddScoped<IDiagnosticService, DiagnosticService>();
@@ -252,6 +252,21 @@ namespace FNEV4.Presentation
                     
                     // ViewModels Import & Traitement
                     services.AddTransient<FNEV4.Presentation.ViewModels.ImportTraitement.ImportFichiersViewModel>();
+                    services.AddTransient<FNEV4.Presentation.ViewModels.ImportTraitement.Sage100ImportViewModel>();
+
+                    // ViewModels Dashboard
+                    services.AddTransient<FNEV4.Presentation.ViewModels.Dashboard.DashboardVueEnsembleViewModel>(provider =>
+                        new FNEV4.Presentation.ViewModels.Dashboard.DashboardVueEnsembleViewModel(
+                            provider.GetRequiredService<IClientRepository>(),
+                            provider.GetRequiredService<InfraLogging>(),
+                            provider.GetRequiredService<FNEV4.Infrastructure.Services.IDatabaseService>(),
+                            provider.GetRequiredService<ILogger<FNEV4.Presentation.ViewModels.Dashboard.DashboardVueEnsembleViewModel>>()));
+                    
+                    services.AddTransient<FNEV4.Presentation.ViewModels.Dashboard.DashboardActionsRapidesViewModel>(provider =>
+                        new FNEV4.Presentation.ViewModels.Dashboard.DashboardActionsRapidesViewModel(
+                            provider.GetRequiredService<IClientRepository>(),
+                            provider.GetRequiredService<FNEV4.Infrastructure.Services.IDatabaseService>(),
+                            provider.GetRequiredService<InfraLogging>()));
 
                     // Service locator pour les ViewModels
                     services.AddSingleton<ViewModelLocator>();

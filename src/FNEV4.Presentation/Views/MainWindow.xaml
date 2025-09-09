@@ -82,9 +82,9 @@
 
                 <!-- Zone utilisateur et paramètres -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
-                    <!-- Informations connexion -->
+                    <!-- État de connexion général -->
                     <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
-                        <materialDesign:PackIcon Kind="CloudCheck" 
+                        <materialDesign:PackIcon Kind="Connection" 
                                                Width="20" Height="20" 
                                                Foreground="White" 
                                                VerticalAlignment="Center" />
@@ -95,8 +95,21 @@
                                  Margin="4,0,0,0" />
                     </StackPanel>
 
-                    <!-- Balance stickers -->
+                    <!-- Environnement actuel -->
                     <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                        <materialDesign:PackIcon Kind="Earth" 
+                                               Width="20" Height="20" 
+                                               Foreground="White" 
+                                               VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding CurrentEnvironment}" 
+                                 FontSize="12" 
+                                 Foreground="White" 
+                                 VerticalAlignment="Center" 
+                                 Margin="4,0,0,0" />
+                    </StackPanel>
+
+                    <!-- Balance stickers (masquée pour l'instant) -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,16,0" Visibility="Collapsed">
                         <materialDesign:PackIcon Kind="Tag" 
                                                Width="20" Height="20" 
                                                Foreground="White" 
@@ -142,6 +155,7 @@
                                     HorizontalContentAlignment="Left"
                                     Height="48"
                                     Padding="8,0"
+                                    Command="{Binding NavigateToDashboardCommand}"
                                     Click="ToggleDashboardSection">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -184,11 +198,6 @@
                                     HorizontalContentAlignment="Left"
                                     Height="36"
                                     Content="Vue d'ensemble" />
-                            <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                    Command="{Binding NavigateToDashboardStatusCommand}"
-                                    HorizontalContentAlignment="Left"
-                                    Height="36"
-                                    Content="Statut du système" />
                             <Button Style="{StaticResource MaterialDesignFlatButton}"
                                     Command="{Binding NavigateToDashboardActionsCommand}"
                                     HorizontalContentAlignment="Left"
@@ -725,24 +734,71 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" 
-                         Text="{Binding CompanyName, StringFormat='Entreprise: {0}'}"
-                         VerticalAlignment="Center"
-                         FontSize="12"
-                         Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                <!-- Informations entreprise -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="Domain" Width="14" Height="14" 
+                                           Foreground="{DynamicResource MaterialDesignBodyLight}" 
+                                           VerticalAlignment="Center" Margin="0,0,4,0"/>
+                    <TextBlock Text="{Binding CompanyName}"
+                             VerticalAlignment="Center"
+                             FontSize="12"
+                             Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                             
+                    <!-- Séparateur -->
+                    <TextBlock Text=" • " VerticalAlignment="Center" FontSize="12" 
+                             Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="8,0"/>
+                             
+                    <!-- Configuration Status -->
+                    <materialDesign:PackIcon Kind="Settings" Width="14" Height="14" 
+                                           Foreground="{DynamicResource MaterialDesignBodyLight}" 
+                                           VerticalAlignment="Center" Margin="0,0,4,0"/>
+                    <TextBlock Text="{Binding ConfigurationStatus, StringFormat='Config: {0}'}"
+                             VerticalAlignment="Center"
+                             FontSize="12"
+                             Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                </StackPanel>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <!-- Environnement -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
+                    <materialDesign:PackIcon Kind="Earth" Width="14" Height="14" 
+                                           Foreground="{DynamicResource MaterialDesignBodyLight}" 
+                                           VerticalAlignment="Center" Margin="0,0,4,0"/>
+                    <TextBlock Text="{Binding CurrentEnvironment}"
+                             VerticalAlignment="Center"
+                             FontSize="12"
+                             Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                </StackPanel>
+
+                <!-- État base de données -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
+                    <materialDesign:PackIcon Kind="Database" Width="14" Height="14" 
+                                           Foreground="{DynamicResource MaterialDesignBodyLight}" 
+                                           VerticalAlignment="Center" Margin="0,0,4,0"/>
+                    <TextBlock Text="{Binding DatabaseStatus, StringFormat='DB: {0}'}"
+                             VerticalAlignment="Center"
+                             FontSize="12"
+                             Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                </StackPanel>
+
+                <!-- Version et Actions -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
                     <TextBlock Text="{Binding ApplicationVersion}"
                              VerticalAlignment="Center"
                              FontSize="12"
                              Foreground="{DynamicResource MaterialDesignBodyLight}"
                              Margin="0,0,16,0" />
-                    
+                </StackPanel>
+                
+                <!-- Bouton de rafraîchissement -->
+                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Style="{StaticResource MaterialDesignToolButton}"
                             Command="{Binding RefreshConnectionStatusCommand}"
-                            ToolTip="Actualiser l'état de connexion">
+                            ToolTip="Actualiser l'état de l'application">
                         <materialDesign:PackIcon Kind="Refresh" Width="12" Height="12" />
                     </Button>
                 </StackPanel>

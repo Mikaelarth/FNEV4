@@ -1,0 +1,484 @@
+<UserControl x:Class="FNEV4.Presentation.Views.Dashboard.DashboardVueEnsembleView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:FNEV4.Presentation.Converters"
+             xmlns:dashboardConverters="clr-namespace:FNEV4.Presentation.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1400"
+             Background="{DynamicResource MaterialDesignPaper}">
+
+    <UserControl.Resources>
+        <!-- Convertisseurs -->
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+        <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
+        <converters:AlerteTypeToColorConverter x:Key="AlerteTypeToColorConverter"/>
+        <converters:AlerteTypeToIconConverter x:Key="AlerteTypeToIconConverter"/>
+        <converters:DashboardBooleanToColorConverter x:Key="BooleanToColorConverter"/>
+        
+        <!-- Styles cohérents avec les autres vues -->
+        <Style x:Key="DashboardCardStyle" TargetType="materialDesign:Card">
+            <Setter Property="Margin" Value="0,0,0,24"/>
+            <Setter Property="Padding" Value="24"/>
+            <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth2"/>
+        </Style>
+
+        <Style x:Key="HeaderIconStyle" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
+        </Style>
+
+        <Style x:Key="ActionButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="MinWidth" Value="120"/>
+        </Style>
+
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="MinWidth" Value="120"/>
+        </Style>
+
+        <!-- Styles spéciaux pour les cartes KPI -->
+        <Style x:Key="KpiCardStyle" TargetType="materialDesign:Card">
+            <Setter Property="Margin" Value="0,0,16,16"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth3"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="KpiValueStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="32"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,8,0,4"/>
+        </Style>
+
+        <Style x:Key="KpiTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBodyLight}"/>
+        </Style>
+
+        <Style x:Key="KpiEvolutionStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+        </Style>
+
+        <!-- Template pour les cartes KPI -->
+        <DataTemplate x:Key="KpiCardTemplate">
+            <materialDesign:Card Style="{StaticResource KpiCardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Titre -->
+                    <TextBlock Grid.Row="0" Grid.Column="0" 
+                             Text="{Binding Titre}" 
+                             Style="{StaticResource KpiTitleStyle}"/>
+
+                    <!-- Icône -->
+                    <materialDesign:PackIcon Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
+                                           Kind="{Binding Icone}"
+                                           Width="28" Height="28"
+                                           VerticalAlignment="Center"
+                                           Foreground="{Binding Couleur}"/>
+
+                    <!-- Valeur -->
+                    <TextBlock Grid.Row="1" Grid.Column="0" 
+                             Text="{Binding Valeur}" 
+                             Style="{StaticResource KpiValueStyle}"
+                             Foreground="{Binding Couleur}"/>
+
+                    <!-- Évolution -->
+                    <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                             Text="{Binding Evolution}" 
+                             Style="{StaticResource KpiEvolutionStyle}">
+                        <TextBlock.Foreground>
+                            <SolidColorBrush Color="{Binding EstPositive, Converter={StaticResource BooleanToColorConverter}}" />
+                        </TextBlock.Foreground>
+                    </TextBlock>
+                </Grid>
+            </materialDesign:Card>
+        </DataTemplate>
+
+        <!-- Template pour les clients récents -->
+        <DataTemplate x:Key="ClientRecentTemplate">
+            <Border BorderBrush="{DynamicResource MaterialDesignDivider}" 
+                    BorderThickness="0,0,0,1" 
+                    Padding="0,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <materialDesign:PackIcon Grid.Column="0" 
+                                           Kind="Account" 
+                                           Width="24" Height="24"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                           Margin="0,0,12,0"/>
+
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{Binding NomComplet}" 
+                                 FontWeight="Medium"/>
+                        <TextBlock Text="{Binding TypeClient}" 
+                                 FontSize="12"
+                                 Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Column="2" 
+                             Text="{Binding DateCreation, StringFormat=dd/MM}" 
+                             FontSize="12"
+                             Foreground="{DynamicResource MaterialDesignBodyLight}"
+                             VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- Template pour les alertes -->
+        <DataTemplate x:Key="AlerteTemplate">
+            <Border BorderBrush="{DynamicResource MaterialDesignDivider}" 
+                    BorderThickness="0,0,0,1" 
+                    Padding="0,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <materialDesign:PackIcon Grid.Column="0" 
+                                           Width="20" Height="20"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,12,0">
+                        <materialDesign:PackIcon.Kind>
+                            <MultiBinding Converter="{StaticResource AlerteTypeToIconConverter}">
+                                <Binding Path="Type"/>
+                                <Binding Path="EstCritique"/>
+                            </MultiBinding>
+                        </materialDesign:PackIcon.Kind>
+                        <materialDesign:PackIcon.Foreground>
+                            <MultiBinding Converter="{StaticResource AlerteTypeToColorConverter}">
+                                <Binding Path="Type"/>
+                                <Binding Path="EstCritique"/>
+                            </MultiBinding>
+                        </materialDesign:PackIcon.Foreground>
+                    </materialDesign:PackIcon>
+
+                    <TextBlock Grid.Column="1" 
+                             Text="{Binding Message}" 
+                             TextWrapping="Wrap"
+                             VerticalAlignment="Center"/>
+
+                    <TextBlock Grid.Column="2" 
+                             Text="{Binding DateCreation, StringFormat=HH:mm}" 
+                             FontSize="12"
+                             Foreground="{DynamicResource MaterialDesignBodyLight}"
+                             VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="32">
+
+            <!-- En-tête avec titre et actions -->
+            <materialDesign:Card Style="{StaticResource DashboardCardStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <materialDesign:PackIcon Grid.Column="0" 
+                                           Kind="ViewDashboard" 
+                                           Style="{StaticResource HeaderIconStyle}"/>
+                    
+                    <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="Dashboard - Vue d'ensemble" 
+                                 FontSize="24" 
+                                 FontWeight="Bold"
+                                 Foreground="{DynamicResource MaterialDesignBody}"/>
+                        <TextBlock Text="Indicateurs clés et vue globale du système" 
+                                 FontSize="14" 
+                                 Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                 Margin="0,4,0,0"/>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Style="{StaticResource SecondaryButtonStyle}"
+                                Command="{Binding ToggleAutoRefreshCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16"/>
+                                <TextBlock Text="Auto" Margin="8,0,0,0"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button Style="{StaticResource SecondaryButtonStyle}"
+                                Command="{Binding ExportKpisCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Export" Width="16" Height="16"/>
+                                <TextBlock Text="Exporter" Margin="8,0,0,0"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button Style="{StaticResource ActionButtonStyle}"
+                                Command="{Binding RefreshDataCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16"/>
+                                <TextBlock Text="Actualiser" Margin="8,0,0,0"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </materialDesign:Card>
+
+            <!-- Indicateur de chargement -->
+            <materialDesign:Card Style="{StaticResource DashboardCardStyle}"
+                               Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <ProgressBar IsIndeterminate="True" Width="24" Height="24" Margin="0,0,16,0"/>
+                    <TextBlock Text="{Binding StatusMessage}" 
+                             VerticalAlignment="Center"
+                             FontSize="16"/>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- Message d'erreur -->
+            <materialDesign:Card Style="{StaticResource DashboardCardStyle}"
+                               Background="#FFEBEE"
+                               Visibility="{Binding HasErrors, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="AlertCircle" 
+                                           Width="24" Height="24"
+                                           Foreground="#D32F2F"
+                                           Margin="0,0,16,0"/>
+                    <TextBlock Text="{Binding ErrorMessage}" 
+                             VerticalAlignment="Center"
+                             Foreground="#D32F2F"
+                             FontWeight="Medium"/>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- Section KPIs principaux -->
+            <materialDesign:Card Style="{StaticResource DashboardCardStyle}"
+                               Visibility="{Binding IsLoading, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                <StackPanel>
+                    <TextBlock Text="📊 Indicateurs clés de performance"
+                             FontSize="18" 
+                             FontWeight="SemiBold"
+                             Foreground="{DynamicResource MaterialDesignBody}"
+                             Margin="0,0,0,20"/>
+
+                    <!-- Grille des KPIs -->
+                    <ItemsControl ItemsSource="{Binding KpiCards}" 
+                                ItemTemplate="{StaticResource KpiCardTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- Section graphiques et informations -->
+            <Grid Visibility="{Binding IsLoading, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Colonne gauche - Graphiques -->
+                <StackPanel Grid.Column="0">
+                    
+                    <!-- Graphique des statistiques mensuelles -->
+                    <materialDesign:Card Style="{StaticResource DashboardCardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="📈 Évolution mensuelle"
+                                     FontSize="16" 
+                                     FontWeight="SemiBold"
+                                     Foreground="{DynamicResource MaterialDesignBody}"
+                                     Margin="0,0,0,16"/>
+
+                            <!-- Placeholder pour graphique -->
+                            <Border Height="200" 
+                                  Background="#F5F5F5" 
+                                  CornerRadius="4"
+                                  BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                  BorderThickness="1">
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="ChartLine" 
+                                                           Width="48" Height="48"
+                                                           Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                    <TextBlock Text="Graphique en cours d'implémentation" 
+                                             Margin="0,8,0,0"
+                                             Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                    <TextBlock Text="Données disponibles: statistiques mensuelles" 
+                                             FontSize="12"
+                                             Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </materialDesign:Card>
+
+                    <!-- Statut du système -->
+                    <materialDesign:Card Style="{StaticResource DashboardCardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="⚙️ Statut du système"
+                                     FontSize="16" 
+                                     FontWeight="SemiBold"
+                                     Foreground="{DynamicResource MaterialDesignBody}"
+                                     Margin="0,0,0,16"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Connexion API:" FontWeight="Medium"/>
+                                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+                                    <materialDesign:PackIcon x:Name="ApiStatusIcon" 
+                                                           Width="16" Height="16" 
+                                                           VerticalAlignment="Center" 
+                                                           Margin="0,0,8,0"/>
+                                    <TextBlock x:Name="ApiStatusText" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Base de données:" FontWeight="Medium" Margin="0,8,0,0"/>
+                                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0,8,0,0">
+                                    <materialDesign:PackIcon x:Name="DbStatusIcon" 
+                                                           Width="16" Height="16" 
+                                                           VerticalAlignment="Center" 
+                                                           Margin="0,0,8,0"/>
+                                    <TextBlock x:Name="DbStatusText" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Solde vignettes:" FontWeight="Medium" Margin="0,8,0,0"/>
+                                <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0,8,0,0">
+                                    <materialDesign:PackIcon x:Name="VignettesStatusIcon" 
+                                                           Width="16" Height="16" 
+                                                           VerticalAlignment="Center" 
+                                                           Margin="0,0,8,0"/>
+                                    <TextBlock x:Name="VignettesStatusText" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Espace disque:" FontWeight="Medium" Margin="0,8,0,0"/>
+                                <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="0,8,0,0">
+                                    <materialDesign:PackIcon Kind="HardDisk" 
+                                                           Width="16" Height="16" 
+                                                           VerticalAlignment="Center" 
+                                                           Foreground="{DynamicResource MaterialDesignBody}"
+                                                           Margin="0,0,8,0"/>
+                                    <TextBlock Text="{Binding EspaceDisqueUtilise}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </materialDesign:Card>
+                </StackPanel>
+
+                <!-- Colonne droite - Informations -->
+                <StackPanel Grid.Column="2">
+                    
+                    <!-- Clients récents -->
+                    <materialDesign:Card Style="{StaticResource DashboardCardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="👥 Clients récents"
+                                     FontSize="16" 
+                                     FontWeight="SemiBold"
+                                     Foreground="{DynamicResource MaterialDesignBody}"
+                                     Margin="0,0,0,16"/>
+
+                            <ScrollViewer MaxHeight="200" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding ClientsRecents}" 
+                                            ItemTemplate="{StaticResource ClientRecentTemplate}"/>
+                            </ScrollViewer>
+                        </StackPanel>
+                    </materialDesign:Card>
+
+                    <!-- Alertes système -->
+                    <materialDesign:Card Style="{StaticResource DashboardCardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="🔔 Alertes système"
+                                     FontSize="16" 
+                                     FontWeight="SemiBold"
+                                     Foreground="{DynamicResource MaterialDesignBody}"
+                                     Margin="0,0,0,16"/>
+
+                            <ScrollViewer MaxHeight="200" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding Alertes}" 
+                                            ItemTemplate="{StaticResource AlerteTemplate}"/>
+                            </ScrollViewer>
+
+                            <TextBlock Text="Aucune alerte active" 
+                                     FontSize="14"
+                                     Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                     HorizontalAlignment="Center"
+                                     Margin="0,16,0,0"
+                                     Visibility="{Binding Alertes.Count, Converter={StaticResource CountToVisibilityConverter}}"/>
+                        </StackPanel>
+                    </materialDesign:Card>
+                </StackPanel>
+            </Grid>
+
+            <!-- Footer avec informations de mise à jour -->
+            <materialDesign:Card Style="{StaticResource DashboardCardStyle}"
+                               Visibility="{Binding IsLoading, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" 
+                             Text="{Binding StatusMessage}" 
+                             VerticalAlignment="Center"
+                             FontSize="14"
+                             Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+
+                    <TextBlock Grid.Column="1" 
+                             VerticalAlignment="Center"
+                             FontSize="12"
+                             Foreground="{DynamicResource MaterialDesignBodyLight}">
+                        <Run Text="Dernière mise à jour: "/>
+                        <Run Text="{Binding DerniereMiseAJour}" FontWeight="Medium"/>
+                    </TextBlock>
+                </Grid>
+            </materialDesign:Card>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

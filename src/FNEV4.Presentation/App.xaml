@@ -23,6 +23,14 @@
             <converters:BooleanToGridLengthConverter x:Key="BooleanToGridLengthConverter" />
             <converters:BooleanToBrushConverter x:Key="BooleanToBrushConverter" />
             <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+            <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+            
+            <!-- Styles globaux -->
+            <Style x:Key="DashboardCardStyle" TargetType="materialDesign:Card">
+                <Setter Property="Margin" Value="0,0,0,24"/>
+                <Setter Property="Padding" Value="24"/>
+                <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth2"/>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

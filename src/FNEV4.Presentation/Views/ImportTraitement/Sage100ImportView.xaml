@@ -91,6 +91,7 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             
                             <materialDesign:PackIcon Kind="FolderCog" 
@@ -122,6 +123,19 @@
                             </Button>
                             
                             <Button Grid.Column="3" 
+                                   Content="Aperçu" 
+                                   Style="{StaticResource MaterialDesignRaisedButton}"
+                                   Background="{DynamicResource PrimaryHueMidBrush}"
+                                   Command="{Binding ShowPreviewCommand}"
+                                   IsEnabled="{Binding HasScanResults}"
+                                   Margin="0,0,8,0"
+                                   Width="100">
+                                <Button.ToolTip>
+                                    <ToolTip Content="Afficher l'aperçu détaillé des factures scannées"/>
+                                </Button.ToolTip>
+                            </Button>
+                            
+                            <Button Grid.Column="4" 
                                    Style="{StaticResource MaterialDesignIconButton}"
                                    Command="{Binding OpenConfiguredFoldersCommand}"
                                    Width="40" Height="40">
@@ -505,7 +519,20 @@
                                  EnableColumnVirtualization="True"
                                  MaxHeight="400">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Feuille" Binding="{Binding NomFeuille}" MinWidth="80" Width="100">
+                                <!-- NOUVELLE COLONNE: Fichier Source -->
+                                <DataGridTextColumn Header="📁 Fichier" Binding="{Binding NomFichierSource}" MinWidth="120" Width="140">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontWeight" Value="Medium"/>
+                                            <Setter Property="Foreground" Value="#9C27B0"/>
+                                            <Setter Property="TextWrapping" Value="NoWrap"/>
+                                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                            <Setter Property="ToolTip" Value="{Binding NomFichierSource}"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                
+                                <DataGridTextColumn Header="Feuille" Binding="{Binding NomFeuille}" MinWidth="80" Width="90">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="FontWeight" Value="Medium"/>
@@ -525,7 +552,7 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 
-                                <DataGridTextColumn Header="Client" Binding="{Binding NomClient}" MinWidth="150" Width="180">
+                                <DataGridTextColumn Header="Client" Binding="{Binding NomClient}" MinWidth="140" Width="160">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="TextWrapping" Value="NoWrap"/>
@@ -545,7 +572,7 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 
-                                <DataGridTextColumn Header="Paiement" Binding="{Binding MoyenPaiement}" MinWidth="120" Width="140">
+                                <DataGridTextColumn Header="Paiement" Binding="{Binding MoyenPaiement}" MinWidth="100" Width="120">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="TextWrapping" Value="NoWrap"/>
@@ -557,18 +584,19 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 
-                                <DataGridTemplateColumn Header="📦 Articles" Width="90" MinWidth="90">
+                                <DataGridTemplateColumn Header="📦 Articles" Width="80" MinWidth="80">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Border Background="#E3F2FD" CornerRadius="8" Padding="8,4">
+                                            <Border Background="#E3F2FD" CornerRadius="8" Padding="6,3">
                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                                     <materialDesign:PackIcon Kind="Package" 
-                                                                           Width="14" Height="14" 
+                                                                           Width="12" Height="12" 
                                                                            Foreground="#1976D2" 
                                                                            VerticalAlignment="Center" 
-                                                                           Margin="0,0,4,0"/>
+                                                                           Margin="0,0,3,0"/>
                                                     <TextBlock Text="{Binding NombreProduits}" 
                                                              FontWeight="Medium" 
+                                                             FontSize="11"
                                                              Foreground="#1976D2"
                                                              VerticalAlignment="Center"/>
                                                 </StackPanel>
@@ -586,11 +614,12 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
                                 
-                                <DataGridTextColumn Header="Montant" Binding="{Binding MontantEstime, StringFormat='N0'}" MinWidth="100" Width="110">
+                                <DataGridTextColumn Header="Montant" Binding="{Binding MontantEstime, StringFormat='N0'}" MinWidth="90" Width="100">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="HorizontalAlignment" Value="Right"/>
                                             <Setter Property="FontWeight" Value="Bold"/>
+                                            <Setter Property="FontSize" Value="11"/>
                                             <Setter Property="Foreground" Value="#4CAF50"/>
                                             <Setter Property="ToolTip" Value="{Binding MontantEstime, StringFormat='Montant: {0:N0} FCFA'}"/>
                                             <Setter Property="Margin" Value="0,0,8,0"/>
@@ -603,6 +632,7 @@
                                         <Style TargetType="TextBlock">
                                             <Setter Property="HorizontalAlignment" Value="Center"/>
                                             <Setter Property="FontWeight" Value="Medium"/>
+                                            <Setter Property="FontSize" Value="11"/>
                                             <Setter Property="Foreground" Value="#FF9800"/>
                                             <Setter Property="ToolTip" Value="Type de facturation FNE (B2B, B2C, B2G, B2F)"/>
                                         </Style>
@@ -620,13 +650,20 @@
                                                                        Foreground="{Binding EstValide, Converter={StaticResource BoolToColorConverter}}"
                                                                        Width="14" Height="14"/>
                                                 <Border.ToolTip>
-                                                    <TextBlock>
-                                                        <Run Text="État: "/>
-                                                        <Run Text="{Binding EstValide, Converter={StaticResource BoolToStatusConverter}}" FontWeight="Bold"/>
-                                                        <LineBreak/>
-                                                        <Run Text="Client trouvé: " FontWeight="Medium"/>
-                                                        <Run Text="{Binding ClientTrouve, Converter={StaticResource BoolToYesNoConverter}}"/>
-                                                    </TextBlock>
+                                                    <StackPanel>
+                                                        <TextBlock>
+                                                            <Run Text="État: "/>
+                                                            <Run Text="{Binding EstValide, Converter={StaticResource BoolToStatusConverter}}" FontWeight="Bold"/>
+                                                        </TextBlock>
+                                                        <TextBlock>
+                                                            <Run Text="Client trouvé: " FontWeight="Medium"/>
+                                                            <Run Text="{Binding ClientTrouve, Converter={StaticResource BoolToYesNoConverter}}"/>
+                                                        </TextBlock>
+                                                        <TextBlock Text="Fichier source:" FontWeight="Medium" Margin="0,4,0,0"/>
+                                                        <TextBlock Text="{Binding NomFichierSource}" FontFamily="Consolas" FontSize="10"/>
+                                                        <TextBlock Text="Feuille:" FontWeight="Medium" Margin="0,2,0,0"/>
+                                                        <TextBlock Text="{Binding NomFeuille}" FontFamily="Consolas" FontSize="10"/>
+                                                    </StackPanel>
                                                 </Border.ToolTip>
                                             </Border>
                                         </DataTemplate>

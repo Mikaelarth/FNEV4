@@ -1,9 +1,15 @@
 using System;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using FNEV4.Core.Interfaces;
+using FNEV4.Infrastructure.Data;
+using FNEV4.Infrastructure.Services;
 using FNEV4.Presentation.Views.Maintenance;
 
 namespace FNEV4.Presentation.ViewModels
@@ -14,6 +20,13 @@ namespace FNEV4.Presentation.ViewModels
     /// </summary>
     public partial class MainViewModel : ObservableObject
     {
+        #region Services
+        
+        private readonly IDatabaseService? _databaseService;
+        private readonly FNEV4DbContext? _dbContext;
+        private readonly DispatcherTimer _statusRefreshTimer;
+        
+        #endregion
         #region Events
         
         /// <summary>
@@ -46,6 +59,15 @@ namespace FNEV4.Presentation.ViewModels
         private string _stickerBalance = "0";
 
         [ObservableProperty]
+        private string _currentEnvironment = "Non configuré";
+
+        [ObservableProperty]
+        private string _configurationStatus = "En attente";
+
+        [ObservableProperty]
+        private string _databaseStatus = "Non connecté";
+
+        [ObservableProperty]
         private bool _isMenuExpanded = true;
 
         [ObservableProperty]
@@ -62,18 +84,22 @@ namespace FNEV4.Presentation.ViewModels
         private void NavigateToDashboard()
         {
             CurrentModuleName = "Dashboard - Vue d'ensemble";
-        }
-
-        [RelayCommand]
-        private void NavigateToDashboardStatus()
-        {
-            CurrentModuleName = "Dashboard - Statut du système";
+            
+            // Créer le ViewModel et la vue
+            var dashboardViewModel = App.ServiceProvider.GetRequiredService<ViewModels.Dashboard.DashboardVueEnsembleViewModel>();
+            var dashboardView = new Views.Dashboard.DashboardVueEnsembleView(dashboardViewModel);
+            CurrentView = dashboardView;
         }
 
         [RelayCommand]
         private void NavigateToDashboardActions()
         {
             CurrentModuleName = "Dashboard - Actions rapides";
+            
+            // Créer le ViewModel et la vue pour Actions rapides
+            var actionsViewModel = App.ServiceProvider.GetRequiredService<ViewModels.Dashboard.DashboardActionsRapidesViewModel>();
+            var actionsView = new Views.Dashboard.DashboardActionsRapidesView(actionsViewModel);
+            CurrentView = actionsView;
         }
 
         /// <summary>
@@ -309,14 +335,30 @@ namespace FNEV4.Presentation.ViewModels
         [RelayCommand]
         private async Task RefreshConnectionStatus()
         {
-            // TODO: Implémenter la vérification de connexion API FNE
             ConnectionStatus = "Vérification...";
             
-            // Simulation d'un appel API
-            await Task.Delay(1000);
-            
-            ConnectionStatus = "Connecté"; // ou "Déconnecté" selon le résultat
-            StickerBalance = "1,245"; // Exemple de balance
+            try
+            {
+                // Vérifier l'état de la base de données
+                await CheckDatabaseStatus();
+                
+                // Vérifier la configuration de l'entreprise
+                await CheckCompanyConfiguration();
+                
+                // Vérifier l'environnement actuel
+                await CheckCurrentEnvironment();
+                
+                // TODO: Vérifier la connexion API FNE quand le module sera implémenté
+                ConnectionStatus = DatabaseStatus == "Connecté" ? "Prêt" : "Problème détecté";
+                
+                // TODO: Récupérer le vrai solde de vignettes depuis l'API
+                StickerBalance = "Non disponible";
+            }
+            catch (Exception ex)
+            {
+                ConnectionStatus = "Erreur";
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la vérification du statut: {ex.Message}");
+            }
         }
 
         #endregion
@@ -325,8 +367,28 @@ namespace FNEV4.Presentation.ViewModels
 
         public MainViewModel()
         {
-            // Initialisation par défaut - nécessaire pour le fonctionnement
+            // Récupérer les services via DI
+            _databaseService = App.ServiceProvider?.GetService<IDatabaseService>();
+            _dbContext = App.ServiceProvider?.GetService<FNEV4DbContext>();
+            
+            // Initialisation par défaut
             CurrentModuleName = "Dashboard - Vue d'ensemble";
+            
+            // Créer et configurer le timer pour le rafraîchissement automatique du statut
+            _statusRefreshTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(30) // Rafraîchir toutes les 30 secondes
+            };
+            _statusRefreshTimer.Tick += async (s, e) => await RefreshConnectionStatus();
+            
+            // Charger le Dashboard par défaut au démarrage
+            LoadDefaultDashboard();
+            
+            // Initialiser le statut au démarrage
+            _ = Task.Run(async () => await InitializeAsync());
+            
+            // Démarrer le timer de rafraîchissement
+            _statusRefreshTimer.Start();
         }
 
         #endregion
@@ -335,11 +397,145 @@ namespace FNEV4.Presentation.ViewModels
 
         private async Task InitializeAsync()
         {
-            // TODO: Charger la configuration de l'entreprise
-            // TODO: Vérifier l'état de connexion
-            // TODO: Charger les données de base
+            // Charger le statut de la configuration de l'entreprise
+            await CheckCompanyConfiguration();
             
+            // Vérifier l'état de connexion de la base de données
+            await CheckDatabaseStatus();
+            
+            // Vérifier l'environnement actuel
+            await CheckCurrentEnvironment();
+            
+            // Rafraîchir l'état de connexion général
             await RefreshConnectionStatus();
+        }
+
+        /// <summary>
+        /// Vérifie l'état de la base de données
+        /// </summary>
+        private async Task CheckDatabaseStatus()
+        {
+            try
+            {
+                if (_databaseService != null)
+                {
+                    var dbInfo = await _databaseService.GetDatabaseInfoAsync();
+                    DatabaseStatus = dbInfo?.ConnectionStatus == "Connectée" ? "Connecté" : "Déconnecté";
+                }
+                else
+                {
+                    DatabaseStatus = "Service non disponible";
+                }
+            }
+            catch (Exception ex)
+            {
+                DatabaseStatus = "Erreur";
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la vérification de la base de données: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Vérifie la configuration de l'entreprise
+        /// </summary>
+        private async Task CheckCompanyConfiguration()
+        {
+            try
+            {
+                if (_dbContext != null)
+                {
+                    var activeCompany = _dbContext.Companies?.FirstOrDefault(c => c.IsActive);
+                    
+                    if (activeCompany != null)
+                    {
+                        CompanyName = activeCompany.CompanyName ?? "Entreprise sans nom";
+                        ConfigurationStatus = "Configuré";
+                        
+                        // Déterminer l'environnement depuis la configuration
+                        CurrentEnvironment = !string.IsNullOrEmpty(activeCompany.Environment) 
+                            ? activeCompany.Environment 
+                            : "Non spécifié";
+                    }
+                    else
+                    {
+                        CompanyName = "Non configuré";
+                        ConfigurationStatus = "À configurer";
+                        CurrentEnvironment = "Non configuré";
+                    }
+                }
+                else
+                {
+                    CompanyName = "Service non disponible";
+                    ConfigurationStatus = "Erreur";
+                }
+            }
+            catch (Exception ex)
+            {
+                CompanyName = "Erreur de chargement";
+                ConfigurationStatus = "Erreur";
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la vérification de la configuration: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Vérifie l'environnement de travail actuel
+        /// </summary>
+        private async Task CheckCurrentEnvironment()
+        {
+            try
+            {
+                if (_dbContext != null)
+                {
+                    var activeCompany = _dbContext.Companies?.FirstOrDefault(c => c.IsActive);
+                    
+                    if (activeCompany != null && !string.IsNullOrEmpty(activeCompany.Environment))
+                    {
+                        CurrentEnvironment = activeCompany.Environment switch
+                        {
+                            "Production" => "🟢 Production",
+                            "Test" => "🟡 Test",
+                            "Development" => "🔵 Développement",
+                            _ => activeCompany.Environment
+                        };
+                    }
+                    else
+                    {
+                        CurrentEnvironment = "⚪ Non configuré";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                CurrentEnvironment = "❌ Erreur";
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la vérification de l'environnement: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Charge le Dashboard par défaut au démarrage de l'application
+        /// </summary>
+        private void LoadDefaultDashboard()
+        {
+            try
+            {
+                // Créer le ViewModel et la vue par défaut
+                var dashboardViewModel = App.ServiceProvider.GetRequiredService<ViewModels.Dashboard.DashboardVueEnsembleViewModel>();
+                var dashboardView = new Views.Dashboard.DashboardVueEnsembleView(dashboardViewModel);
+                CurrentView = dashboardView;
+            }
+            catch (Exception ex)
+            {
+                // Log de l'erreur en cas de problème
+                System.Diagnostics.Debug.WriteLine($"Erreur lors du chargement du Dashboard par défaut: {ex.Message}");
+                // Ne pas faire planter l'application, l'utilisateur pourra naviguer manuellement
+            }
+        }
+
+        /// <summary>
+        /// Nettoyage des ressources
+        /// </summary>
+        public void Dispose()
+        {
+            _statusRefreshTimer?.Stop();
         }
 
         #endregion

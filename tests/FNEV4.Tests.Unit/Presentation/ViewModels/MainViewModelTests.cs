@@ -42,7 +42,6 @@ namespace FNEV4.Tests.Unit.Presentation.ViewModels
 
         [Theory]
         [InlineData("Dashboard - Vue d'ensemble")]
-        [InlineData("Dashboard - Statut du système")]
         [InlineData("Dashboard - Actions rapides")]
         public void DashboardNavigationCommands_ShouldUpdateCurrentModuleName(string expectedModuleName)
         {
@@ -54,9 +53,6 @@ namespace FNEV4.Tests.Unit.Presentation.ViewModels
             {
                 case "Dashboard - Vue d'ensemble":
                     viewModel.NavigateToDashboardCommand.Execute(null);
-                    break;
-                case "Dashboard - Statut du système":
-                    viewModel.NavigateToDashboardStatusCommand.Execute(null);
                     break;
                 case "Dashboard - Actions rapides":
                     viewModel.NavigateToDashboardActionsCommand.Execute(null);
@@ -316,7 +312,6 @@ namespace FNEV4.Tests.Unit.Presentation.ViewModels
 
             // Assert - Vérifier que toutes les commandes sont initialisées
             viewModel.NavigateToDashboardCommand.Should().NotBeNull();
-            viewModel.NavigateToDashboardStatusCommand.Should().NotBeNull();
             viewModel.NavigateToDashboardActionsCommand.Should().NotBeNull();
             
             viewModel.NavigateToImportFichiersCommand.Should().NotBeNull();

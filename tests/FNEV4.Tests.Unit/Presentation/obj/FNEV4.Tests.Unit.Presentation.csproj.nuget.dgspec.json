@@ -1,33 +1,39 @@
 {
   "format": 1,
   "restore": {
-    "C:\\wamp64\\www\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj": {}
+    "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj": {}
   },
   "projects": {
-    "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
+    "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj",
+        "projectUniqueName": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj",
         "projectName": "FNEV4.Application",
-        "projectPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj",
+        "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj",
         "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-        "outputPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Application\\obj\\",
+        "outputPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Application\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
-                "projectPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
+              "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
+                "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
               }
             }
           }
@@ -41,7 +47,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -80,26 +87,32 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
+    "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj",
+        "projectUniqueName": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj",
         "projectName": "FNEV4.Core",
-        "projectPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj",
+        "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj",
         "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-        "outputPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Core\\obj\\",
+        "outputPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Core\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -117,7 +130,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -144,37 +158,43 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
+    "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj",
+        "projectUniqueName": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj",
         "projectName": "FNEV4.Infrastructure",
-        "projectPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj",
+        "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj",
         "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-        "outputPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Infrastructure\\obj\\",
+        "outputPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
-                "projectPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj"
+              "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
+                "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj"
               },
-              "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
-                "projectPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
+              "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
+                "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
               }
             }
           }
@@ -188,7 +208,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -251,40 +272,46 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj": {
+    "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj",
+        "projectUniqueName": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj",
         "projectName": "FNEV4.Presentation",
-        "projectPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj",
+        "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj",
         "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-        "outputPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Presentation\\obj\\",
+        "outputPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Presentation\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0-windows"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0-windows7.0": {
             "targetAlias": "net8.0-windows",
             "projectReferences": {
-              "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
-                "projectPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj"
+              "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
+                "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj"
               },
-              "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
-                "projectPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
+              "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
+                "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
               },
-              "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
-                "projectPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj"
+              "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
+                "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj"
               }
             }
           }
@@ -298,7 +325,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0-windows7.0": {
@@ -372,43 +400,49 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\wamp64\\www\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj": {
+    "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\wamp64\\www\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj",
+        "projectUniqueName": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj",
         "projectName": "FNEV4.Tests.Unit.Presentation",
-        "projectPath": "C:\\wamp64\\www\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj",
+        "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj",
         "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-        "outputPath": "C:\\wamp64\\www\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\obj\\",
+        "outputPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0-windows"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0-windows7.0": {
             "targetAlias": "net8.0-windows",
             "projectReferences": {
-              "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
-                "projectPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj"
+              "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
+                "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj"
               },
-              "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
-                "projectPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
+              "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
+                "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
               },
-              "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
-                "projectPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj"
+              "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
+                "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj"
               },
-              "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj": {
-                "projectPath": "C:\\wamp64\\www\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj"
+              "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj": {
+                "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj"
               }
             }
           }
@@ -422,7 +456,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0-windows7.0": {
@@ -474,7 +509,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

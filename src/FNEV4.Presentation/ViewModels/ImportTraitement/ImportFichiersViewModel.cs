@@ -85,8 +85,9 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             _serviceProvider = serviceProvider;
             InitializeImportTypes();
             
-            // Status avec description claire des types d'import
-            StatusMessage = $"✅ {AvailableImportTypes.Count} types d'import disponibles : Standard, Exceptionnel Sage v15";
+            // Status avec description claire et informative des types d'import
+            StatusMessage = $"✅ {AvailableImportTypes.Count} types d'import disponibles : " +
+                           "Standard (en développement), Sage 100 v15 (opérationnel)";
         }
 
         #endregion
@@ -197,12 +198,23 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             
             MessageBox.Show(
                 "Aide sur l'import de fichiers :\n\n" +
+                "📊 TYPES D'IMPORT DISPONIBLES :\n\n" +
                 "• Import Standard : Formats Excel normalisés avec en-têtes fixes\n" +
-                "• Import Exceptionnel Sage v15 : Structure non-standard spécifique\n" +
+                "  - Structure classique : N° facture, Date, Client, Montant HT, TVA\n" +
+                "  - Validation automatique des données\n" +
+                "  - Compatible avec la plupart des systèmes de gestion\n\n" +
+                "• Import Exceptionnel Sage 100 v15 : Structure spécialisée\n" +
+                "  - Format spécifique : 1 feuille = 1 facture\n" +
+                "  - Gestion clients divers (code 1999) et normaux\n" +
+                "  - Support moyen de paiement A18 (cash, card, mobile-money, etc.)\n" +
+                "  - Validation métier avancée et gestion d'erreurs détaillée\n\n" +
                 "• Import Configuration : Paramètres système et règles métier\n\n" +
-                "Note : Pour l'import de clients standard, utilisez le menu\n" +
-                "'Gestion Clients > Liste des clients > Importer'\n\n" +
-                "Pour plus d'informations, consultez la documentation.",
+                "📋 NOTES IMPORTANTES :\n" +
+                "• Pour l'import de clients standard : 'Gestion Clients > Importer'\n" +
+                "• Tous les imports génèrent des logs détaillés\n" +
+                "• Les fichiers traités sont automatiquement archivés\n" +
+                "• Support complet de la certification FNE Côte d'Ivoire\n\n" +
+                "Pour plus d'informations, consultez la documentation technique.",
                 "Aide - Import de fichiers",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
@@ -218,15 +230,25 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         {
             StatusMessage = "📊 Ouverture de l'historique...";
             
-            // TODO: Implémenter la fenêtre d'historique
+            // TODO: Implémenter la fenêtre d'historique complète
             MessageBox.Show(
-                "Historique des imports :\n\n" +
-                "Cette fonctionnalité permettra de voir :\n" +
-                "• Les imports récents\n" +
-                "• Les statistiques de réussite\n" +
-                "• Les logs d'erreurs\n\n" +
-                "🚧 En cours de développement",
-                "Historique - Import de fichiers",
+                "📈 Historique des imports :\n\n" +
+                "Cette fonctionnalité permettra de consulter :\n\n" +
+                "📊 STATISTIQUES :\n" +
+                "• Imports récents par type (Standard, Sage 100 v15)\n" +
+                "• Taux de réussite et d'échec par période\n" +
+                "• Volumes traités (nombre de factures, clients)\n\n" +
+                "📋 LOGS DÉTAILLÉS :\n" +
+                "• Journaux d'activité horodatés\n" +
+                "• Détails des erreurs et avertissements\n" +
+                "• Traçabilité complète des opérations\n\n" +
+                "📁 FICHIERS TRAITÉS :\n" +
+                "• Liste des fichiers importés\n" +
+                "• Statuts de traitement et archivage\n" +
+                "• Liens vers les dossiers d'archive\n\n" +
+                "🚧 Fonctionnalité en cours de développement\n" +
+                "Sera disponible dans la prochaine version.",
+                "Historique des imports",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
             
@@ -313,12 +335,12 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             {
                 Type = "FacturesSage100",
                 Title = "Import Exceptionnel Sage 100 v15",
-                Description = "Import spécialisé pour les factures Sage 100 v15 selon la structure définie dans exemple_structure_excel.py. Gère les clients divers (code 1999), moyens de paiement A18, et la structure spécifique : 1 feuille = 1 facture.",
-                Icon = "AlertCircleOutline", 
+                Description = "Import spécialisé pour les factures Sage 100 v15 selon la structure définie. Gère les clients divers (code 1999), moyens de paiement A18, et la structure spécifique : 1 feuille = 1 facture. Supporte la validation avancée et la gestion des erreurs.",
+                Icon = "FileExcelOutline", 
                 IsEnabled = true,
-                Status = "Sage 100 v15",
-                StatusColor = new SolidColorBrush(Color.FromRgb(255, 193, 7)), // Amber
-                SupportedFormats = ".xlsx spécifique Sage 100 v15 (selon exemple_structure_excel.py)",
+                Status = "Opérationnel",
+                StatusColor = new SolidColorBrush(Color.FromRgb(76, 175, 80)), // Green pour indiquer que c'est fonctionnel
+                SupportedFormats = ".xlsx Sage 100 v15 (structure validée automatiquement)",
                 ButtonText = "IMPORTER SAGE 100",
                 Color = new SolidColorBrush(Color.FromRgb(255, 87, 34)) // Deep Orange
             });
@@ -343,30 +365,55 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 // Obtenir le ViewModel via l'injection de dépendance
                 var sage100ViewModel = _serviceProvider.GetRequiredService<Sage100ImportViewModel>();
                 
-                // Créer et afficher la fenêtre d'import Sage 100
+                // Créer la vue d'import Sage 100
+                var sage100View = new Views.ImportTraitement.Sage100ImportView()
+                {
+                    DataContext = sage100ViewModel
+                };
+                
+                // Créer et configurer la fenêtre d'import Sage 100
                 var sage100Window = new Window
                 {
                     Title = "Import Sage 100 v15 - Factures Exceptionnelles",
-                    Width = 1200,
-                    Height = 800,
+                    Width = 1400,
+                    Height = 900,
+                    MinWidth = 1200,
+                    MinHeight = 800,
                     WindowStartupLocation = WindowStartupLocation.CenterScreen,
-                    Content = new Views.ImportTraitement.Sage100ImportView()
-                    {
-                        DataContext = sage100ViewModel
-                    }
+                    WindowState = WindowState.Normal,
+                    ResizeMode = ResizeMode.CanResize,
+                    Content = sage100View
                 };
 
-                // Afficher la fenêtre
-                sage100Window.ShowDialog();
+                // Configurer l'icône et le style
+                sage100Window.Icon = System.Windows.Application.Current.MainWindow?.Icon;
                 
-                StatusMessage = "✅ Import Sage 100 v15 ouvert avec succès";
+                // Afficher la fenêtre de manière modale
+                var dialogResult = sage100Window.ShowDialog();
+                
+                StatusMessage = dialogResult == true 
+                    ? "✅ Import Sage 100 v15 terminé avec succès" 
+                    : "ℹ️ Import Sage 100 v15 fermé";
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("Sage100ImportViewModel"))
+            {
+                StatusMessage = "❌ Service Sage 100 non configuré";
+                MessageBox.Show(
+                    "Le service d'import Sage 100 n'est pas correctement configuré.\n\n" +
+                    "Erreur : Service Sage100ImportViewModel introuvable dans l'injection de dépendance.\n\n" +
+                    "Veuillez vérifier la configuration des services dans App.xaml.cs",
+                    "Service manquant",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
             catch (Exception ex)
             {
                 StatusMessage = $"❌ Erreur ouverture import Sage 100 : {ex.Message}";
                 MessageBox.Show(
                     $"Impossible d'ouvrir la fenêtre d'import Sage 100 :\n\n{ex.Message}\n\n" +
-                    "Vérifiez que tous les composants nécessaires sont présents.",
+                    "Détails techniques :\n" +
+                    $"Type d'erreur : {ex.GetType().Name}\n" +
+                    "Vérifiez que tous les composants nécessaires sont présents et correctement configurés.",
                     "Erreur d'ouverture",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);

@@ -42,6 +42,7 @@ namespace FNEV4.Core.Models.ImportTraitement
         public int NombreFeuilles { get; set; }
         public int FacturesDetectees { get; set; }
         public List<Sage100FacturePreview> Apercu { get; set; } = new();
+        public List<string> Errors { get; set; } = new();
     }
 
     /// <summary>
@@ -114,13 +115,31 @@ namespace FNEV4.Core.Models.ImportTraitement
     public class Sage100FacturePreview
     {
         public string NomFeuille { get; set; } = string.Empty;
+        public string NomFichierSource { get; set; } = string.Empty; // Nouveau: nom du fichier Excel source
+        
+        // Alias pour compatibilité avec l'interface
+        public string FichierSource => NomFichierSource;
+        
         public string NumeroFacture { get; set; } = string.Empty;
         public string CodeClient { get; set; } = string.Empty;
         public string NomClient { get; set; } = string.Empty;
+        
+        // Alias pour compatibilité avec l'interface
+        public string IntituleClient => NomClient;
+        
         public DateTime DateFacture { get; set; }
         public string MoyenPaiement { get; set; } = string.Empty;
+        
+        // Alias pour compatibilité avec l'interface
+        public string PointDeVente => MoyenPaiement;
+        
         public int NombreProduits { get; set; }
         public decimal MontantEstime { get; set; }
+        
+        // Aliases pour compatibilité avec l'interface
+        public decimal MontantHT => MontantEstime * 0.83m; // Estimation HT (TVA 20%)
+        public decimal MontantTTC => MontantEstime;
+        
         public bool EstValide { get; set; }
         public bool ClientTrouve { get; set; }
         public List<string> Erreurs { get; set; } = new();

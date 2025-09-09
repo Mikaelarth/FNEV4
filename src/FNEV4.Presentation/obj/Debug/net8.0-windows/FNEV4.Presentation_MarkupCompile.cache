@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-C:\wamp64\www\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\
+C:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\
 FNEV4.Presentation
 none
 false
-TRACE;DEBUG;NET;NET8_0;NETCOREAPP
-C:\wamp64\www\FNEV4\src\FNEV4.Presentation\App.xaml
-24-456392339
+TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
+C:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Presentation\App.xaml
+271302720234
 11413424753
-56-1346583355
-270828424490
-Controls\CollapsibleMenuItem.xaml;Resources\Styles\ButtonStyles.xaml;Resources\Styles\CardStyles.xaml;Resources\Styles\MenuItemStyles.xaml;Resources\Styles\MenuStyles.xaml;Styles\MenuStyles.xaml;Views\Configuration\ApiFneConfigView.xaml;Views\Configuration\CheminsDossiersConfigView.xaml;Views\Configuration\EntrepriseConfigView.xaml;Views\GestionClients\AjoutModificationClientView.xaml;Views\GestionClients\ImportClientsWindow.xaml;Views\GestionClients\ListeClientsView.xaml;Views\ImportTraitement\ImportFichiersView.xaml;Views\ImportTraitement\Sage100ImportView.xaml;Views\Maintenance\BaseDonneesView.xaml;Views\Maintenance\DatabaseSettingsDialog.xaml;Views\Maintenance\LogsDiagnosticsView.xaml;Views\Maintenance\OutilsTechniquesView.xaml;Views\Maintenance\RecordEditDialog.xaml;Views\Maintenance\SynchronisationView.xaml;Views\Maintenance\TableDataDialog.xaml;Views\Maintenance\TableStructureDialog.xaml;Views\MainWindow.xaml;Views\Special\ImportExceptionnelDialog.xaml;
+64264916519
+270-2045840674
+Controls\CollapsibleMenuItem.xaml;Resources\Styles\ButtonStyles.xaml;Resources\Styles\CardStyles.xaml;Resources\Styles\MenuItemStyles.xaml;Resources\Styles\MenuStyles.xaml;Styles\MenuStyles.xaml;Views\Configuration\ApiFneConfigView.xaml;Views\Configuration\CheminsDossiersConfigView.xaml;Views\Configuration\EntrepriseConfigView.xaml;Views\Dashboard\DashboardActionsRapidesView.xaml;Views\Dashboard\DashboardVueEnsembleView.xaml;Views\GestionClients\AjoutModificationClientView.xaml;Views\GestionClients\ImportClientsWindow.xaml;Views\GestionClients\ListeClientsView.xaml;Views\ImportTraitement\ImportFichiersView.xaml;Views\ImportTraitement\Sage100ImportView.xaml;Views\ImportTraitement\Sage100PreviewWindow.xaml;Views\Maintenance\BaseDonneesView.xaml;Views\Maintenance\DatabaseSettingsDialog.xaml;Views\Maintenance\LogsDiagnosticsView.xaml;Views\Maintenance\OutilsTechniquesView.xaml;Views\Maintenance\RecordEditDialog.xaml;Views\Maintenance\SynchronisationView.xaml;Views\Maintenance\TableDataDialog.xaml;Views\Maintenance\TableStructureDialog.xaml;Views\MainWindow.xaml;Views\Special\ImportExceptionnelDialog.xaml;
 
 False
 

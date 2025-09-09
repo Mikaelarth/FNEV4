@@ -58,22 +58,18 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                         var factureData = await ParseFactureFromWorksheetAsync(worksheet);
                         if (factureData != null)
                         {
-                            // TODO CRITIQUE: INTÉGRER EN BASE DE DONNÉES
-                            // PROBLÈME IDENTIFIÉ: Les factures ne sont pas sauvegardées !
-                            // SOLUTION: Implémenter ConvertToFneInvoiceAsync avec les bonnes entités
-                            // 
-                            // var fneInvoice = await ConvertToFneInvoiceAsync(factureData, worksheet.Name);
-                            // if (fneInvoice != null)
-                            // {
-                            //     await _context.FneInvoices.AddAsync(fneInvoice);
-                            //     await _context.SaveChangesAsync();
-                            // }
-                            
-                            // LOG TEMPORAIRE pour debugging
-                            await _loggingService.LogErrorAsync(
-                                $"ATTENTION: Facture {factureData.NumeroFacture} SIMULÉE (non sauvegardée en base)", 
-                                "Sage100Import", 
-                                null);
+                            // CORRECTION CRITIQUE: Sauvegarde réelle en base de données
+                            var fneInvoice = await ConvertToFneInvoiceAsync(factureData, worksheet.Name);
+                            if (fneInvoice != null)
+                            {
+                                await _context.FneInvoices.AddAsync(fneInvoice);
+                                await _context.SaveChangesAsync();
+                                
+                                // Log de succès
+                                await _loggingService.LogInfoAsync(
+                                    $"Facture {factureData.NumeroFacture} sauvegardée avec succès (ID: {fneInvoice.Id})", 
+                                    "Sage100Import");
+                            }
                             
                             result.FacturesImportees++;
                             result.FacturesDetaillees.Add(new Sage100FactureImportee
@@ -690,6 +686,136 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
             {
                 return string.Empty;
             }
+        }
+
+        /// <summary>
+        /// Convertit les données Sage 100 en entité FneInvoice
+        /// </summary>
+        private async Task<FneInvoice?> ConvertToFneInvoiceAsync(Sage100FactureData factureData, string worksheetName)
+        {
+            try
+            {
+                // Récupérer le client (ou créer client divers si nécessaire)
+                var client = await GetOrCreateClientAsync(factureData);
+                if (client == null)
+                {
+                    await _loggingService.LogErrorAsync($"Impossible de récupérer/créer le client {factureData.CodeClient}", "Sage100Import");
+                    return null;
+                }
+
+                var fneInvoice = new FneInvoice
+                {
+                    Id = Guid.NewGuid(),
+                    InvoiceNumber = factureData.NumeroFacture,
+                    InvoiceType = !string.IsNullOrWhiteSpace(factureData.NumeroFactureAvoir) ? "refund" : "sale",
+                    InvoiceDate = factureData.DateFacture,
+                    ClientId = client.Id,
+                    ClientCode = factureData.CodeClient,
+                    PointOfSale = factureData.PointDeVente,
+                    PaymentMethod = factureData.MoyenPaiement,
+                    Status = "draft",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                // Calculer les montants totaux
+                decimal totalHT = factureData.Produits.Sum(p => p.MontantHt);
+                decimal totalTVA = factureData.Produits.Sum(p => GetVatAmountFromProduct(p));
+                
+                fneInvoice.TotalAmountHT = totalHT;
+                fneInvoice.TotalVatAmount = totalTVA;
+                fneInvoice.TotalAmountTTC = totalHT + totalTVA;
+                
+                // Si c'est un avoir, les montants sont négatifs
+                if (fneInvoice.InvoiceType == "refund")
+                {
+                    fneInvoice.TotalAmountHT = -Math.Abs(fneInvoice.TotalAmountHT);
+                    fneInvoice.TotalVatAmount = -Math.Abs(fneInvoice.TotalVatAmount);
+                    fneInvoice.TotalAmountTTC = -Math.Abs(fneInvoice.TotalAmountTTC);
+                    // Note: RefundReference n'existe pas dans l'entité FneInvoice actuelle
+                }
+
+                return fneInvoice;
+            }
+            catch (Exception ex)
+            {
+                await _loggingService.LogErrorAsync($"Erreur conversion facture {factureData.NumeroFacture}: {ex.Message}", "Sage100Import");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Récupère un client existant ou crée un client divers
+        /// </summary>
+        private async Task<Client?> GetOrCreateClientAsync(Sage100FactureData factureData)
+        {
+            try
+            {
+                if (factureData.CodeClient == "1999")
+                {
+                    // Client divers - chercher par NCC ou créer
+                    var clientDivers = await _clientRepository.GetByNccAsync(factureData.NccClient);
+                    if (clientDivers == null)
+                    {
+                        // Créer nouveau client divers
+                        clientDivers = new Client
+                        {
+                            Id = Guid.NewGuid(),
+                            ClientCode = "1999",
+                            CompanyName = factureData.NomReelClientDivers ?? factureData.IntituleClient,
+                            ClientNcc = factureData.NccClient,
+                            ClientType = "divers",
+                            DefaultPaymentMethod = factureData.MoyenPaiement,
+                            IsActive = true,
+                            CreatedDate = DateTime.UtcNow,
+                            LastModifiedDate = DateTime.UtcNow
+                        };
+                        
+                        await _clientRepository.CreateAsync(clientDivers);
+                        await _loggingService.LogInfoAsync($"Client divers créé: {clientDivers.CompanyName} (NCC: {clientDivers.ClientNcc})", "Sage100Import");
+                    }
+                    return clientDivers;
+                }
+                else
+                {
+                    // Client normal - doit exister
+                    var client = await _clientRepository.GetByClientCodeAsync(factureData.CodeClient);
+                    if (client == null)
+                    {
+                        await _loggingService.LogErrorAsync($"Client {factureData.CodeClient} introuvable", "Sage100Import");
+                    }
+                    return client;
+                }
+            }
+            catch (Exception ex)
+            {
+                await _loggingService.LogErrorAsync($"Erreur récupération client {factureData.CodeClient}: {ex.Message}", "Sage100Import");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Calcule le montant TVA d'un produit basé sur son code TVA et montant HT
+        /// </summary>
+        private decimal GetVatAmountFromProduct(Sage100ProduitData produit)
+        {
+            var vatRate = GetVatRateFromCode(produit.CodeTva);
+            return produit.MontantHt * (vatRate / 100);
+        }
+
+        /// <summary>
+        /// Obtient le taux de TVA à partir du code TVA
+        /// </summary>
+        private decimal GetVatRateFromCode(string codeTva)
+        {
+            return codeTva?.ToUpper() switch
+            {
+                "TVA" => 18.0m,    // 18%
+                "TVAB" => 9.0m,    // 9%
+                "TVAC" => 0.0m,    // 0% (convention)
+                "TVAD" => 0.0m,    // 0% (légale)
+                _ => 18.0m         // Par défaut 18%
+            };
         }
 
         #endregion

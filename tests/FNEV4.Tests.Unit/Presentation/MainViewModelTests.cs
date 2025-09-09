@@ -38,16 +38,16 @@ namespace FNEV4.Tests.Unit.Presentation
         }
 
         [Fact]
-        public void NavigateToDashboardStatus_ShouldUpdateCurrentModuleName()
+        public void NavigateToDashboardActions_ShouldUpdateCurrentModuleName()
         {
             // Arrange
             var viewModel = new MainViewModel();
 
             // Act
-            viewModel.NavigateToDashboardStatusCommand.Execute(null);
+            viewModel.NavigateToDashboardActionsCommand.Execute(null);
 
             // Assert
-            viewModel.CurrentModuleName.Should().Be("Dashboard - Statut du système");
+            viewModel.CurrentModuleName.Should().Be("Dashboard - Actions rapides");
         }
 
         [Fact]
