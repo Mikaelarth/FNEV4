@@ -16,6 +16,7 @@
         MinWidth="800"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
+        Topmost="False"
         ResizeMode="CanResize">
 
     <Window.Resources>

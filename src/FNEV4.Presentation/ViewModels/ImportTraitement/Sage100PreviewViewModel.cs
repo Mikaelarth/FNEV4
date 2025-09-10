@@ -155,11 +155,17 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 // Créer le ViewModel pour le dialogue
                 var dialogViewModel = new Sage100FactureDetailsViewModel(facture);
                 
+                // Trouver la fenêtre d'aperçu actuelle
+                var previewWindow = System.Windows.Application.Current.Windows
+                    .OfType<Views.ImportTraitement.Sage100PreviewWindow>()
+                    .FirstOrDefault();
+                
                 // Créer et afficher le dialogue
                 var dialog = new Views.ImportTraitement.Sage100FactureDetailsDialog
                 {
                     DataContext = dialogViewModel,
-                    Owner = System.Windows.Application.Current.MainWindow
+                    Owner = previewWindow ?? System.Windows.Application.Current.MainWindow,
+                    WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner
                 };
                 
                 dialog.ShowDialog();
