@@ -183,46 +183,134 @@
                       CanUserSortColumns="True"
                       CanUserReorderColumns="True"
                       CanUserResizeColumns="True"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
                       SelectionMode="Extended"
                       GridLinesVisibility="Horizontal"
                       HeadersVisibility="Column"
                       materialDesign:DataGridAssist.CellPadding="12,8"
                       materialDesign:DataGridAssist.ColumnHeaderPadding="12,12"
                       FontSize="13"
-                      RowHeight="52">
+                      RowHeight="48"
+                      IsReadOnly="True"
+                      EnableRowVirtualization="True"
+                      EnableColumnVirtualization="True">
+
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
 
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Fichier Source" Binding="{Binding NomFichierSource}" Width="140" />
-                    <DataGridTextColumn Header="N° Facture" Binding="{Binding NumeroFacture}" Width="110" />
-                    <DataGridTextColumn Header="Date" Binding="{Binding DateFacture, StringFormat=dd/MM/yyyy}" Width="90" />
-                    <DataGridTextColumn Header="Code Client" Binding="{Binding CodeClient}" Width="110" />
-                    <DataGridTextColumn Header="Client" Binding="{Binding NomClient}" Width="220" />
-                    <DataGridTextColumn Header="Point de Vente" Binding="{Binding PointDeVente}" Width="130" />
-                    <DataGridTextColumn Header="Moyen Paiement" Binding="{Binding MoyenPaiement}" Width="130" />
-                    <DataGridTextColumn Header="Montant HT" Binding="{Binding MontantHT, StringFormat=N2}" Width="110" />
-                    <DataGridTextColumn Header="Montant TTC" Binding="{Binding MontantTTC, StringFormat=N2}" Width="110" />
+                    <DataGridTextColumn Header="Fichier Source" Binding="{Binding NomFichierSource}" Width="140">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="4,0"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="N° Facture" Binding="{Binding NumeroFacture}" Width="110">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="4,0"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Date" Binding="{Binding DateFacture, StringFormat=dd/MM/yyyy}" Width="90">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="4,0"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Code Client" Binding="{Binding CodeClient}" Width="110">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="4,0"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Client" Binding="{Binding NomClient}" Width="220">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="4,0"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Point de Vente" Binding="{Binding PointDeVente}" Width="130">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="4,0"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Moyen Paiement" Binding="{Binding MoyenPaiement}" Width="130">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="4,0"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Montant HT" Binding="{Binding MontantHT, StringFormat=N2}" Width="110">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                <Setter Property="Padding" Value="4,0"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Montant TTC" Binding="{Binding MontantTTC, StringFormat=N2}" Width="110">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                <Setter Property="Padding" Value="4,0"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
                     
                     <!-- Colonne Statut avec couleurs sémantiques -->
                     <DataGridTemplateColumn Header="Statut" Width="90">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding Statut}" 
-                                          FontWeight="Medium"
-                                          HorizontalAlignment="Center"
-                                          VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Statut}" Value="Valide">
-                                                    <Setter Property="Foreground" Value="#4CAF50"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Statut}" Value="Erreur">
-                                                    <Setter Property="Foreground" Value="#F44336"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                <Border Background="Transparent" 
+                                        Padding="8,4"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Statut}" 
+                                              FontWeight="Medium"
+                                              FontSize="12"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Statut}" Value="Valide">
+                                                        <Setter Property="Foreground" Value="#4CAF50"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Statut}" Value="Erreur">
+                                                        <Setter Property="Foreground" Value="#F44336"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -231,26 +319,32 @@
                     <DataGridTemplateColumn Header="Produits" Width="120">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Button Style="{StaticResource SecondaryButtonStyle}"
-                                        Command="{Binding Path=DataContext.ShowProductDetailsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                        CommandParameter="{Binding}"
-                                        ToolTip="Voir les détails des produits"
-                                        Height="32"
-                                        Padding="8,4"
-                                        FontSize="12"
-                                        HorizontalAlignment="Center"
-                                        MinWidth="80">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Package" 
-                                                               Width="14" Height="14" 
-                                                               Foreground="{DynamicResource PrimaryHueMidBrush}" 
-                                                               VerticalAlignment="Center"
-                                                               Margin="0,0,4,0" />
-                                        <TextBlock Text="{Binding NombreProduits}" 
-                                                   FontWeight="Medium" 
-                                                   VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
+                                <Border Background="Transparent" 
+                                        Padding="4"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Center">
+                                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                                            Command="{Binding Path=DataContext.ShowProductDetailsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"
+                                            ToolTip="Voir les détails des produits"
+                                            Height="36"
+                                            Padding="8,6"
+                                            FontSize="12"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            MinWidth="80">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Package" 
+                                                                   Width="14" Height="14" 
+                                                                   Foreground="{DynamicResource PrimaryHueMidBrush}" 
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,4,0" />
+                                            <TextBlock Text="{Binding NombreProduits}" 
+                                                       FontWeight="Medium" 
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </Border>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
