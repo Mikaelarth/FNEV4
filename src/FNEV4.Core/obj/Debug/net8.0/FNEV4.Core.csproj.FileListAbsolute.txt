@@ -24,3 +24,16 @@ C:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Core\obj\Debug\net8.0\FNEV4.
 C:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Core\obj\Debug\net8.0\refint\FNEV4.Core.dll
 C:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Core\obj\Debug\net8.0\FNEV4.Core.pdb
 C:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Core\obj\Debug\net8.0\ref\FNEV4.Core.dll
+D:\PROJET\FNEV4\src\FNEV4.Core\bin\Debug\net8.0\FNEV4.Core.deps.json
+D:\PROJET\FNEV4\src\FNEV4.Core\bin\Debug\net8.0\FNEV4.Core.dll
+D:\PROJET\FNEV4\src\FNEV4.Core\bin\Debug\net8.0\FNEV4.Core.pdb
+D:\PROJET\FNEV4\src\FNEV4.Core\obj\Debug\net8.0\FNEV4.Core.csproj.AssemblyReference.cache
+D:\PROJET\FNEV4\src\FNEV4.Core\obj\Debug\net8.0\FNEV4.Core.GeneratedMSBuildEditorConfig.editorconfig
+D:\PROJET\FNEV4\src\FNEV4.Core\obj\Debug\net8.0\FNEV4.Core.AssemblyInfoInputs.cache
+D:\PROJET\FNEV4\src\FNEV4.Core\obj\Debug\net8.0\FNEV4.Core.AssemblyInfo.cs
+D:\PROJET\FNEV4\src\FNEV4.Core\obj\Debug\net8.0\FNEV4.Core.csproj.CoreCompileInputs.cache
+D:\PROJET\FNEV4\src\FNEV4.Core\obj\Debug\net8.0\FNEV4.Core.sourcelink.json
+D:\PROJET\FNEV4\src\FNEV4.Core\obj\Debug\net8.0\FNEV4.Core.dll
+D:\PROJET\FNEV4\src\FNEV4.Core\obj\Debug\net8.0\refint\FNEV4.Core.dll
+D:\PROJET\FNEV4\src\FNEV4.Core\obj\Debug\net8.0\FNEV4.Core.pdb
+D:\PROJET\FNEV4\src\FNEV4.Core\obj\Debug\net8.0\ref\FNEV4.Core.dll

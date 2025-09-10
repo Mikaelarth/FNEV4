@@ -1,13 +1,12 @@
-﻿
-FC:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Presentation\App.xaml;;
-FC:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Presentation\Views\Configuration\ApiFneConfigView.xaml;;
-FC:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Presentation\Views\Configuration\CheminsDossiersConfigView.xaml;;
-FC:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Presentation\Views\Dashboard\DashboardVueEnsembleView.xaml;;
-FC:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Presentation\Views\GestionClients\ImportClientsWindow.xaml;;
-FC:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Presentation\Views\ImportTraitement\ImportFichiersView.xaml;;
-FC:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Presentation\Views\ImportTraitement\Sage100ImportView.xaml;;
-FC:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Presentation\Views\ImportTraitement\Sage100PreviewWindow.xaml;;
-FC:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Presentation\Views\Maintenance\BaseDonneesView.xaml;;
-FC:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Presentation\Views\Maintenance\LogsDiagnosticsView.xaml;;
-FC:\Users\HP\Documents\projets\FNEV4\FNEV4\src\FNEV4.Presentation\Views\MainWindow.xaml;;
+﻿D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\GeneratedInternalTypeHelper.g.cs
+FD:\PROJET\FNEV4\src\FNEV4.Presentation\App.xaml;;
+FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\Configuration\ApiFneConfigView.xaml;;
+FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\Configuration\CheminsDossiersConfigView.xaml;;
+FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\Dashboard\DashboardVueEnsembleView.xaml;;
+FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\GestionClients\ImportClientsWindow.xaml;;
+FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\ImportTraitement\ImportFichiersView.xaml;;
+FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\ImportTraitement\Sage100ImportView.xaml;;
+FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\Maintenance\BaseDonneesView.xaml;;
+FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\Maintenance\LogsDiagnosticsView.xaml;;
+FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\MainWindow.xaml;;
 

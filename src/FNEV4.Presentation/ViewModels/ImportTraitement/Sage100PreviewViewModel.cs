@@ -145,9 +145,10 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         }
 
         [RelayCommand]
-        private void ShowProductDetails(Sage100FacturePreview? facture)
+        private void ShowProductDetails(object? parameter)
         {
-            if (facture == null) return;
+            if (parameter is not Sage100FacturePreview facture || facture == null) 
+                return;
             
             var produitDetails = string.Empty;
             if (facture.Produits?.Any() == true)

@@ -2206,7 +2206,7 @@
         },
         "runtime": {
           "FNEV4.Application.dll": {
-            "assemblyVersion": "1.0.0.0",
+            "assemblyVersion": "1.0.0",
             "fileVersion": "1.0.0.0"
           }
         }
@@ -2217,7 +2217,7 @@
         },
         "runtime": {
           "FNEV4.Core.dll": {
-            "assemblyVersion": "1.0.0.0",
+            "assemblyVersion": "1.0.0",
             "fileVersion": "1.0.0.0"
           }
         }
@@ -2239,7 +2239,7 @@
         },
         "runtime": {
           "FNEV4.Infrastructure.dll": {
-            "assemblyVersion": "1.0.0.0",
+            "assemblyVersion": "1.0.0",
             "fileVersion": "1.0.0.0"
           }
         }
@@ -2264,7 +2264,7 @@
         },
         "runtime": {
           "FNEV4.Presentation.dll": {
-            "assemblyVersion": "1.0.0.0",
+            "assemblyVersion": "1.0.0",
             "fileVersion": "1.0.0.0"
           }
         }

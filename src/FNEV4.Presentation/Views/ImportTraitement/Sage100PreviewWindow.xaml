@@ -201,25 +201,54 @@
                     <DataGridTextColumn Header="Moyen Paiement" Binding="{Binding MoyenPaiement}" Width="130" />
                     <DataGridTextColumn Header="Montant HT" Binding="{Binding MontantHT, StringFormat=N2}" Width="110" />
                     <DataGridTextColumn Header="Montant TTC" Binding="{Binding MontantTTC, StringFormat=N2}" Width="110" />
-                    <DataGridTextColumn Header="Statut" Binding="{Binding Statut}" Width="90" />
+                    
+                    <!-- Colonne Statut avec couleurs sémantiques -->
+                    <DataGridTemplateColumn Header="Statut" Width="90">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Statut}" 
+                                          FontWeight="Medium"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Statut}" Value="Valide">
+                                                    <Setter Property="Foreground" Value="#4CAF50"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Statut}" Value="Erreur">
+                                                    <Setter Property="Foreground" Value="#F44336"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     
                     <!-- Colonne Produits avec style FNEV4 -->
-                    <DataGridTemplateColumn Header="Produits" Width="110">
+                    <DataGridTemplateColumn Header="Produits" Width="120">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Button Style="{StaticResource SecondaryButtonStyle}"
-                                        Command="{Binding DataContext.ShowProductDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        Command="{Binding Path=DataContext.ShowProductDetailsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                         CommandParameter="{Binding}"
                                         ToolTip="Voir les détails des produits"
-                                        Height="36"
-                                        Padding="12,6"
-                                        FontSize="12">
+                                        Height="32"
+                                        Padding="8,4"
+                                        FontSize="12"
+                                        HorizontalAlignment="Center"
+                                        MinWidth="80">
                                     <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Package" 
+                                                               Width="14" Height="14" 
+                                                               Foreground="{DynamicResource PrimaryHueMidBrush}" 
+                                                               VerticalAlignment="Center"
+                                                               Margin="0,0,4,0" />
                                         <TextBlock Text="{Binding NombreProduits}" 
                                                    FontWeight="Medium" 
-                                                   VerticalAlignment="Center" 
-                                                   Margin="0,0,6,0" />
-                                        <materialDesign:PackIcon Kind="Package" Width="16" Height="16" Foreground="{DynamicResource PrimaryHueMidBrush}" />
+                                                   VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                             </DataTemplate>
