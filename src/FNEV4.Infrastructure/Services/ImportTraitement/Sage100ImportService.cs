@@ -418,26 +418,17 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                     CodeProduit = codeProduit,
                     Designation = GetCellValue(worksheet, $"C{row}"),
                     Emballage = GetCellValue(worksheet, $"F{row}"),
-                    CodeTva = GetCellValue(worksheet, $"G{row}")
+                    CodeTva = GetTvaCodeFromPercentage(GetCellValue(worksheet, $"G{row}"))
                 };
 
-                // Parse prix unitaire
-                if (decimal.TryParse(GetCellValue(worksheet, $"D{row}"), NumberStyles.Number, CultureInfo.InvariantCulture, out var prix))
-                {
-                    produit.PrixUnitaire = prix;
-                }
+                // Parse prix unitaire avec précision décimale
+                produit.PrixUnitaire = GetDecimalCellValue(worksheet, $"D{row}");
 
-                // Parse quantité
-                if (decimal.TryParse(GetCellValue(worksheet, $"E{row}"), NumberStyles.Number, CultureInfo.InvariantCulture, out var qte))
-                {
-                    produit.Quantite = qte;
-                }
+                // Parse quantité avec précision décimale
+                produit.Quantite = GetDecimalCellValue(worksheet, $"E{row}");
 
-                // Parse montant HT
-                if (decimal.TryParse(GetCellValue(worksheet, $"H{row}"), NumberStyles.Number, CultureInfo.InvariantCulture, out var montant))
-                {
-                    produit.MontantHt = montant;
-                }
+                // Parse montant HT avec précision décimale
+                produit.MontantHt = GetDecimalCellValue(worksheet, $"H{row}");
 
                 facture.Produits.Add(produit);
             }
@@ -611,20 +602,18 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                     if (!string.IsNullOrWhiteSpace(codeProduit))
                     {
                         nombreProduits++;
-                        if (decimal.TryParse(GetCellValue(worksheet, $"H{row}"), NumberStyles.Number, CultureInfo.InvariantCulture, out var montant))
-                        {
-                            montantTotal += montant;
-                        }
+                        var montant = GetDecimalCellValue(worksheet, $"H{row}");
+                        montantTotal += montant;
                         
                         // Créer l'objet produit pour le détail
                         var produit = new Sage100ProduitData
                         {
                             CodeProduit = codeProduit,
                             Designation = GetCellValue(worksheet, $"C{row}"),
-                            PrixUnitaire = decimal.TryParse(GetCellValue(worksheet, $"D{row}"), NumberStyles.Number, CultureInfo.InvariantCulture, out var prix) ? prix : 0,
-                            Quantite = decimal.TryParse(GetCellValue(worksheet, $"E{row}"), NumberStyles.Number, CultureInfo.InvariantCulture, out var qte) ? qte : 0,
+                            PrixUnitaire = GetDecimalCellValue(worksheet, $"D{row}"),
+                            Quantite = GetDecimalCellValue(worksheet, $"E{row}"),
                             Emballage = GetCellValue(worksheet, $"F{row}"),
-                            CodeTva = GetCellValue(worksheet, $"G{row}"),
+                            CodeTva = GetTvaCodeFromPercentage(GetCellValue(worksheet, $"G{row}")),
                             MontantHt = montant,
                             NumeroLigne = row
                         };
@@ -868,6 +857,38 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
         }
 
         /// <summary>
+        /// Récupère une valeur numérique d'une cellule en préservant la précision décimale
+        /// </summary>
+        private decimal GetDecimalCellValue(IXLWorksheet worksheet, string cellAddress)
+        {
+            try
+            {
+                var cell = worksheet.Cell(cellAddress);
+                if (cell.IsEmpty())
+                    return 0;
+
+                // Essayer d'abord de récupérer directement comme decimal
+                if (cell.TryGetValue(out decimal decimalValue))
+                    return decimalValue;
+
+                // Sinon essayer comme double puis convertir
+                if (cell.TryGetValue(out double doubleValue))
+                    return (decimal)doubleValue;
+
+                // En dernier recours, essayer de parser la chaîne
+                var stringValue = cell.GetString().Trim();
+                if (decimal.TryParse(stringValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsedValue))
+                    return parsedValue;
+
+                return 0;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        /// <summary>
         /// Convertit les données Sage 100 en entité FneInvoice
         /// </summary>
         private async Task<FneInvoice?> ConvertToFneInvoiceAsync(Sage100FactureData factureData, string worksheetName)
@@ -995,6 +1016,35 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                 "TVAD" => 0.0m,    // 0% (légale)
                 _ => 18.0m         // Par défaut 18%
             };
+        }
+
+        /// <summary>
+        /// Convertit un pourcentage TVA en code textuel
+        /// </summary>
+        private string GetTvaCodeFromPercentage(string tvaValue)
+        {
+            // Si la cellule est vide ou null, c'est 0% (TVAC)
+            if (string.IsNullOrWhiteSpace(tvaValue))
+                return "TVAC";
+
+            // Si c'est déjà un code textuel, le retourner tel quel
+            if (tvaValue.ToUpper() is "TVA" or "TVAB" or "TVAC" or "TVAD")
+                return tvaValue.ToUpper();
+
+            // Essayer de parser comme un nombre
+            if (decimal.TryParse(tvaValue, out decimal percentage))
+            {
+                return percentage switch
+                {
+                    18 => "TVA",   // 18% -> TVA
+                    9 => "TVAB",   // 9% -> TVAB  
+                    0 => "TVAC",   // 0% -> TVAC (exonéré)
+                    _ => "TVAC"    // Autre pourcentage inconnu -> TVAC (0%)
+                };
+            }
+
+            // Si parsing échoue, considérer comme 0%
+            return "TVAC";
         }
 
         #endregion

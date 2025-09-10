@@ -181,16 +181,16 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Montant HT:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Facture.MontantHT, StringFormat='{}{0:N0} FCFA'}" Style="{StaticResource ValueStyle}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Facture.MontantHT, StringFormat='{}{0:N2} FCFA'}" Style="{StaticResource ValueStyle}"/>
 
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Montant TTC:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Facture.MontantTTC, StringFormat='{}{0:N0} FCFA'}" 
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Facture.MontantTTC, StringFormat='{}{0:N2} FCFA'}" 
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource PrimaryHueMidBrush}"
                                    Style="{StaticResource ValueStyle}"/>
 
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="TVA:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding MontantTVA, StringFormat='{}{0:N0} FCFA'}" Style="{StaticResource ValueStyle}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding MontantTVA, StringFormat='{}{0:N2} FCFA'}" Style="{StaticResource ValueStyle}"/>
                     </Grid>
                 </StackPanel>
             </Grid>
@@ -263,7 +263,7 @@
 
                         <!-- Prix Unitaire -->
                         <DataGridTextColumn Header="Prix Unit. (FCFA)"
-                                            Binding="{Binding PrixUnitaire, StringFormat='{}{0:N0}'}"
+                                            Binding="{Binding PrixUnitaire, StringFormat='{}{0:N2}'}"
                                             Width="130">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignDataGridTextColumnStyle}">
@@ -337,7 +337,7 @@
 
                         <!-- Montant HT -->
                         <DataGridTextColumn Header="Montant HT (FCFA)"
-                                            Binding="{Binding MontantHt, StringFormat='{}{0:N0}'}"
+                                            Binding="{Binding MontantHt, StringFormat='{}{0:N2}'}"
                                             Width="150">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignDataGridTextColumnStyle}">
