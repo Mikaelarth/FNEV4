@@ -146,13 +146,19 @@ namespace FNEV4.Presentation
             return Host.CreateDefaultBuilder()
                 .ConfigureAppConfiguration((context, config) =>
                 {
+                    // Déterminer l'environnement
+                    var environmentName = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development";
+                    
                     config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                    config.AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true);
+                    config.AddEnvironmentVariables();
                 })
                 .ConfigureServices((context, services) =>
                 {
                     // Configuration du service centralisé des chemins en premier
                     // Configuration centralisée des chemins et base de données
-                    services.AddSingleton<IDatabasePathProvider, DatabasePathProvider>();
+                    services.AddSingleton<IDatabasePathProvider>(provider =>
+                        new DatabasePathProvider(provider.GetRequiredService<IConfiguration>()));
                     services.AddSingleton<IPathConfigurationService>(provider =>
                         new PathConfigurationService(
                             provider.GetRequiredService<IConfiguration>(),

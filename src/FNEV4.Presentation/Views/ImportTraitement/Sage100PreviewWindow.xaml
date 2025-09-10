@@ -9,133 +9,253 @@
         Height="800"
         Width="1400"
         WindowStartupLocation="CenterScreen"
-        WindowState="Maximized">
+        WindowState="Maximized"
+        Background="{DynamicResource MaterialDesignPaper}"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="13"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Auto"
+        FontFamily="{DynamicResource MaterialDesignFont}">
 
-    <Grid>
+    <Window.Resources>
+        <!-- Styles conformes à la charte graphique FNEV4 -->
+        <Style x:Key="HeaderIconStyle" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
+        </Style>
+
+        <Style x:Key="ActionButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="MinWidth" Value="120"/>
+        </Style>
+
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="MinWidth" Value="120"/>
+        </Style>
+        
+        <Style x:Key="KpiCardStyle" TargetType="materialDesign:Card">
+            <Setter Property="Margin" Value="0,0,16,16"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth1"/>
+        </Style>
+
+        <Style x:Key="KpiValueStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="32"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,8,0,4"/>
+        </Style>
+
+        <Style x:Key="KpiTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBodyLight}"/>
+        </Style>
+    </Window.Resources>
+
+    <!-- Layout principal avec marges cohérentes -->
+    <Grid Margin="24">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="64" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Row 0: En-tête avec titre et description -->
-        <StackPanel Grid.Row="0" Margin="20,20,20,10">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
-                <materialDesign:PackIcon Kind="Receipt" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,10,0" />
-                <TextBlock Text="Aperçu des Factures Sage 100" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" />
+        <!-- En-tête simplifié sans fond ni bordure -->
+        <Grid Grid.Row="0" Margin="0,0,0,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Logo et titre -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <materialDesign:PackIcon Kind="Receipt" 
+                                       Width="32" Height="32" 
+                                       Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                       VerticalAlignment="Center" />
+                <TextBlock Text="Aperçu des Factures Sage 100" 
+                         FontSize="20" 
+                         FontWeight="Bold" 
+                         Foreground="{DynamicResource MaterialDesignBody}" 
+                         VerticalAlignment="Center" 
+                         Margin="12,0,0,0" />
             </StackPanel>
-            <TextBlock Text="Visualisation détaillée des factures détectées avant import" 
-                       HorizontalAlignment="Center" 
-                       FontSize="14" 
-                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
-        </StackPanel>
 
-        <!-- Row 1: Statistiques en une ligne -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="20,10">
-            <Border Background="{DynamicResource PrimaryHueMidBrush}" CornerRadius="15" Padding="15,10" Margin="10,0">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="FileDocument" Foreground="White" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0" />
-                    <TextBlock Text="{Binding TotalFactures}" FontSize="18" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" />
-                    <TextBlock Text="Factures trouvées" FontSize="12" Foreground="White" VerticalAlignment="Center" Margin="5,0,0,0" />
-                </StackPanel>
-            </Border>
+            <!-- Description -->
+            <TextBlock Grid.Column="1"
+                     Text="Visualisation détaillée des factures détectées avant import"
+                     FontSize="14"
+                     Foreground="{DynamicResource MaterialDesignBodyLight}"
+                     VerticalAlignment="Center"
+                     HorizontalAlignment="Center" />
+        </Grid>
 
-            <Border Background="{DynamicResource SecondaryHueMidBrush}" CornerRadius="15" Padding="15,10" Margin="10,0">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="CheckCircle" Foreground="White" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0" />
-                    <TextBlock Text="{Binding FacturesTraitees}" FontSize="18" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" />
-                    <TextBlock Text="Factures valides" FontSize="12" Foreground="White" VerticalAlignment="Center" Margin="5,0,0,0" />
-                </StackPanel>
-            </Border>
-
-            <Border Background="#FF9800" CornerRadius="15" Padding="15,10" Margin="10,0">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="AlertCircle" Foreground="White" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0" />
-                    <TextBlock Text="{Binding FacturesEnErreur}" FontSize="18" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" />
-                    <TextBlock Text="Factures avec erreurs" FontSize="12" Foreground="White" VerticalAlignment="Center" Margin="5,0,0,0" />
-                </StackPanel>
-            </Border>
-        </StackPanel>
-
-        <!-- Row 2: Barre de recherche rapide -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="20,10">
-            <TextBox Width="400" 
-                     materialDesign:HintAssist.Hint="Recherche rapide (numéro facture, client, montant...)"
-                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                     FontSize="14" />
-            <Button Content="Effacer" 
-                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                    Command="{Binding ClearSearchCommand}"
-                    Margin="10,0,0,0" />
-        </StackPanel>
-
-        <!-- Row 3: DataGrid -->
-        <DataGrid Grid.Row="3" 
-                  Name="FacturesDataGrid"
-                  ItemsSource="{Binding FilteredFactures}"
-                  AutoGenerateColumns="False"
-                  CanUserSortColumns="True"
-                  CanUserReorderColumns="True"
-                  CanUserResizeColumns="True"
-                  SelectionMode="Extended"
-                  GridLinesVisibility="Horizontal"
-                  HeadersVisibility="Column"
-                  Margin="20,10,20,10"
-                  materialDesign:DataGridAssist.CellPadding="8"
-                  materialDesign:DataGridAssist.ColumnHeaderPadding="8">
-
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Fichier Source" Binding="{Binding NomFichierSource}" Width="120" />
-                <DataGridTextColumn Header="N° Facture" Binding="{Binding NumeroFacture}" Width="100" />
-                <DataGridTextColumn Header="Date" Binding="{Binding DateFacture, StringFormat=dd/MM/yyyy}" Width="80" />
-                <DataGridTextColumn Header="Code Client" Binding="{Binding CodeClient}" Width="100" />
-                <DataGridTextColumn Header="Client" Binding="{Binding NomClient}" Width="200" />
-                <DataGridTextColumn Header="Point de Vente" Binding="{Binding PointDeVente}" Width="120" />
-                <DataGridTextColumn Header="Moyen Paiement" Binding="{Binding MoyenPaiement}" Width="120" />
-                <DataGridTextColumn Header="Montant HT" Binding="{Binding MontantHT, StringFormat=N2}" Width="100" />
-                <DataGridTextColumn Header="Montant TTC" Binding="{Binding MontantTTC, StringFormat=N2}" Width="100" />
-                <DataGridTextColumn Header="Statut" Binding="{Binding Statut}" Width="80" />
+        <!-- Row 1: Filtres statistiques compacts au lieu des grandes cartes -->
+        <materialDesign:Card Grid.Row="1" Padding="16" Margin="0,0,0,16" materialDesign:ShadowAssist.ShadowDepth="Depth1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
                 
-                <!-- Colonne Produits avec icône cliquable -->
-                <DataGridTemplateColumn Header="Produits" Width="100">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                    Command="{Binding DataContext.ShowProductDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                    CommandParameter="{Binding}"
-                                    ToolTip="Voir les détails des produits">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding NombreProduits}" 
-                                               FontWeight="Bold" 
-                                               VerticalAlignment="Center" 
-                                               Margin="0,0,5,0" />
-                                    <materialDesign:PackIcon Kind="Package" Width="16" Height="16" />
-                                </StackPanel>
-                            </Button>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+                <!-- Statistiques compactes avec filtres -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    
+                    <!-- Bouton filtre: Toutes -->
+                    <Button Style="{StaticResource SecondaryButtonStyle}" 
+                            Command="{Binding ShowAllFacturesCommand}"
+                            Height="32" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FileDocument" Width="16" Height="16" Margin="0,0,6,0"/>
+                            <TextBlock Text="{Binding TotalFactures, StringFormat='{}{0} trouvées'}" FontSize="12" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <!-- Bouton filtre: Valides -->
+                    <Button Style="{StaticResource SecondaryButtonStyle}" 
+                            Command="{Binding ShowValidFacturesCommand}"
+                            Height="32" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CheckCircle" Width="16" Height="16" Margin="0,0,6,0" Foreground="#4CAF50"/>
+                            <TextBlock Text="{Binding FacturesTraitees, StringFormat='{}{0} valides'}" FontSize="12" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <!-- Bouton filtre: Erreurs -->
+                    <Button Style="{StaticResource SecondaryButtonStyle}" 
+                            Command="{Binding ShowErrorFacturesCommand}"
+                            Height="32">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AlertCircle" Width="16" Height="16" Margin="0,0,6,0" Foreground="#F44336"/>
+                            <TextBlock Text="{Binding FacturesEnErreur, StringFormat='{}{0} erreurs'}" FontSize="12" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Button>
+                    
+                </StackPanel>
+                
+                <!-- Recherche compacte -->
+                <Grid Grid.Column="1" Width="300">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <TextBox Grid.Column="0" 
+                             materialDesign:HintAssist.Hint="Recherche..."
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="13" 
+                             Height="36" 
+                             VerticalAlignment="Center"
+                             VerticalContentAlignment="Center"
+                             Padding="0,8,0,0" />
+                    
+                    <Button Grid.Column="1" 
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            Command="{Binding ClearSearchCommand}"
+                            Width="36" Height="36" 
+                            Margin="4,0,0,0"
+                            VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="Close" Width="16" Height="16"/>
+                    </Button>
+                </Grid>
+            </Grid>
+        </materialDesign:Card>
 
-        <!-- Row 4: Boutons d'actions -->
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="20">
-            <Button Content="Exporter en Excel" 
-                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                    Margin="5" />
-            
-            <Button Content="IMPORTER LES FACTURES" 
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    Background="{DynamicResource SecondaryHueMidBrush}"
-                    Margin="5" />
-            
-            <Button Content="Fermer" 
-                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                    IsCancel="True"
-                    Margin="5" />
-        </StackPanel>
+        <!-- Row 2: DataGrid avec plus d'espace -->
+        <materialDesign:Card Grid.Row="3" 
+                           Padding="0" 
+                           Margin="0,0,0,24"
+                           materialDesign:ShadowAssist.ShadowDepth="Depth2">
+            <DataGrid Name="FacturesDataGrid"
+                      ItemsSource="{Binding FilteredFactures}"
+                      AutoGenerateColumns="False"
+                      CanUserSortColumns="True"
+                      CanUserReorderColumns="True"
+                      CanUserResizeColumns="True"
+                      SelectionMode="Extended"
+                      GridLinesVisibility="Horizontal"
+                      HeadersVisibility="Column"
+                      materialDesign:DataGridAssist.CellPadding="12,8"
+                      materialDesign:DataGridAssist.ColumnHeaderPadding="12,12"
+                      FontSize="13"
+                      RowHeight="52">
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Fichier Source" Binding="{Binding NomFichierSource}" Width="140" />
+                    <DataGridTextColumn Header="N° Facture" Binding="{Binding NumeroFacture}" Width="110" />
+                    <DataGridTextColumn Header="Date" Binding="{Binding DateFacture, StringFormat=dd/MM/yyyy}" Width="90" />
+                    <DataGridTextColumn Header="Code Client" Binding="{Binding CodeClient}" Width="110" />
+                    <DataGridTextColumn Header="Client" Binding="{Binding NomClient}" Width="220" />
+                    <DataGridTextColumn Header="Point de Vente" Binding="{Binding PointDeVente}" Width="130" />
+                    <DataGridTextColumn Header="Moyen Paiement" Binding="{Binding MoyenPaiement}" Width="130" />
+                    <DataGridTextColumn Header="Montant HT" Binding="{Binding MontantHT, StringFormat=N2}" Width="110" />
+                    <DataGridTextColumn Header="Montant TTC" Binding="{Binding MontantTTC, StringFormat=N2}" Width="110" />
+                    <DataGridTextColumn Header="Statut" Binding="{Binding Statut}" Width="90" />
+                    
+                    <!-- Colonne Produits avec style FNEV4 -->
+                    <DataGridTemplateColumn Header="Produits" Width="110">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource SecondaryButtonStyle}"
+                                        Command="{Binding DataContext.ShowProductDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        ToolTip="Voir les détails des produits"
+                                        Height="36"
+                                        Padding="12,6"
+                                        FontSize="12">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding NombreProduits}" 
+                                                   FontWeight="Medium" 
+                                                   VerticalAlignment="Center" 
+                                                   Margin="0,0,6,0" />
+                                        <materialDesign:PackIcon Kind="Package" Width="16" Height="16" Foreground="{DynamicResource PrimaryHueMidBrush}" />
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </materialDesign:Card>
+
+        <!-- Row 4: Boutons d'actions style FNEV4 -->
+        <materialDesign:Card Grid.Row="4" 
+                           Padding="24" 
+                           materialDesign:ShadowAssist.ShadowDepth="Depth2">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                
+                <!-- Bouton Exporter -->
+                <Button Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding ExportToExcelCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="FileExcel" Width="18" Height="18" Margin="0,0,8,0"/>
+                        <TextBlock Text="Exporter en Excel"/>
+                    </StackPanel>
+                </Button>
+                
+                <!-- Bouton principal Import -->
+                <Button Style="{StaticResource ActionButtonStyle}"
+                        Command="{Binding ImportFacturesCommand}"
+                        Background="#FF5722"
+                        BorderBrush="#FF5722">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Import" Width="18" Height="18" Margin="0,0,8,0"/>
+                        <TextBlock Text="IMPORTER LES FACTURES"/>
+                    </StackPanel>
+                </Button>
+                
+            </StackPanel>
+        </materialDesign:Card>
     </Grid>
 </Window>

@@ -50,23 +50,115 @@ namespace FNEV4.Infrastructure.Services
             // SOLUTION CENTRALISÉE: Utiliser le provider centralisé pour la base de données
             _databasePath = _databasePathProvider.DatabasePath;
             
-            // Déduire le répertoire data depuis le chemin de la base
-            _dataRootPath = Path.GetDirectoryName(_databasePath) ?? Path.Combine(GetProjectRootPath(), "data");
+            // Détermine le mode de chemin depuis la configuration
+            var pathMode = _configuration["Environment:PathMode"] ?? "Auto";
+            var environmentType = _configuration["Environment:Type"] ?? "Development";
+            
+            // Déduire le répertoire data selon le mode
+            _dataRootPath = GetDataRootPath(pathMode, environmentType);
 
-            // Configuration des sous-dossiers (relatifs au data fixe)
-            _importFolderPath = Path.Combine(_dataRootPath, "Import");
-            _exportFolderPath = Path.Combine(_dataRootPath, "Export"); 
-            _archiveFolderPath = Path.Combine(_dataRootPath, "Archive");
-            _logsFolderPath = Path.Combine(_dataRootPath, "Logs");
-            _backupFolderPath = Path.Combine(_dataRootPath, "Backup");
+            // Configuration des sous-dossiers
+            InitializeFolderPaths(pathMode);
 
             // Configuration du fichier de config de base
             _databaseConfigPath = Path.Combine(_dataRootPath, "database-config.json");
             
             // Log pour diagnostic
             System.Diagnostics.Debug.WriteLine($"[PathConfigurationService] Configuration centralisée:");
+            System.Diagnostics.Debug.WriteLine($"[PathConfigurationService] Mode: {pathMode}");
             System.Diagnostics.Debug.WriteLine($"[PathConfigurationService] Base de données: {_databasePath}");
             System.Diagnostics.Debug.WriteLine($"[PathConfigurationService] Dossier data: {_dataRootPath}");
+        }
+
+        private string GetDataRootPath(string pathMode, string environmentType)
+        {
+            // 1. Chemin explicite dans la configuration
+            var configDataRoot = _configuration["PathSettings:DataRootPath"];
+            if (!string.IsNullOrEmpty(configDataRoot))
+            {
+                return ExpandEnvironmentVariables(configDataRoot);
+            }
+            
+            // 2. Basé sur le mode de chemin
+            switch (pathMode.ToLower())
+            {
+                case "appdata":
+                    return Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "FNEV4");
+                
+                case "project":
+                    return Path.Combine(GetProjectRootPath(), "data");
+                
+                case "custom":
+                    // Utilise le répertoire de la base de données
+                    return Path.GetDirectoryName(_databasePath) ?? Path.Combine(GetProjectRootPath(), "data");
+                
+                case "auto":
+                default:
+                    // Auto: Basé sur l'environnement
+                    if (environmentType.ToLower() == "production")
+                    {
+                        return Path.Combine(
+                            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                            "FNEV4");
+                    }
+                    else
+                    {
+                        return Path.Combine(GetProjectRootPath(), "data");
+                    }
+            }
+        }
+
+        private void InitializeFolderPaths(string pathMode)
+        {
+            // Chemins par défaut (relatifs au DataRoot)
+            var defaultImport = _configuration["PathSettings:ImportFolder"] ?? "Import";
+            var defaultExport = _configuration["PathSettings:ExportFolder"] ?? "Export";
+            var defaultArchive = _configuration["PathSettings:ArchiveFolder"] ?? "Archive";
+            var defaultLogs = _configuration["PathSettings:LogsFolder"] ?? "Logs";
+            var defaultBackup = _configuration["PathSettings:BackupFolder"] ?? "Backup";
+            
+            // Chemins personnalisés (absolus)
+            var customImport = _configuration["PathSettings:CustomPaths:ImportFolder"];
+            var customExport = _configuration["PathSettings:CustomPaths:ExportFolder"];
+            var customArchive = _configuration["PathSettings:CustomPaths:ArchiveFolder"];
+            var customLogs = _configuration["PathSettings:CustomPaths:LogsFolder"];
+            var customBackup = _configuration["PathSettings:CustomPaths:BackupFolder"];
+
+            // Utiliser le chemin personnalisé s'il existe, sinon le chemin par défaut
+            _importFolderPath = GetFolderPath(customImport, defaultImport);
+            _exportFolderPath = GetFolderPath(customExport, defaultExport);
+            _archiveFolderPath = GetFolderPath(customArchive, defaultArchive);
+            _logsFolderPath = GetFolderPath(customLogs, defaultLogs);
+            _backupFolderPath = GetFolderPath(customBackup, defaultBackup);
+        }
+
+        private string GetFolderPath(string? customPath, string defaultPath)
+        {
+            if (!string.IsNullOrEmpty(customPath))
+            {
+                var expandedPath = ExpandEnvironmentVariables(customPath);
+                return Path.IsPathRooted(expandedPath) ? expandedPath : Path.Combine(_dataRootPath, expandedPath);
+            }
+            
+            return Path.Combine(_dataRootPath, defaultPath);
+        }
+
+        private string ExpandEnvironmentVariables(string? path)
+        {
+            if (string.IsNullOrEmpty(path)) return string.Empty;
+            
+            // Expand des variables d'environnement Windows comme %LocalAppData%
+            var expanded = Environment.ExpandEnvironmentVariables(path);
+            
+            // Support pour des variables personnalisées
+            expanded = expanded.Replace("{UserProfile}", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+            expanded = expanded.Replace("{AppData}", Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData));
+            expanded = expanded.Replace("{LocalAppData}", Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
+            expanded = expanded.Replace("{Documents}", Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+            
+            return expanded;
         }
 
         /// <summary>

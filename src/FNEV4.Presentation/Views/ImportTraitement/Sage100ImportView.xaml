@@ -91,7 +91,6 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             
                             <materialDesign:PackIcon Kind="FolderCog" 
@@ -112,30 +111,21 @@
                             </StackPanel>
                             
                             <Button Grid.Column="2" 
-                                   Content="Scanner" 
-                                   Style="{StaticResource MaterialDesignOutlinedButton}"
-                                   Command="{Binding ScanImportFolderCommand}"
+                                   Style="{StaticResource MaterialDesignRaisedButton}"
+                                   Background="{DynamicResource PrimaryHueMidBrush}"
+                                   Command="{Binding ScanAndPreviewCommand}"
                                    Margin="0,0,8,0"
-                                   Width="100">
+                                   Width="110">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="MagnifyPlusOutline" Width="18" Height="18" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Scanner"/>
+                                </StackPanel>
                                 <Button.ToolTip>
-                                    <ToolTip Content="Scanner le dossier d'import pour traiter tous les fichiers Excel"/>
+                                    <ToolTip Content="Scanner le dossier d'import et afficher automatiquement l'aperçu des factures trouvées"/>
                                 </Button.ToolTip>
                             </Button>
                             
                             <Button Grid.Column="3" 
-                                   Content="Aperçu" 
-                                   Style="{StaticResource MaterialDesignRaisedButton}"
-                                   Background="{DynamicResource PrimaryHueMidBrush}"
-                                   Command="{Binding ShowPreviewCommand}"
-                                   IsEnabled="{Binding HasScanResults}"
-                                   Margin="0,0,8,0"
-                                   Width="100">
-                                <Button.ToolTip>
-                                    <ToolTip Content="Afficher l'aperçu détaillé des factures scannées"/>
-                                </Button.ToolTip>
-                            </Button>
-                            
-                            <Button Grid.Column="4" 
                                    Style="{StaticResource MaterialDesignIconButton}"
                                    Command="{Binding OpenConfiguredFoldersCommand}"
                                    Width="40" Height="40">

@@ -12,7 +12,7 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
     {
         #region Properties
 
-        private readonly Sage100ImportViewModel _parentViewModel;
+        private readonly Sage100ImportViewModel? _parentViewModel;
 
         [ObservableProperty]
         private ObservableCollection<Sage100FacturePreview> _facturesImportees = new();
@@ -29,6 +29,9 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         [ObservableProperty]
         private int _invalidFiles;
 
+        [ObservableProperty]
+        private string _currentFilter = "Toutes";
+
         public int TotalFactures => FacturesImportees?.Count ?? 0;
         public int FacturesTraitees => ValidFiles;
         public int FacturesEnErreur => InvalidFiles;
@@ -37,7 +40,7 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
 
         #region Constructor
 
-        public Sage100PreviewViewModel(Sage100ImportViewModel parentViewModel = null)
+        public Sage100PreviewViewModel(Sage100ImportViewModel? parentViewModel = null)
         {
             _parentViewModel = parentViewModel;
             FacturesImportees = new ObservableCollection<Sage100FacturePreview>();
@@ -66,6 +69,21 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             FilteredFactures.Clear();
             
             var filtered = FacturesImportees.AsEnumerable();
+
+            // Filtre par statut
+            switch (CurrentFilter)
+            {
+                case "Valides":
+                    filtered = filtered.Where(f => f.EstValide);
+                    break;
+                case "Erreurs":
+                    filtered = filtered.Where(f => !f.EstValide);
+                    break;
+                case "Toutes":
+                default:
+                    // Pas de filtre, afficher toutes les factures
+                    break;
+            }
 
             // Filtre de recherche rapide sur plusieurs champs
             if (!string.IsNullOrWhiteSpace(SearchText))
@@ -127,7 +145,7 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         }
 
         [RelayCommand]
-        private void ShowProductDetails(Sage100FacturePreview facture)
+        private void ShowProductDetails(Sage100FacturePreview? facture)
         {
             if (facture == null) return;
             
@@ -205,6 +223,79 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                     System.Windows.MessageBoxButton.OK, 
                     System.Windows.MessageBoxImage.Error);
             }
+        }
+
+        [RelayCommand]
+        private void ExportToExcel()
+        {
+            try
+            {
+                // TODO: Implémenter l'export Excel des factures prévisualisées
+                System.Windows.MessageBox.Show(
+                    "Fonctionnalité d'export Excel en cours de développement", 
+                    "Information", 
+                    System.Windows.MessageBoxButton.OK, 
+                    System.Windows.MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show(
+                    $"Erreur lors de l'export :\n{ex.Message}", 
+                    "Erreur", 
+                    System.Windows.MessageBoxButton.OK, 
+                    System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand]
+        private async Task ImportFactures()
+        {
+            try
+            {
+                // Déléguer l'import au ViewModel parent s'il existe
+                if (_parentViewModel != null)
+                {
+                    // Utiliser la méthode d'import publique du parent
+                    await _parentViewModel.ProcessImportFromPreview();
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show(
+                        "Impossible de démarrer l'import - Référence au module d'import non disponible", 
+                        "Erreur", 
+                        System.Windows.MessageBoxButton.OK, 
+                        System.Windows.MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show(
+                    $"Erreur lors du démarrage de l'import :\n{ex.Message}", 
+                    "Erreur", 
+                    System.Windows.MessageBoxButton.OK, 
+                    System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand]
+        private void ShowAllFactures()
+        {
+            CurrentFilter = "Toutes";
+            ApplyFilters();
+        }
+
+        [RelayCommand]
+        private void ShowValidFactures()
+        {
+            CurrentFilter = "Valides";
+            ApplyFilters();
+        }
+
+        [RelayCommand]
+        private void ShowErrorFactures()
+        {
+            CurrentFilter = "Erreurs";
+            ApplyFilters();
         }
 
         #endregion

@@ -12,11 +12,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using System.Diagnostics;
+using Microsoft.Extensions.Configuration;
 using FNEV4.Core.Interfaces;
 using FNEV4.Core.Entities;
 using FNEV4.Core.Services;
-using CoreLogging = FNEV4.Core.Interfaces.ILoggingService;
 using FNEV4.Infrastructure.Services;
+using CoreLogging = FNEV4.Core.Interfaces.ILoggingService;
 using InfraLogging = FNEV4.Infrastructure.Services.ILoggingService;
 
 namespace FNEV4.Presentation.ViewModels.Configuration
@@ -30,6 +31,8 @@ namespace FNEV4.Presentation.ViewModels.Configuration
         #region Fields & Dependencies
 
         private readonly IPathConfigurationService _pathConfigurationService;
+        private readonly IDatabasePathProvider _databasePathProvider;
+        private readonly IConfiguration _configuration;
 
         // Services temporairement désactivés pour debug
         // private readonly IFolderConfigurationService _folderService;
@@ -135,6 +138,28 @@ namespace FNEV4.Presentation.ViewModels.Configuration
 
         [ObservableProperty]
         private bool backupAutoEnabled = true;
+
+        #endregion
+
+        #region Observable Properties - Informations sur l'Environnement
+
+        [ObservableProperty]
+        private string currentEnvironment = "Development";
+
+        [ObservableProperty]
+        private string databaseMode = "Auto";
+
+        [ObservableProperty]
+        private string pathMode = "Auto";
+
+        [ObservableProperty]
+        private string currentDatabasePath = string.Empty;
+
+        [ObservableProperty]
+        private string environmentDescription = string.Empty;
+
+        [ObservableProperty]
+        private Brush environmentStatusColor = Brushes.Green;
 
         #endregion
 
@@ -268,9 +293,15 @@ namespace FNEV4.Presentation.ViewModels.Configuration
 
         #region Constructor
 
-        public CheminsDossiersConfigViewModel(IPathConfigurationService pathConfigurationService = null, InfraLogging loggingService = null, ILoggingConfigurationService loggingConfigService = null, IBackupService backupService = null)
+        public CheminsDossiersConfigViewModel(
+            IPathConfigurationService? pathConfigurationService = null, 
+            InfraLogging? loggingService = null, 
+            ILoggingConfigurationService? loggingConfigService = null, 
+            IBackupService? backupService = null)
         {
             _pathConfigurationService = pathConfigurationService ?? App.GetService<IPathConfigurationService>();
+            _databasePathProvider = App.GetService<IDatabasePathProvider>();
+            _configuration = App.GetService<IConfiguration>();
             _loggingService = loggingService ?? App.GetService<InfraLogging>();
             _loggingConfigService = loggingConfigService ?? App.GetService<ILoggingConfigurationService>();
             _backupService = backupService ?? App.GetService<IBackupService>();
@@ -346,6 +377,9 @@ namespace FNEV4.Presentation.ViewModels.Configuration
                 LogsFolderPath = _pathConfigurationService.LogsFolderPath;
                 BackupFolderPath = _pathConfigurationService.BackupFolderPath;
 
+                // Initialiser les informations sur l'environnement
+                InitializeEnvironmentInfo();
+
                 // Initialiser les paramètres de logging depuis le service de configuration
                 InitializeLoggingSettings();
 
@@ -356,6 +390,43 @@ namespace FNEV4.Presentation.ViewModels.Configuration
                 // Fallback vers les valeurs par défaut en cas d'erreur
                 InitializeFallbackValues();
                 System.Diagnostics.Debug.WriteLine($"Erreur lors de l'initialisation des chemins: {ex.Message}");
+            }
+        }
+
+        private void InitializeEnvironmentInfo()
+        {
+            try
+            {
+                // Obtenir les informations de l'environnement depuis la configuration
+                CurrentEnvironment = _configuration["Environment:Type"] ?? "Development";
+                DatabaseMode = _configuration["Environment:DatabaseMode"] ?? "Auto";
+                PathMode = _configuration["Environment:PathMode"] ?? "Auto";
+                CurrentDatabasePath = _databasePathProvider.DatabasePath;
+
+                // Décrire l'environnement actuel
+                EnvironmentDescription = CurrentEnvironment.ToLower() switch
+                {
+                    "development" => "🔧 Mode Développement - Utilise le répertoire du projet",
+                    "production" => "🚀 Mode Production - Utilise %LocalAppData% pour la sécurité",
+                    "portable" => "💼 Mode Portable - Tous les fichiers dans le répertoire de l'application",
+                    "custom" => "⚙️ Mode Personnalisé - Configuration manuelle des chemins",
+                    _ => "📁 Configuration automatique basée sur l'environnement"
+                };
+
+                // Définir la couleur selon l'environnement
+                EnvironmentStatusColor = CurrentEnvironment.ToLower() switch
+                {
+                    "development" => Brushes.Orange,
+                    "production" => Brushes.Green,
+                    "portable" => Brushes.Blue,
+                    "custom" => Brushes.Purple,
+                    _ => Brushes.Gray
+                };
+            }
+            catch (Exception ex)
+            {
+                EnvironmentDescription = $"❌ Erreur lecture environnement: {ex.Message}";
+                EnvironmentStatusColor = Brushes.Red;
             }
         }
 
@@ -956,20 +1027,20 @@ namespace FNEV4.Presentation.ViewModels.Configuration
 
         #region Helper Methods - Validation et Test
 
-        private async Task<bool> ValidatePathAsync(string pathType, string path)
+        private Task<bool> ValidatePathAsync(string pathType, string path)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(path))
                 {
                     SetPathStatus(pathType, "Invalid");
-                    return false;
+                    return Task.FromResult(false);
                 }
 
                 if (!Directory.Exists(path))
                 {
                     SetPathStatus(pathType, "Warning");
-                    return false;
+                    return Task.FromResult(false);
                 }
 
                 // if (!await _folderService.HasWritePermissionAsync(path))
@@ -979,12 +1050,12 @@ namespace FNEV4.Presentation.ViewModels.Configuration
                 // }
 
                 SetPathStatus(pathType, "Valid");
-                return true;
+                return Task.FromResult(true);
             }
             catch
             {
                 SetPathStatus(pathType, "Invalid");
-                return false;
+                return Task.FromResult(false);
             }
         }
 
@@ -1053,7 +1124,7 @@ namespace FNEV4.Presentation.ViewModels.Configuration
             await UpdateStatisticsAsync();
         }
 
-        private async Task UpdateGlobalStatusAsync()
+        private Task UpdateGlobalStatusAsync()
         {
             var statuses = new[] { ImportFolderStatus, ExportFolderStatus, ArchiveFolderStatus, LogsFolderStatus, BackupFolderStatus };
             
@@ -1087,9 +1158,10 @@ namespace FNEV4.Presentation.ViewModels.Configuration
             }
 
             PathsConfiguredSummary = $"{validCount}/5 dossiers configurés correctement";
+            return Task.CompletedTask;
         }
 
-        private async Task UpdateStatisticsAsync()
+        private Task UpdateStatisticsAsync()
         {
             ConfiguredFoldersCount = new[] { ImportFolderStatus, ExportFolderStatus, ArchiveFolderStatus, LogsFolderStatus, BackupFolderStatus }
                 .Count(s => s == "Valid");
@@ -1100,6 +1172,8 @@ namespace FNEV4.Presentation.ViewModels.Configuration
             if (ExportAutoOrganizeEnabled && ExportFolderStatus == "Valid") ActiveWatchersCount++;
             if (ArchiveAutoEnabled && ArchiveFolderStatus == "Valid") ActiveWatchersCount++;
             if (BackupAutoEnabled && BackupFolderStatus == "Valid") ActiveWatchersCount++;
+            
+            return Task.CompletedTask;
         }
 
         private async Task UpdateImportFolderInfoAsync()
@@ -1683,10 +1757,10 @@ namespace FNEV4.Presentation.ViewModels.Configuration
         /// Ouvre le gestionnaire de sauvegardes
         /// </summary>
         [RelayCommand]
-        private void OpenBackupManager()
+        private async Task OpenBackupManagerAsync()
         {
             // TODO: Implémenter le gestionnaire de sauvegardes avec fenêtre dédiée
-            ShowNotificationAsync("🛠️ Gestionnaire de sauvegardes en développement", "Information", Brushes.Blue);
+            await ShowNotificationAsync("🛠️ Gestionnaire de sauvegardes en développement", "Information", Brushes.Blue);
         }
 
         /// <summary>

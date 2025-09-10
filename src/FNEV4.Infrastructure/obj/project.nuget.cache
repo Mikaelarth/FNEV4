@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "qk8CMmBJoZY=",
+  "dgSpecHash": "uPP6YYEQ2F4=",
   "success": true,
-  "projectFilePath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj",
+  "projectFilePath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\HP\\.nuget\\packages\\automapper\\12.0.1\\automapper.12.0.1.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\closedxml\\0.102.2\\closedxml.0.102.2.nupkg.sha512",

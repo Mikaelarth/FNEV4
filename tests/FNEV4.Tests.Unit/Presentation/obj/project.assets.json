@@ -10134,48 +10134,41 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\HP\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\HP\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj",
+      "projectUniqueName": "D:\\PROJET\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj",
       "projectName": "FNEV4.Tests.Unit.Presentation",
-      "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj",
+      "projectPath": "D:\\PROJET\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj",
       "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\obj\\",
+      "outputPath": "D:\\PROJET\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0-windows"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net8.0-windows7.0": {
           "targetAlias": "net8.0-windows",
           "projectReferences": {
-            "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
-              "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj"
+            "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
+              "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj"
             },
-            "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
-              "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
+            "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
+              "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
             },
-            "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
-              "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj"
+            "D:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
+              "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj"
             },
-            "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj": {
-              "projectPath": "C:\\Users\\HP\\Documents\\projets\\FNEV4\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj"
+            "D:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj": {
+              "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj"
             }
           }
         }
@@ -10189,8 +10182,7 @@
         "enableAudit": "true",
         "auditLevel": "low",
         "auditMode": "direct"
-      },
-      "SdkAnalysisLevel": "9.0.300"
+      }
     },
     "frameworks": {
       "net8.0-windows7.0": {
@@ -10242,7 +10234,7 @@
             "privateAssets": "none"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

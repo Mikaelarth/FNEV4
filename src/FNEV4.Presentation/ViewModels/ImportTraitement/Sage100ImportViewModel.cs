@@ -732,6 +732,189 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             }
         }
 
+        /// <summary>
+        /// Commande fusionnée pour scanner et afficher l'aperçu en une seule action
+        /// Améliore l'UX en réduisant le nombre d'étapes pour l'utilisateur
+        /// </summary>
+        [RelayCommand]
+        private async Task ScanAndPreview()
+        {
+            try
+            {
+                var importPath = _pathService.ImportFolderPath;
+                
+                if (!Directory.Exists(importPath))
+                {
+                    MessageBox.Show($"Le dossier d'import n'existe pas :\n{importPath}\n\nVeuillez configurer les chemins dans 'Configuration > Chemins & Dossiers'", 
+                                  "Dossier introuvable", 
+                                  MessageBoxButton.OK, 
+                                  MessageBoxImage.Warning);
+                    return;
+                }
+
+                var excelFiles = Directory.GetFiles(importPath, "*.xlsx");
+                
+                if (excelFiles.Length == 0)
+                {
+                    MessageBox.Show($"Aucun fichier Excel trouvé dans :\n{importPath}", 
+                                  "Dossier vide", 
+                                  MessageBoxButton.OK, 
+                                  MessageBoxImage.Information);
+                    return;
+                }
+
+                // Phase 1: Scanner (même logique que ScanImportFolder mais silencieux)
+                IsProcessing = true;
+                ValidationMessage = "🔍 Analyse des fichiers en cours...";
+                HasValidationResult = true;
+                
+                var allPreviews = new List<Sage100FacturePreview>();
+                var validFilesCount = 0;
+                var invalidFilesCount = 0;
+                var totalInvoicesFound = 0;
+                var validInvoicesFound = 0;
+                var invalidInvoicesFound = 0;
+                
+                _lastScanTotalFiles = excelFiles.Length;
+                _lastScanErrors.Clear();
+                
+                foreach (var file in excelFiles)
+                {
+                    try
+                    {
+                        var fileName = Path.GetFileName(file);
+                        ValidationDetails = $"📄 Analyse de {fileName}...";
+                        
+                        var preview = await _sage100ImportService.PreviewFileAsync(file);
+                        
+                        if (preview.IsSuccess && preview.FacturesDetectees > 0)
+                        {
+                            validFilesCount++;
+                            totalInvoicesFound += preview.FacturesDetectees;
+                            
+                            // Ajouter chaque facture à la liste d'aperçu avec nom du fichier
+                            foreach (var facturePreview in preview.Apercu)
+                            {
+                                facturePreview.NomFichierSource = fileName;
+                                allPreviews.Add(facturePreview);
+                                
+                                if (facturePreview.EstValide)
+                                    validInvoicesFound++;
+                                else
+                                    invalidInvoicesFound++;
+                            }
+                        }
+                        else
+                        {
+                            invalidFilesCount++;
+                            var errorMessage = preview.Errors?.Any() == true ? string.Join(", ", preview.Errors) : "Structure invalide ou fichier corrompu";
+                            _lastScanErrors.Add($"{fileName}: {errorMessage}");
+                            
+                            allPreviews.Add(new Sage100FacturePreview
+                            {
+                                NomFeuille = "❌ ERREUR FICHIER",
+                                NomFichierSource = fileName,
+                                NumeroFacture = "N/A",
+                                NomClient = "Fichier non analysable",
+                                EstValide = false,
+                                Erreurs = preview.Errors?.Any() == true ? preview.Errors : new List<string> { "Structure invalide ou fichier corrompu" }
+                            });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        invalidFilesCount++;
+                        var errorMessage = ex.Message.Length > 50 ? ex.Message.Substring(0, 50) + "..." : ex.Message;
+                        _lastScanErrors.Add($"{Path.GetFileName(file)}: Exception - {ex.Message}");
+                        
+                        allPreviews.Add(new Sage100FacturePreview
+                        {
+                            NomFeuille = "🚨 EXCEPTION",
+                            NomFichierSource = Path.GetFileName(file),
+                            NumeroFacture = "ERROR",
+                            NomClient = errorMessage,
+                            EstValide = false,
+                            Erreurs = { $"Exception: {ex.Message}" }
+                        });
+                    }
+                }
+                
+                IsProcessing = false;
+                
+                // Charger les données d'aperçu
+                PreviewFactures.Clear();
+                foreach (var preview in allPreviews)
+                {
+                    PreviewFactures.Add(preview);
+                }
+                
+                HasPreviewData = allPreviews.Count > 0;
+                HasScanResults = true;
+                
+                if (totalInvoicesFound == 0)
+                {
+                    ValidationMessage = "❌ Aucune facture valide détectée";
+                    ValidationDetails = $"Aucune facture valide trouvée dans les {excelFiles.Length} fichier(s) Excel";
+                    ValidationIcon = "AlertCircle";
+                    ValidationColor = new SolidColorBrush(Colors.Orange);
+                    
+                    // Toujours afficher l'aperçu pour montrer les erreurs détaillées
+                    // L'utilisateur peut voir pourquoi les fichiers n'ont pas été traités
+                }
+                
+                // Phase 2: Afficher directement l'aperçu dans tous les cas
+                if (totalInvoicesFound > 0)
+                {
+                    ValidationMessage = "✅ Analyse terminée - Ouverture de l'aperçu";
+                    ValidationDetails = $"{validInvoicesFound} facture(s) prête(s) pour import";
+                    ValidationIcon = "CheckCircle";
+                    ValidationColor = new SolidColorBrush(Colors.Green);
+                }
+                else
+                {
+                    ValidationMessage = "⚠️ Analyse terminée - Aperçu des erreurs";
+                    ValidationDetails = $"Aucune facture valide - Consultez l'aperçu pour voir les erreurs détaillées";
+                    ValidationIcon = "AlertCircle";
+                    ValidationColor = new SolidColorBrush(Colors.Orange);
+                }
+                
+                // Créer et afficher la fenêtre d'aperçu dans tous les cas
+                var previewWindow = new Views.ImportTraitement.Sage100PreviewWindow();
+                var previewViewModel = new Sage100PreviewViewModel(this);
+                
+                var previewResult = new Sage100PreviewResult
+                {
+                    IsSuccess = totalInvoicesFound > 0,
+                    FacturesDetectees = PreviewFactures.Count,
+                    Apercu = PreviewFactures.ToList(),
+                    Errors = _lastScanErrors
+                };
+                
+                previewViewModel.LoadPreviewData(previewResult);
+                
+                previewWindow.DataContext = previewViewModel;
+                previewWindow.Owner = System.Windows.Application.Current.MainWindow;
+                previewWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                IsProcessing = false;
+                
+                ValidationMessage = "🚨 Erreur lors de l'analyse";
+                ValidationDetails = ex.Message;
+                ValidationIcon = "AlertCircle";
+                ValidationColor = new SolidColorBrush(Colors.Red);
+                HasValidationResult = true;
+                
+                MessageBox.Show($"❌ ERREUR lors de l'analyse et affichage de l'aperçu:\n\n" +
+                              $"Erreur: {ex.Message}\n\n" +
+                              $"💡 Vérifiez les permissions et la configuration des dossiers.", 
+                              "Erreur", 
+                              MessageBoxButton.OK, 
+                              MessageBoxImage.Error);
+            }
+        }
+
         #endregion
 
         #region Private Methods

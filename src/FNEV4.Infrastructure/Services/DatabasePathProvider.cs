@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Microsoft.Extensions.Configuration;
 
 namespace FNEV4.Infrastructure.Services
 {
@@ -17,11 +18,13 @@ namespace FNEV4.Infrastructure.Services
     public class DatabasePathProvider : IDatabasePathProvider
     {
         private readonly string _databasePath;
+        private readonly IConfiguration? _configuration;
 
-        public DatabasePathProvider()
+        public DatabasePathProvider(IConfiguration? configuration = null)
         {
+            _configuration = configuration;
             // CHEMIN ABSOLU FIXE - Plus jamais de variation !
-            // Utilise un chemin relatif au répertoire de la solution
+            // Utilise la configuration pour déterminer le chemin
             _databasePath = GetFixedDatabasePath();
             EnsureDatabaseDirectoryExists();
         }
@@ -42,24 +45,62 @@ namespace FNEV4.Infrastructure.Services
             }
         }
 
-        private static string GetFixedDatabasePath()
+        private string GetFixedDatabasePath()
         {
-            // Méthode 1: Variable d'environnement pour production
+            // Méthode 1: Variable d'environnement (priorité absolue)
             var envPath = Environment.GetEnvironmentVariable("FNEV4_DATABASE_PATH");
             if (!string.IsNullOrEmpty(envPath))
             {
                 return envPath;
             }
 
-            // Méthode 2: Chemin fixe pour développement
-            var devPath = @"C:\wamp64\www\FNEV4\data\FNEV4.db";
-            if (Directory.Exists(Path.GetDirectoryName(devPath)))
+            // Méthode 2: Configuration appsettings.json
+            var configPath = _configuration?["PathSettings:DatabasePath"];
+            if (!string.IsNullOrEmpty(configPath))
             {
-                return devPath;
+                // Si chemin relatif, le rendre absolu par rapport au répertoire de l'application
+                if (!Path.IsPathRooted(configPath))
+                {
+                    configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, configPath);
+                }
+                return configPath;
             }
 
-            // Méthode 3: Chercher le répertoire racine du projet
+            // Méthode 3: Mode basé sur la configuration d'environnement
+            var environmentType = _configuration?["Environment:Type"] ?? "Development";
+            var databaseMode = _configuration?["Environment:DatabaseMode"] ?? "Auto";
+
+            switch (databaseMode.ToLower())
+            {
+                case "appdata":
+                    return GetAppDataPath();
+                
+                case "project":
+                    return GetProjectPath() ?? GetAppDataPath();
+                
+                case "auto":
+                default:
+                    // Auto: Détection intelligente
+                    return environmentType.ToLower() == "production" 
+                        ? GetAppDataPath() 
+                        : (GetProjectPath() ?? GetAppDataPath());
+            }
+        }
+
+        private static string GetAppDataPath()
+        {
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "FNEV4",
+                "FNEV4.db"
+            );
+        }
+
+        private static string? GetProjectPath()
+        {
+            // Chercher le répertoire racine du projet (présence du fichier .sln)
             var currentDir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+            
             while (currentDir != null)
             {
                 if (File.Exists(Path.Combine(currentDir.FullName, "FNEV4.sln")))
@@ -68,15 +109,8 @@ namespace FNEV4.Infrastructure.Services
                 }
                 currentDir = currentDir.Parent;
             }
-
-            // Méthode 4: Fallback dans le répertoire de l'application
-            var appDataPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "FNEV4",
-                "FNEV4.db"
-            );
             
-            return appDataPath;
+            return null;
         }
     }
 }
