@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\PROJET\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj": {}
+    "d:\\PROJET\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj": {}
   },
   "projects": {
-    "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
+    "d:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj",
+        "projectUniqueName": "d:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj",
         "projectName": "FNEV4.Application",
-        "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj",
+        "projectPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj",
         "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-        "outputPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\obj\\",
+        "outputPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Application\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -26,8 +26,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
-                "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
+              "d:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
+                "projectPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
               }
             }
           }
@@ -84,14 +84,14 @@
         }
       }
     },
-    "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
+    "d:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj",
+        "projectUniqueName": "d:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj",
         "projectName": "FNEV4.Core",
-        "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj",
+        "projectPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj",
         "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-        "outputPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\obj\\",
+        "outputPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Core\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -148,14 +148,14 @@
         }
       }
     },
-    "D:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
+    "d:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj",
+        "projectUniqueName": "d:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj",
         "projectName": "FNEV4.Infrastructure",
-        "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj",
+        "projectPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj",
         "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-        "outputPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\obj\\",
+        "outputPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -170,11 +170,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
-                "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj"
+              "d:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
+                "projectPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj"
               },
-              "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
-                "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
+              "d:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
+                "projectPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
               }
             }
           }
@@ -277,14 +277,14 @@
           "net8.0-windows7.0": {
             "targetAlias": "net8.0-windows",
             "projectReferences": {
-              "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
-                "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj"
+              "d:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
+                "projectPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj"
               },
-              "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
-                "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
+              "d:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
+                "projectPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
               },
-              "D:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
-                "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj"
+              "d:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
+                "projectPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj"
               }
             }
           }
@@ -376,14 +376,14 @@
         }
       }
     },
-    "D:\\PROJET\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj": {
+    "d:\\PROJET\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\PROJET\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj",
+        "projectUniqueName": "d:\\PROJET\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj",
         "projectName": "FNEV4.Tests.Unit.Presentation",
-        "projectPath": "D:\\PROJET\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj",
+        "projectPath": "d:\\PROJET\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\FNEV4.Tests.Unit.Presentation.csproj",
         "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-        "outputPath": "D:\\PROJET\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\obj\\",
+        "outputPath": "d:\\PROJET\\FNEV4\\tests\\FNEV4.Tests.Unit\\Presentation\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -398,14 +398,14 @@
           "net8.0-windows7.0": {
             "targetAlias": "net8.0-windows",
             "projectReferences": {
-              "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
-                "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj"
+              "d:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
+                "projectPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj"
               },
-              "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
-                "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
+              "d:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
+                "projectPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
               },
-              "D:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
-                "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj"
+              "d:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
+                "projectPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj"
               },
               "D:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj": {
                 "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj"

@@ -150,28 +150,28 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             if (parameter is not Sage100FacturePreview facture || facture == null) 
                 return;
             
-            var produitDetails = string.Empty;
-            if (facture.Produits?.Any() == true)
+            try
             {
-                produitDetails = string.Join("\n", facture.Produits.Select(p => 
-                    $"• {p.Designation} - Qté: {p.Quantite} - Prix: {p.PrixUnitaire:N2} - Total: {p.MontantHt:N2}"));
+                // Créer le ViewModel pour le dialogue
+                var dialogViewModel = new Sage100FactureDetailsViewModel(facture);
+                
+                // Créer et afficher le dialogue
+                var dialog = new Views.ImportTraitement.Sage100FactureDetailsDialog
+                {
+                    DataContext = dialogViewModel,
+                    Owner = System.Windows.Application.Current.MainWindow
+                };
+                
+                dialog.ShowDialog();
             }
-            else
+            catch (Exception ex)
             {
-                produitDetails = "Aucun produit détaillé disponible";
+                System.Windows.MessageBox.Show(
+                    $"Erreur lors de l'affichage des détails de la facture: {ex.Message}",
+                    "Erreur",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
-            
-            System.Windows.MessageBox.Show(
-                $"Détails de la facture {facture.NumeroFacture}:\n\n" +
-                $"Client: {facture.NomClient}\n" +
-                $"Date: {facture.DateFacture:dd/MM/yyyy}\n" +
-                $"Nombre de produits: {facture.NombreProduits}\n" +
-                $"Montant HT: {facture.MontantHT:N2}\n" +
-                $"Montant TTC: {facture.MontantTTC:N2}\n\n" +
-                $"Produits:\n{produitDetails}",
-                "Détails de la facture",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
         }
 
         [RelayCommand]
