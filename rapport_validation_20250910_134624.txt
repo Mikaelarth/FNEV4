@@ -1,0 +1,42 @@
+================================================================================
+RAPPORT DE VALIDATION SAGE 100
+================================================================================
+Fichier analysé: test_b2b_vs_divers.xlsx
+Date validation: 2025-09-10 13:46:24
+
+📊 STATISTIQUES GÉNÉRALES
+----------------------------------------
+Nombre total de feuilles: 5
+Factures valides: 2
+Factures invalides: 3
+Taux de réussite: 40.0%
+
+✅ FACTURES VALIDES
+----------------------------------------
+• Facture_B2B_Valide
+  N°: 556001
+  Client: ENTREPRISE ABC SARL (2000)
+  Produits: 1
+  Montant HT: 1,000,000.00 FCFA
+
+• Facture_Divers_Valide
+  N°: 556003
+  Client: MARIE KOUAME (1999)
+  Produits: 1
+  Montant HT: 37,500.00 FCFA
+
+TOTAL GÉNÉRAL: 1,037,500.00 FCFA HT (2 produits)
+
+❌ FACTURES INVALIDES
+----------------------------------------
+• Facture_B2B_Sans_NCC
+  Erreurs:
+     - A6: NCC client B2B manquant (obligatoire pour clients B2B)
+
+• Facture_Divers_Sans_NCC
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+
+• Facture_B2B_NCC_Invalide
+  Erreurs:
+     - A6: NCC '123ABC' invalide (format attendu: 7 chiffres + 1 lettre)

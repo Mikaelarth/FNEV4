@@ -1,0 +1,37 @@
+================================================================================
+RAPPORT DE VALIDATION SAGE 100
+================================================================================
+Fichier analysé: test_b2b_vs_divers.xlsx
+Date validation: 2025-09-10 13:44:09
+
+📊 STATISTIQUES GÉNÉRALES
+----------------------------------------
+Nombre total de feuilles: 5
+Factures valides: 0
+Factures invalides: 5
+Taux de réussite: 0.0%
+
+❌ FACTURES INVALIDES
+----------------------------------------
+• Facture_B2B_Valide
+  Erreurs:
+     - A18: Moyen de paiement 'VIREMENT' invalide. Valides: card, cash, credit, check, mobile-money, bank-transfer
+
+• Facture_B2B_Sans_NCC
+  Erreurs:
+     - A6: NCC client B2B manquant (obligatoire pour clients B2B)
+     - A18: Moyen de paiement 'VIREMENT' invalide. Valides: card, cash, credit, check, mobile-money, bank-transfer
+
+• Facture_Divers_Valide
+  Erreurs:
+     - A18: Moyen de paiement 'ESPECES' invalide. Valides: card, cash, credit, check, mobile-money, bank-transfer
+
+• Facture_Divers_Sans_NCC
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+     - A18: Moyen de paiement 'ESPECES' invalide. Valides: card, cash, credit, check, mobile-money, bank-transfer
+
+• Facture_B2B_NCC_Invalide
+  Erreurs:
+     - A6: NCC '123ABC' invalide (format attendu: 7 chiffres + 1 lettre)
+     - A18: Moyen de paiement 'CHEQUE' invalide. Valides: card, cash, credit, check, mobile-money, bank-transfer

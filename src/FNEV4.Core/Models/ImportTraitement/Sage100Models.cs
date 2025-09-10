@@ -158,6 +158,7 @@ namespace FNEV4.Core.Models.ImportTraitement
         
         // Propriétés FNE
         public string TypeFacture { get; set; } = "B2B";                    // B2B, B2C, B2G, B2F
+        public string Template { get; set; } = "N/A";                       // Template du client depuis la DB
         public bool EstClientDivers => CodeClient == "1999";
         public bool EstAvoir { get; set; }
         
@@ -208,5 +209,18 @@ namespace FNEV4.Core.Models.ImportTraitement
         {
             Tva, TvaB, TvaC, TvaD
         };
+    }
+
+    /// <summary>
+    /// Informations de template d'un client depuis la base de données
+    /// </summary>
+    public class ClientTemplateInfo
+    {
+        public string ClientCode { get; set; } = string.Empty;
+        public string Template { get; set; } = string.Empty;
+        public string NomCommercial { get; set; } = string.Empty;
+        public string Ncc { get; set; } = string.Empty;
+        public bool Active { get; set; }
+        public bool Exists { get; set; } = false;
     }
 }

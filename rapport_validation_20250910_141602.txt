@@ -1,0 +1,56 @@
+================================================================================
+RAPPORT DE VALIDATION SAGE 100
+================================================================================
+Fichier analysé: test_clients_validation.xlsx
+Date validation: 2025-09-10 14:16:02
+
+📊 STATISTIQUES GÉNÉRALES
+----------------------------------------
+Nombre total de feuilles: 6
+Factures valides: 4
+Factures invalides: 2
+Taux de réussite: 66.7%
+
+✅ FACTURES VALIDES
+----------------------------------------
+• Facture_Client_B2B_OK
+  N°: 556001
+  Client: ENTREPRISE ABC SARL (2000)
+  Template: B2B
+  Produits: 1
+  Montant HT: 1,000,000.00 FCFA
+
+• Facture_Divers_Avec_NCC
+  N°: 556004
+  Client: MARIE KOUAME (1999)
+  Template: B2C
+  Produits: 1
+  Montant HT: 37,500.00 FCFA
+
+• Facture_Divers_Sans_NCC
+  N°: 556005
+  Client: JEAN KOUASSI (1999)
+  Template: B2C
+  Produits: 1
+  Montant HT: 31,200.00 FCFA
+  ⚠️  Avertissements:
+     - A15: NCC client divers non spécifié (template B2C appliqué par défaut)
+
+• Facture_B2B_Template_B2C
+  N°: 556006
+  Client: BUSINESS GHI SARL (5000)
+  Template: B2C
+  Produits: 1
+  Montant HT: 300,000.00 FCFA
+
+TOTAL GÉNÉRAL: 1,368,700.00 FCFA HT (4 produits)
+
+❌ FACTURES INVALIDES
+----------------------------------------
+• Facture_Client_Inexistant
+  Erreurs:
+     - A5: Client '9999' non trouvé dans la base de données
+
+• Facture_Client_Inactif
+  Erreurs:
+     - A5: Client '6000' inactif

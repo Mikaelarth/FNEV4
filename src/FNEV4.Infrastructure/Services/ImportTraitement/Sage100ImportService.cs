@@ -23,15 +23,18 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
         private readonly IClientRepository _clientRepository;
         private readonly FNEV4DbContext _context;
         private readonly ILoggingService _loggingService;
+        private readonly ClientTemplateService _clientTemplateService;
 
         public Sage100ImportService(
             IClientRepository clientRepository, 
             FNEV4DbContext context,
-            ILoggingService loggingService)
+            ILoggingService loggingService,
+            ClientTemplateService clientTemplateService)
         {
             _clientRepository = clientRepository;
             _context = context;
             _loggingService = loggingService;
+            _clientTemplateService = clientTemplateService;
         }
         public async Task<Sage100ImportResult> ImportSage100FileAsync(string filePath)
         {
@@ -443,7 +446,7 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
         }
 
         /// <summary>
-        /// Crée un aperçu d'une facture avec validation métier
+        /// Crée un aperçu d'une facture avec validation métier et récupération du template
         /// </summary>
         private async Task<Sage100FacturePreview?> CreateFacturePreviewAsync(IXLWorksheet worksheet)
         {
@@ -456,6 +459,28 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
             {
                 preview.NumeroFacture = GetCellValue(worksheet, "A3");
                 preview.CodeClient = GetCellValue(worksheet, "A5");
+
+                // Récupérer les informations de template depuis la base de données
+                var clientTemplateInfo = await _clientTemplateService.GetClientTemplateAsync(preview.CodeClient);
+                
+                if (clientTemplateInfo != null && clientTemplateInfo.Exists)
+                {
+                    // Client trouvé en base de données
+                    preview.Template = clientTemplateInfo.Template ?? "N/A";
+                    preview.ClientTrouve = clientTemplateInfo.Active;
+                }
+                else
+                {
+                    // Client non trouvé en base de données
+                    preview.Template = "N/A";
+                    preview.ClientTrouve = false;
+                    
+                    // Ajouter une erreur de validation si ce n'est pas le client divers
+                    if (preview.CodeClient != "1999")
+                    {
+                        preview.Erreurs.Add($"Client {preview.CodeClient} non trouvé dans la base de données FNEV4");
+                    }
+                }
 
                 // Déterminer le nom du client avec DEBUG
                 var codeClient = preview.CodeClient;
@@ -634,7 +659,7 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
         /// <summary>
         /// Analyse les informations pour la certification FNE et détecte les conflits de données
         /// </summary>
-        private async Task AnalyzerInformationsFNE(Sage100FacturePreview preview, IXLWorksheet worksheet, string codeClient)
+        private Task AnalyzerInformationsFNE(Sage100FacturePreview preview, IXLWorksheet worksheet, string codeClient)
         {
             // Détermination du type de facturation FNE basé sur le code client
             if (codeClient == "1999")
@@ -653,6 +678,8 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
             {
                 preview.TypeFacture = "B2B"; // Entreprise/B2B par défaut
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>

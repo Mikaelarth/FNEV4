@@ -1,0 +1,1051 @@
+================================================================================
+RAPPORT DE VALIDATION SAGE 100
+================================================================================
+Fichier analysé: factures.xlsx
+Date validation: 2025-09-10 13:39:35
+
+📊 STATISTIQUES GÉNÉRALES
+----------------------------------------
+Nombre total de feuilles: 129
+Factures valides: 0
+Factures invalides: 129
+Taux de réussite: 0.0%
+
+❌ FACTURES INVALIDES
+----------------------------------------
+• Facture comptabilisée N° 556300
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556299
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556312
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556280
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556281
+  Erreurs:
+     - A6: NCC '0324286 H' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556315
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556316
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556389
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 24: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556390
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556297
+  Erreurs:
+     - A6: NCC '0909616 P' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 24: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556296
+  Erreurs:
+     - A6: NCC '1620709 T' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 24: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556295
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 24: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556313
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556307
+  Erreurs:
+     - A6: NCC '1940484 T' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556272
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556276
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556402
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+
+• Facture comptabilisée N° 556403
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556404
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556278
+  Erreurs:
+     - A6: NCC '1821540 T' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556274
+  Erreurs:
+     - A6: NCC '98148944 H' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556279
+  Erreurs:
+     - A6: NCC '98148944 H' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556273
+  Erreurs:
+     - A6: NCC '8504010 D' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556277
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556275
+  Erreurs:
+     - A6: NCC '0324286 H' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556282
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556288
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556289
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556290
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556302
+  Erreurs:
+     - A6: NCC '7902030 X' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556285
+  Erreurs:
+     - A6: NCC '2044588 Z' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556306
+  Erreurs:
+     - A6: NCC '1301076 G' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+
+• Facture comptabilisée N° 556287
+  Erreurs:
+     - A6: NCC '9907874 D' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556291
+  Erreurs:
+     - A6: NCC '9907874 D' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556429
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 24: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556324
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556333
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556447
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556448
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556449
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 24: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556400
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556397
+  Erreurs:
+     - A6: NCC '1301076 G' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+
+• Facture comptabilisée N° 556325
+  Erreurs:
+     - A6: NCC '9907874 D' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556326
+  Erreurs:
+     - A6: NCC '9907874 D' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556327
+  Erreurs:
+     - A6: NCC '9907874 D' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556328
+  Erreurs:
+     - A6: NCC '9907874 D' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556329
+  Erreurs:
+     - A6: NCC '9907874 D' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556330
+  Erreurs:
+     - A6: NCC '9907874 D' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556331
+  Erreurs:
+     - A6: NCC '9907874 D' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556332
+  Erreurs:
+     - A6: NCC '9907874 D' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556336
+  Erreurs:
+     - A6: NCC '0324286 H' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+
+• Facture comptabilisée N° 556386
+  Erreurs:
+     - A15: NCC 'CC: 1855281W' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556438
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556439
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556391
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556583
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556355
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556422
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556401
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556423
+  Erreurs:
+     - A6: NCC '0324286 H' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556394
+  Erreurs:
+     - A6: NCC '0909616 P' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 24: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556450
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556451
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556571
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556395
+  Erreurs:
+     - A6: NCC '1620709 T' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556396
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 24: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556399
+  Erreurs:
+     - A6: NCC '1102324 W' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 24: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556434
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556436
+  Erreurs:
+     - A6: NCC '0324286 H' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556417
+  Erreurs:
+     - A6: NCC '1301076 G' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+
+• Facture comptabilisée N° 556435
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556419
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556420
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556425
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 24: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556409
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556412
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556466
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556456
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 24: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556410
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556413
+  Erreurs:
+     - A6: NCC '1213042 V' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556418
+  Erreurs:
+     - A6: NCC '0324286 H' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556415
+  Erreurs:
+     - A6: NCC '7401717 S' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+
+• Facture comptabilisée N° 556408
+  Erreurs:
+     - A6: NCC '2044588 Z' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556411
+  Erreurs:
+     - A6: NCC '9907874 D' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556416
+  Erreurs:
+     - A6: NCC '9907874 D' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+
+• Facture comptabilisée N° 556414
+  Erreurs:
+     - A6: NCC '8904238 K' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556424
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 24: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556407
+  Erreurs:
+     - A6: NCC '0324286 H' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556573
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556574
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556432
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556431
+  Erreurs:
+     - A6: NCC '0324286 H' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556478
+  Erreurs:
+     - A6: NCC '98148944 H' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556433
+  Erreurs:
+     - A6: NCC '9403041 C' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556472
+  Erreurs:
+     - A15: NCC 'N°9015' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556473
+  Erreurs:
+     - A15: NCC 'N°7797' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556470
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 24: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556440
+  Erreurs:
+     - A6: NCC '1344667 P' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556442
+  Erreurs:
+     - A6: NCC '1940484 T' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556437
+  Erreurs:
+     - A6: NCC '0324286 H' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556471
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556459
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 24: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556445
+  Erreurs:
+     - A6: NCC '0909616 P' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556586
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556587
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556588
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556589
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556444
+  Erreurs:
+     - A6: NCC '1620709 T' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556443
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 24: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556441
+  Erreurs:
+     - A6: NCC '1102324 W' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+     - Ligne 24: Vérifier calcul montant HT
+     - Ligne 26: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556482
+  Erreurs:
+     - A6: NCC '9913422 M' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556481
+  Erreurs:
+     - A15: NCC 'CC: 1924576 J' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556479
+  Erreurs:
+     - A6: NCC '1301076 G' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+
+• Facture comptabilisée N° 556480
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556454
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556469
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556475
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+
+• Facture comptabilisée N° 556476
+  Erreurs:
+     - A15: NCC spécifique du client divers manquant (obligatoire pour code 1999)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+
+• Facture comptabilisée N° 556572
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556458
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556468
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556467
+  Erreurs:
+     - A6: NCC '1213042 V' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556461
+  Erreurs:
+  Avertissements:
+     - A6: NCC client normal manquant (recommandé)
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556452
+  Erreurs:
+     - A6: NCC '98148944 H' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556464
+  Erreurs:
+     - A6: NCC '1301076 G' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556465
+  Erreurs:
+     - A6: NCC '1301076 G' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556457
+  Erreurs:
+     - A6: NCC '4273143 E' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556463
+  Erreurs:
+     - A6: NCC '8504010 D' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT
+
+• Facture comptabilisée N° 556453
+  Erreurs:
+     - A6: NCC '9907874 D' invalide (format attendu: 7 chiffres + 1 lettre)
+  Avertissements:
+     - A18: Moyen de paiement non spécifié (utilisera celui du client par défaut)
+     - Ligne 20: Vérifier calcul montant HT
+     - Ligne 22: Vérifier calcul montant HT

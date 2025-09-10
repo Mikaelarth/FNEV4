@@ -1,0 +1,49 @@
+================================================================================
+RAPPORT DE VALIDATION SAGE 100
+================================================================================
+Fichier analysé: test_factures_sage100.xlsx
+Date validation: 2025-09-10 13:39:19
+
+📊 STATISTIQUES GÉNÉRALES
+----------------------------------------
+Nombre total de feuilles: 5
+Factures valides: 3
+Factures invalides: 2
+Taux de réussite: 60.0%
+
+✅ FACTURES VALIDES
+----------------------------------------
+• Facture_001
+  N°: FAC001
+  Client: ENTREPRISE TECH SARL (CLI001)
+  Produits: 2
+  Montant HT: 900,000.00 FCFA
+
+• Facture_002
+  N°: FAC002
+  Client: KOUAME JEAN-BAPTISTE (1999)
+  Produits: 1
+  Montant HT: 32,500.00 FCFA
+
+• Facture_COMPLEXE
+  N°: FAC999
+  Client: GRANDE ENTREPRISE SARL (ENTREP001)
+  Produits: 5
+  Montant HT: 3,100,000.00 FCFA
+
+TOTAL GÉNÉRAL: 4,032,500.00 FCFA HT (8 produits)
+
+❌ FACTURES INVALIDES
+----------------------------------------
+• Facture_003_ERREURS
+  Erreurs:
+     - A3: Numéro de facture manquant
+     - A13: Nom réel du client divers manquant (obligatoire pour code 1999)
+     - A15: NCC '123ABC' invalide (format attendu: 7 chiffres + 1 lettre)
+     - A8: Date 'date_invalide' invalide
+     - A18: Moyen de paiement 'bitcoin' invalide. Valides: cash, bank-transfer, check, mobile-money, card, credit
+  Avertissements:
+     - Ligne 20: Vérifier calcul montant HT
+
+• Avoir_001
+  Erreurs:

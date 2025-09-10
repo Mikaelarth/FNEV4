@@ -192,11 +192,13 @@ namespace FNEV4.Presentation
                     services.AddScoped<IBackupService, BackupService>();
                     
                     // Services Import Traitement
+                    services.AddScoped<ClientTemplateService>();
                     services.AddScoped<ISage100ImportService>(provider => 
                         new Sage100ImportService(
                             provider.GetRequiredService<IClientRepository>(),
                             provider.GetRequiredService<FNEV4DbContext>(),
-                            provider.GetRequiredService<InfraLogging>()));
+                            provider.GetRequiredService<InfraLogging>(),
+                            provider.GetRequiredService<ClientTemplateService>()));
 
                     // Adaptateur pour ILoggingService (respecte l'architecture Clean)
                     services.AddScoped<FNEV4.Core.Interfaces.ILoggingService>(provider => 
