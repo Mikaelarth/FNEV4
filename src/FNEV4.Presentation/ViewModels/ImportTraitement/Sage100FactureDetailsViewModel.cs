@@ -20,7 +20,6 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             _facture = facture ?? throw new ArgumentNullException(nameof(facture));
             _produits = new ObservableCollection<Sage100ProduitData>(facture.Produits ?? new List<Sage100ProduitData>());
             
-            InitializeCommands();
             CalculateProperties();
         }
 
@@ -92,30 +91,6 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             {
                 return Facture.MontantTVA;
             }
-        }
-
-        // Commandes
-        public ICommand ExporterCommand { get; private set; } = null!;
-
-        private void InitializeCommands()
-        {
-            ExporterCommand = new RelayCommand(ExecuteExporter, CanExecuteExporter);
-        }
-
-        private bool CanExecuteExporter()
-        {
-            return Facture != null && Produits?.Count > 0;
-        }
-
-        private void ExecuteExporter()
-        {
-            // TODO: Implémenter l'export Excel
-            // Pour l'instant, on peut afficher un message
-            System.Windows.MessageBox.Show(
-                "Fonctionnalité d'export en cours de développement.",
-                "Export Excel",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
         }
 
         private void CalculateProperties()

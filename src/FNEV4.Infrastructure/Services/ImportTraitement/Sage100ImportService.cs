@@ -899,7 +899,6 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                 var client = await GetOrCreateClientAsync(factureData);
                 if (client == null)
                 {
-                    await _loggingService.LogErrorAsync($"Impossible de récupérer/créer le client {factureData.CodeClient}", "Sage100Import");
                     return null;
                 }
 
@@ -915,7 +914,11 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                     PaymentMethod = factureData.MoyenPaiement,
                     Status = "draft",
                     CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    UpdatedAt = DateTime.UtcNow,
+                    // Pour les clients divers, stocker le nom réel dans le message commercial
+                    CommercialMessage = factureData.EstClientDivers 
+                        ? $"Client: {factureData.NomReelClientDivers ?? factureData.IntituleClient}"
+                        : null
                 };
 
                 // Calculer les montants totaux
@@ -939,7 +942,6 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
             }
             catch (Exception ex)
             {
-                await _loggingService.LogErrorAsync($"Erreur conversion facture {factureData.NumeroFacture}: {ex.Message}", "Sage100Import");
                 return null;
             }
         }
@@ -953,43 +955,17 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
             {
                 if (factureData.CodeClient == "1999")
                 {
-                    // Client divers - chercher par NCC ou créer
-                    var clientDivers = await _clientRepository.GetByNccAsync(factureData.GetNccClient());
-                    if (clientDivers == null)
-                    {
-                        // Créer nouveau client divers
-                        clientDivers = new Client
-                        {
-                            Id = Guid.NewGuid(),
-                            ClientCode = "1999",
-                            CompanyName = factureData.NomReelClientDivers ?? factureData.IntituleClient,
-                            ClientNcc = factureData.GetNccClient(),
-                            ClientType = "divers",
-                            DefaultPaymentMethod = factureData.MoyenPaiement,
-                            IsActive = true,
-                            CreatedDate = DateTime.UtcNow,
-                            LastModifiedDate = DateTime.UtcNow
-                        };
-                        
-                        await _clientRepository.CreateAsync(clientDivers);
-                        await _loggingService.LogInfoAsync($"Client divers créé: {clientDivers.CompanyName} (NCC: {clientDivers.ClientNcc})", "Sage100Import");
-                    }
-                    return clientDivers;
+                    // Client divers - utiliser toujours le client 1999 existant
+                    return await _clientRepository.GetByClientCodeAsync("1999");
                 }
                 else
                 {
                     // Client normal - doit exister
-                    var client = await _clientRepository.GetByClientCodeAsync(factureData.CodeClient);
-                    if (client == null)
-                    {
-                        await _loggingService.LogErrorAsync($"Client {factureData.CodeClient} introuvable", "Sage100Import");
-                    }
-                    return client;
+                    return await _clientRepository.GetByClientCodeAsync(factureData.CodeClient);
                 }
             }
             catch (Exception ex)
             {
-                await _loggingService.LogErrorAsync($"Erreur récupération client {factureData.CodeClient}: {ex.Message}", "Sage100Import");
                 return null;
             }
         }
@@ -1045,6 +1021,202 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
 
             // Si parsing échoue, considérer comme 0%
             return "TVAC";
+        }
+
+        /// <summary>
+        /// Import les factures pré-validées depuis l'aperçu (sans re-validation)
+        /// </summary>
+        public async Task<Sage100ImportResult> ImportPrevalidatedFacturesAsync(IEnumerable<Sage100FacturePreview> validFactures, string sourceFilePath)
+        {
+            var startTime = DateTime.Now;
+            var result = new Sage100ImportResult();
+            
+            // Import des factures pré-validées
+            
+            try
+            {
+                // Validation du fichier source
+                if (string.IsNullOrWhiteSpace(sourceFilePath))
+                {
+                    result.IsSuccess = false;
+                    result.Message = "Chemin du fichier source invalide";
+                    return result;
+                }
+
+                if (!File.Exists(sourceFilePath))
+                {
+                    result.IsSuccess = false;
+                    result.Message = $"Fichier source introuvable : {sourceFilePath}";
+                    return result;
+                }
+
+                if (!Path.GetExtension(sourceFilePath).Equals(".xlsx", StringComparison.OrdinalIgnoreCase))
+                {
+                    result.IsSuccess = false;
+                    result.Message = $"Extension de fichier non supportée : {Path.GetExtension(sourceFilePath)}";
+                    return result;
+                }
+
+                // Filtrer uniquement les factures valides
+                var facturesToImport = validFactures.Where(f => f.EstValide).ToList();
+                
+                if (!facturesToImport.Any())
+                {
+                    result.IsSuccess = false;
+                    result.Message = "Aucune facture valide à importer";
+                    result.FacturesEchouees = validFactures.Count();
+                    return result;
+                }
+
+                // Tentative d'ouverture du fichier Excel avec retry en cas de verrou
+                XLWorkbook? workbook = null;
+                for (int attempt = 1; attempt <= 3; attempt++)
+                {
+                    try
+                    {
+                        workbook = new XLWorkbook(sourceFilePath);
+                        break;
+                    }
+                    catch (Exception ex) when (attempt < 3 && (ex.Message.Contains("being used") || ex.Message.Contains("Empty extension")))
+                    {
+                        await Task.Delay(500); // Attendre 500ms avant retry
+                    }
+                    catch (Exception ex)
+                    {
+                        if (attempt >= 3)
+                        {
+                            throw; // Re-lancer l'exception si c'est la dernière tentative
+                        }
+                        await Task.Delay(500);
+                    }
+                }
+
+                if (workbook == null)
+                {
+                    result.IsSuccess = false;
+                    result.Message = "Impossible d'ouvrir le fichier Excel après plusieurs tentatives";
+                    return result;
+                }
+
+                using (workbook)
+                {
+                    foreach (var facturePreview in facturesToImport)
+                    {
+                        try
+                        {
+                        // Trouver la feuille correspondante de façon intelligente
+                        IXLWorksheet? worksheet = null;
+                        
+                        // 1. D'abord essayer de trouver par nom exact (pour compatibilité)
+                        worksheet = workbook.Worksheets.FirstOrDefault(w => w.Name == facturePreview.FichierSource);
+                        
+                        // 2. Si pas trouvé, chercher une feuille contenant le numéro de facture
+                        if (worksheet == null && !string.IsNullOrEmpty(facturePreview.NumeroFacture))
+                        {
+                            worksheet = workbook.Worksheets.FirstOrDefault(w => w.Name.Contains(facturePreview.NumeroFacture));
+                        }
+                        
+                        // 3. Si toujours pas trouvé, prendre la première feuille disponible
+                        if (worksheet == null)
+                        {
+                            worksheet = workbook.Worksheets.FirstOrDefault();
+                        }
+                        
+                        if (worksheet == null)
+                        {
+                            result.FacturesEchouees++;
+                            result.Errors.Add($"Aucune feuille disponible dans le fichier");
+                            continue;
+                        }
+
+                        // Parser les données de la facture
+                        var factureData = await ParseFactureFromWorksheetAsync(worksheet);
+                        if (factureData != null)
+                        {
+                            // Convertir vers format FNE
+                            var fneInvoice = await ConvertToFneInvoiceAsync(factureData, worksheet.Name);
+                            if (fneInvoice != null)
+                            {
+                                // Sauvegarde en base
+                                await _context.FneInvoices.AddAsync(fneInvoice);
+                                await _context.SaveChangesAsync();
+                                
+                                result.FacturesImportees++;
+                                result.FacturesDetaillees.Add(new Sage100FactureImportee
+                                {
+                                    NumeroFacture = factureData.NumeroFacture,
+                                    NomFeuille = worksheet.Name,
+                                    EstImportee = true,
+                                    DateImport = DateTime.Now,
+                                    NombreProduits = factureData.Produits.Count,
+                                    MontantTotal = factureData.Produits.Sum(p => p.MontantHt)
+                                });
+                            }
+                            else
+                            {
+                                result.FacturesEchouees++;
+                                result.Errors.Add($"Échec conversion FNE pour facture {factureData.NumeroFacture}");
+                                result.FacturesDetaillees.Add(new Sage100FactureImportee
+                                {
+                                    NumeroFacture = factureData.NumeroFacture,
+                                    NomFeuille = worksheet.Name,
+                                    EstImportee = false,
+                                    MessageErreur = "Échec conversion FNE",
+                                    DateImport = DateTime.Now
+                                });
+                            }
+                        }
+                        else
+                        {
+                            result.FacturesEchouees++;
+                            result.Errors.Add($"Échec parsing pour feuille '{worksheet.Name}'");
+                            result.FacturesDetaillees.Add(new Sage100FactureImportee
+                            {
+                                NomFeuille = worksheet.Name,
+                                EstImportee = false,
+                                MessageErreur = "Échec parsing",
+                                DateImport = DateTime.Now
+                            });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        result.FacturesEchouees++;
+                        result.Errors.Add($"Erreur facture '{facturePreview.NumeroFacture}': {ex.Message}");
+                        result.FacturesDetaillees.Add(new Sage100FactureImportee
+                        {
+                            NumeroFacture = facturePreview.NumeroFacture,
+                            NomFeuille = facturePreview.FichierSource,
+                            EstImportee = false,
+                            MessageErreur = ex.Message,
+                            DateImport = DateTime.Now
+                        });
+                    }
+                }
+
+                result.IsSuccess = result.FacturesImportees > 0;
+                result.Message = result.IsSuccess 
+                    ? $"Import réussi: {result.FacturesImportees} facture(s) importée(s)"
+                    : "Aucune facture importée";
+                    
+                if (result.FacturesEchouees > 0)
+                {
+                    result.Message += $", {result.FacturesEchouees} échec(s)";
+                }
+                } // Fermeture du bloc using (workbook)
+            }
+            catch (Exception ex)
+            {
+                result.IsSuccess = false;
+                result.Message = $"Erreur import: {ex.Message}";
+                result.Errors.Add(ex.Message);
+            }
+            finally
+            {
+                result.DureeTraitement = DateTime.Now - startTime;
+            }
+
+            return result;
         }
 
         #endregion

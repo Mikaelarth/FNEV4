@@ -359,16 +359,6 @@
                     HorizontalAlignment="Right" 
                     Margin="0,16,0,0">
             
-            <Button Content="📊 EXPORTER"
-                    Command="{Binding ExporterCommand}"
-                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                    Margin="0,0,12,0"
-                    Padding="16,8">
-                <Button.ToolTip>
-                    <ToolTip Content="Exporter les détails en Excel"/>
-                </Button.ToolTip>
-            </Button>
-
             <Button Content="❌ FERMER"
                     IsCancel="True"
                     Style="{StaticResource MaterialDesignRaisedButton}"

@@ -27,6 +27,7 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         private readonly ISage100ImportService _sage100ImportService;
         private readonly IPathConfigurationService _pathService;
         private readonly FNEV4DbContext _context;
+        private readonly FNEV4.Core.Interfaces.ILoggingService _loggingService;
 
         #region Properties
 
@@ -159,11 +160,35 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
 
         #region Constructor
 
-        public Sage100ImportViewModel(ISage100ImportService sage100ImportService, IPathConfigurationService pathService, FNEV4DbContext context)
+        public Sage100ImportViewModel(
+            ISage100ImportService sage100ImportService, 
+            IPathConfigurationService pathService, 
+            FNEV4DbContext context,
+            FNEV4.Core.Interfaces.ILoggingService loggingService)
         {
             _sage100ImportService = sage100ImportService;
             _pathService = pathService;
             _context = context;
+            _loggingService = loggingService;
+        }
+
+        #endregion
+
+        #region Logging Helpers
+
+        private async Task LogInfoAsync(string message, string category = "Import")
+        {
+            await _loggingService.LogInformationAsync(message, category);
+        }
+
+        private async Task LogWarningAsync(string message, string category = "Import")
+        {
+            await _loggingService.LogWarningAsync(message, category);
+        }
+
+        private async Task LogErrorAsync(string message, string category = "Import", Exception? exception = null)
+        {
+            await _loggingService.LogErrorAsync(message, exception, category);
         }
 
         #endregion
@@ -186,6 +211,9 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             {
                 SelectedFilePath = openFileDialog.FileName;
                 
+                // Debug : Vérifier le chemin sélectionné
+                System.Diagnostics.Debug.WriteLine($"🔍 SelectFile - SelectedFilePath défini: '{SelectedFilePath}'");
+                
                 // Reset des résultats précédents
                 ResetResults();
                 
@@ -198,6 +226,9 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         [RelayCommand]
         private async Task ValidateFile()
         {
+            // Debug : Vérifier le chemin au début de ValidateFile
+            System.Diagnostics.Debug.WriteLine($"🔍 ValidateFile démarré - SelectedFilePath: '{SelectedFilePath ?? "null"}'");
+            
             if (string.IsNullOrEmpty(SelectedFilePath))
             {
                 MessageBox.Show("Veuillez sélectionner un fichier Excel.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -706,9 +737,16 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                     return;
                 }
 
+                // Debug : Vérifier le chemin avant création de l'aperçu
+                System.Diagnostics.Debug.WriteLine($"🔍 Avant création aperçu - SelectedFilePath: '{SelectedFilePath ?? "null"}'");
+                
+                // Déterminer le chemin source (pour compatibilité, mais traitement intelligent dans ProcessImportFromPreviewWithData)
+                string sourceFilePath = SelectedFilePath ?? "AUTO_MODE"; // Mode automatique sera détecté automatiquement
+                System.Diagnostics.Debug.WriteLine($"🔍 SourceFilePath passé à l'aperçu: '{sourceFilePath}'");
+                
                 // Création de la fenêtre d'aperçu
                 var previewWindow = new Views.ImportTraitement.Sage100PreviewWindow();
-                var previewViewModel = new Sage100PreviewViewModel(this); // Passer une référence de ce ViewModel
+                var previewViewModel = new Sage100PreviewViewModel(this, sourceFilePath); // Passer une référence de ce ViewModel et le chemin du fichier
                 
                 // Chargement des données
                 var previewResult = new Sage100PreviewResult
@@ -878,9 +916,13 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                     ValidationColor = new SolidColorBrush(Colors.Orange);
                 }
                 
+                // Déterminer le chemin du fichier source (mode manuel utilise SelectedFilePath)
+                string sourceFilePath = SelectedFilePath ?? string.Empty;
+                System.Diagnostics.Debug.WriteLine($"🔍 Mode Manuel - SourceFilePath: '{sourceFilePath}'");
+                
                 // Créer et afficher la fenêtre d'aperçu dans tous les cas
                 var previewWindow = new Views.ImportTraitement.Sage100PreviewWindow();
-                var previewViewModel = new Sage100PreviewViewModel(this);
+                var previewViewModel = new Sage100PreviewViewModel(this, sourceFilePath);
                 
                 var previewResult = new Sage100PreviewResult
                 {
@@ -1352,13 +1394,217 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         }
 
         /// <summary>
-        /// Traite l'import depuis la fenêtre de prévisualisation
+        /// Traite l'import depuis la fenêtre de prévisualisation avec données pré-validées
+        /// </summary>
+        public async Task ProcessImportFromPreviewWithData(IEnumerable<Sage100FacturePreview> factures, string sourceFilePath)
+        {
+            try
+            {
+                // Log : Début du processus d'import
+                // Début de l'import
+                
+                // Détecter le mode : Manuel (un fichier) vs Automatique (plusieurs fichiers)
+                var facturesByFile = factures.GroupBy(f => f.NomFichierSource).ToList();
+                // Détection des fichiers sources
+                
+                if (facturesByFile.Count == 1 && !string.IsNullOrWhiteSpace(sourceFilePath))
+                {
+                    // Mode MANUEL : Un seul fichier avec chemin complet
+                    // Mode manuel - import direct
+                    _lastImportResult = await _sage100ImportService.ImportPrevalidatedFacturesAsync(factures, sourceFilePath);
+                }
+                else
+                {
+                    // Mode AUTOMATIQUE : Plusieurs fichiers, traiter par groupe
+                    // Mode automatique - import par fichier
+                    
+                    var globalResult = new Sage100ImportResult { IsSuccess = true };
+                    var processedFiles = new List<string>();
+                    
+                    foreach (var fileGroup in facturesByFile)
+                    {
+                        var fileName = fileGroup.Key;
+                        var facturesInFile = fileGroup.ToList();
+                        var facturesValides = facturesInFile.Where(f => f.EstValide).ToList();
+                        var fullFilePath = Path.Combine(ImportFolderPath ?? "", fileName);
+                        
+                        // Traitement du fichier
+                        
+                        if (File.Exists(fullFilePath))
+                        {
+                            var fileResult = await _sage100ImportService.ImportPrevalidatedFacturesAsync(facturesInFile, fullFilePath);
+                            
+                            // Accumulation des résultats
+                            globalResult.FacturesImportees += fileResult.FacturesImportees;
+                            globalResult.FacturesEchouees += fileResult.FacturesEchouees;
+                            
+                            if (!fileResult.IsSuccess)
+                            {
+                                globalResult.IsSuccess = false;
+                                globalResult.Message += $"{fileName}: {fileResult.Message}; ";
+                            }
+                            
+                            if (fileResult.IsSuccess && fileResult.FacturesImportees > 0)
+                            {
+                                processedFiles.Add(fullFilePath);
+                            }
+                        }
+                        else
+                        {
+                            await LogErrorAsync($"🚨 Fichier introuvable: '{fullFilePath}'", "Import");
+                            globalResult.FacturesEchouees += facturesInFile.Count;
+                            globalResult.IsSuccess = false;
+                            globalResult.Message += $"{fileName}: Fichier introuvable; ";
+                        }
+                    }
+                    
+                    globalResult.DureeTraitement = DateTime.Now - DateTime.Now;
+                    _lastImportResult = globalResult;
+                    
+                    // Archiver tous les fichiers traités avec succès
+                    if (AutoArchiveEnabled && processedFiles.Any())
+                    {
+                        foreach (var processedFile in processedFiles)
+                        {
+                            await ArchiveProcessedFile(processedFile, _lastImportResult);
+                        }
+                    }
+                }
+                
+                // Post-traitement identique
+                if (_lastImportResult.IsSuccess && _lastImportResult.FacturesImportees > 0 && AutoArchiveEnabled)
+                {
+                    await ArchiveProcessedFile(sourceFilePath, _lastImportResult);
+                }
+                
+                UpdateImportResultUI(_lastImportResult);
+                
+                ImportedFactures.Clear();
+                foreach (var facture in _lastImportResult.FacturesDetaillees)
+                {
+                    ImportedFactures.Add(facture);
+                }
+                
+                HasDetailedResults = ImportedFactures.Count > 0;
+                HasImportResult = true;
+                
+                // Notification selon le résultat
+                if (_lastImportResult.IsSuccess)
+                {
+                    if (_lastImportResult.FacturesEchouees == 0)
+                    {
+                        MessageBox.Show(
+                            $"Import réussi !\n\n" +
+                            $"✅ {_lastImportResult.FacturesImportees} facture(s) importée(s)\n" +
+                            $"⏱️ Durée : {_lastImportResult.DureeTraitement.TotalSeconds:F1}s",
+                            "Import terminé",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            $"Import partiellement réussi\n\n" +
+                            $"✅ {_lastImportResult.FacturesImportees} facture(s) importée(s)\n" +
+                            $"❌ {_lastImportResult.FacturesEchouees} facture(s) échouée(s)\n" +
+                            $"⏱️ Durée : {_lastImportResult.DureeTraitement.TotalSeconds:F1}s\n\n" +
+                            "Consultez les détails pour plus d'informations.",
+                            "Import terminé",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show(
+                        $"Échec de l'import\n\n" +
+                        $"❌ {_lastImportResult.Message}\n\n" +
+                        "Consultez les détails pour plus d'informations.",
+                        "Échec d'import",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'import :\n{ex.Message}", 
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Traite l'import depuis la fenêtre de prévisualisation avec données pré-validées (version obsolète)
         /// </summary>
         public async Task ProcessImportFromPreview()
         {
             try
             {
-                await Import();
+                // Debug : Vérifier le chemin du fichier
+                System.Diagnostics.Debug.WriteLine($"🔍 ProcessImportFromPreview - SelectedFilePath: '{SelectedFilePath}'");
+                
+                if (string.IsNullOrWhiteSpace(SelectedFilePath))
+                {
+                    MessageBox.Show("Erreur : Aucun fichier sélectionné pour l'import.", 
+                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                
+                // Utiliser l'import optimisé avec données pré-validées
+                _lastImportResult = await _sage100ImportService.ImportPrevalidatedFacturesAsync(PreviewFactures, SelectedFilePath);
+                
+                // Post-traitement identique
+                if (_lastImportResult.IsSuccess && _lastImportResult.FacturesImportees > 0 && AutoArchiveEnabled)
+                {
+                    await ArchiveProcessedFile(SelectedFilePath, _lastImportResult);
+                }
+                
+                UpdateImportResultUI(_lastImportResult);
+                
+                ImportedFactures.Clear();
+                foreach (var facture in _lastImportResult.FacturesDetaillees)
+                {
+                    ImportedFactures.Add(facture);
+                }
+                
+                HasDetailedResults = ImportedFactures.Count > 0;
+                HasImportResult = true;
+                
+                // Notification selon le résultat
+                if (_lastImportResult.IsSuccess)
+                {
+                    if (_lastImportResult.FacturesEchouees == 0)
+                    {
+                        MessageBox.Show(
+                            $"Import réussi !\n\n" +
+                            $"✅ {_lastImportResult.FacturesImportees} facture(s) importée(s)\n" +
+                            $"⏱️ Durée : {_lastImportResult.DureeTraitement.TotalSeconds:F1}s",
+                            "Import terminé",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            $"Import partiellement réussi\n\n" +
+                            $"✅ {_lastImportResult.FacturesImportees} facture(s) importée(s)\n" +
+                            $"❌ {_lastImportResult.FacturesEchouees} facture(s) échouée(s)\n" +
+                            $"⏱️ Durée : {_lastImportResult.DureeTraitement.TotalSeconds:F1}s\n\n" +
+                            "Consultez les détails pour plus d'informations.",
+                            "Import terminé",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show(
+                        $"Échec de l'import\n\n" +
+                        $"❌ {_lastImportResult.Message}\n\n" +
+                        "Consultez les détails pour plus d'informations.",
+                        "Échec d'import",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
             }
             catch (Exception ex)
             {
