@@ -80,6 +80,9 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         [ObservableProperty]
         private Brush _importResultColor = new SolidColorBrush(Colors.Green);
 
+        [ObservableProperty]
+        private bool _autoArchiveEnabled = true;
+
         public ObservableCollection<Sage100FacturePreview> PreviewFactures { get; } = new();
         public ObservableCollection<Sage100FactureImportee> ImportedFactures { get; } = new();
 
@@ -146,9 +149,6 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         public string ImportFolderPath => _pathService?.ImportFolderPath ?? "Non configuré";
         public string ExportFolderPath => _pathService?.ExportFolderPath ?? "Non configuré";
         public string ArchiveFolderPath => _pathService?.ArchiveFolderPath ?? "Non configuré";
-
-        [ObservableProperty]
-        private bool _autoArchiveEnabled = true;
 
         [ObservableProperty]
         private bool _hasConfiguredFolders = false;
@@ -259,6 +259,9 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                     // Mise à jour du message pour la génération de l'aperçu
                     ValidationMessage = "Génération de l'aperçu...";
                     ValidationDetails = "Analyse des factures et validation des données";
+                    
+                    // Force le rafraîchissement du contexte EF pour éviter les problèmes de cache après suppression directe en base
+                    _sage100ImportService.RefreshContext();
                     
                     // Générer l'aperçu
                     var preview = await _sage100ImportService.PreviewFileAsync(SelectedFilePath);
@@ -1227,8 +1230,9 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 
                 foreach (var invoice in importedInvoices.Where(i => i.EstImportee))
                 {
-                    // Recherche par numéro de facture dans la base
+                    // Recherche par numéro de facture dans la base (avec AsNoTracking pour ignorer le cache)
                     var dbInvoice = await _context.FneInvoices
+                        .AsNoTracking()
                         .FirstOrDefaultAsync(f => f.InvoiceNumber == invoice.NumeroFacture);
                     
                     if (dbInvoice != null)
@@ -1399,8 +1403,9 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
 
         /// <summary>
         /// Traite l'import depuis la fenêtre de prévisualisation avec données pré-validées
+        /// Retourne true si la fenêtre d'aperçu doit être fermée
         /// </summary>
-        public async Task ProcessImportFromPreviewWithData(IEnumerable<Sage100FacturePreview> factures, string sourceFilePath)
+        public async Task<bool> ProcessImportFromPreviewWithData(IEnumerable<Sage100FacturePreview> factures, string sourceFilePath)
         {
             try
             {
@@ -1493,6 +1498,8 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 HasImportResult = true;
                 
                 // Notification selon le résultat
+                Views.Common.CustomMessageBox.MessageBoxResult dialogResult;
+                
                 if (_lastImportResult.IsSuccess)
                 {
                     if (_lastImportResult.FacturesEchouees == 0)
@@ -1500,12 +1507,10 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                         // Créer un rapport détaillé pour les détails de succès
                         var detailedReport = ImportDetailedReport.FromSage100Result(_lastImportResult, sourceFilePath ?? "");
                         
-                        Views.Common.CustomMessageBox.Show(
-                            $"Import réussi !\n\n" +
-                            $"✅ {_lastImportResult.FacturesImportees} facture(s) importée(s)\n" +
-                            $"⏱️ Durée : {_lastImportResult.DureeTraitement.TotalSeconds:F1}s",
+                        dialogResult = Views.Common.CustomMessageBox.Show(
+                            $"Import réussi ! {_lastImportResult.FacturesImportees} facture(s) importées en {_lastImportResult.DureeTraitement.TotalSeconds:F1}s",
                             "Import terminé",
-                            Views.Common.CustomMessageBox.MessageBoxType.Information,
+                            Views.Common.CustomMessageBox.MessageBoxType.Success,
                             detailedReport);
                     }
                     else
@@ -1513,12 +1518,8 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                         // Créer un rapport détaillé pour les détails de succès partiel
                         var detailedReport2 = ImportDetailedReport.FromSage100Result(_lastImportResult, sourceFilePath ?? "");
                         
-                        Views.Common.CustomMessageBox.Show(
-                            $"Import partiellement réussi\n\n" +
-                            $"✅ {_lastImportResult.FacturesImportees} facture(s) importée(s)\n" +
-                            $"❌ {_lastImportResult.FacturesEchouees} facture(s) échouée(s)\n" +
-                            $"⏱️ Durée : {_lastImportResult.DureeTraitement.TotalSeconds:F1}s\n\n" +
-                            "Consultez les détails pour plus d'informations.",
+                        dialogResult = Views.Common.CustomMessageBox.Show(
+                            $"Import partiellement réussi : {_lastImportResult.FacturesImportees} facture(s) importées, {_lastImportResult.FacturesEchouees} en échec",
                             "Import terminé",
                             Views.Common.CustomMessageBox.MessageBoxType.Warning,
                             detailedReport2);
@@ -1530,21 +1531,37 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                     var detailedReport = ImportDetailedReport.FromSage100Result(_lastImportResult, sourceFilePath ?? "");
                     
                     // Utiliser CustomMessageBox avec rapport détaillé
-                    Views.Common.CustomMessageBox.Show(
-                        $"Échec de l'import\n\n" +
-                        $"❌ {_lastImportResult.Message}\n\n" +
-                        "Cliquez sur 'Consulter les détails' pour plus d'informations.",
+                    dialogResult = Views.Common.CustomMessageBox.Show(
+                        $"L'import a échoué : {_lastImportResult.FacturesEchouees} facture(s) n'ont pas pu être importées",
                         "Échec d'import",
                         Views.Common.CustomMessageBox.MessageBoxType.Error,
                         detailedReport);
                 }
+                
+                // Retourner true pour fermer la fenêtre d'aperçu, sauf si l'utilisateur a ouvert les détails
+                return dialogResult == Views.Common.CustomMessageBox.MessageBoxResult.OK;
             }
             catch (Exception ex)
             {
-                Views.Common.CustomMessageBox.Show(
-                    $"Erreur lors de l'import :\n{ex.Message}", 
-                    "Erreur", 
-                    Views.Common.CustomMessageBox.MessageBoxType.Error);
+                // Créer un rapport détaillé pour l'erreur système
+                var errorReport = new ImportDetailedReport 
+                { 
+                    IsSuccess = false,
+                    Message = ex.Message,
+                    DateImport = DateTime.Now,
+                    FichierSource = _selectedFilePath
+                };
+                errorReport.AddGlobalError(ex.Message);
+                errorReport.AddGlobalError($"Détails techniques: {ex}");
+                
+                var dialogResult = Views.Common.CustomMessageBox.Show(
+                    "Une erreur technique s'est produite lors de l'import", 
+                    "Erreur système", 
+                    Views.Common.CustomMessageBox.MessageBoxType.Error,
+                    errorReport);
+                
+                // En cas d'erreur, fermer la fenêtre d'aperçu seulement si l'utilisateur clique OK
+                return dialogResult == Views.Common.CustomMessageBox.MessageBoxResult.OK;
             }
         }
 

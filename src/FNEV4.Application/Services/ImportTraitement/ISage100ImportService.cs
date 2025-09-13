@@ -37,5 +37,11 @@ namespace FNEV4.Application.Services.ImportTraitement
         /// <param name="sourceFilePath">Chemin vers le fichier source Excel</param>
         /// <returns>Résultat de l'import avec détails</returns>
         Task<Sage100ImportResult> ImportPrevalidatedFacturesAsync(IEnumerable<Sage100FacturePreview> validFactures, string sourceFilePath);
+
+        /// <summary>
+        /// Force le rafraîchissement du contexte Entity Framework pour éviter les problèmes de cache
+        /// Utile après des modifications directes en base de données (ex: suppression via SQLite)
+        /// </summary>
+        void RefreshContext();
     }
 }

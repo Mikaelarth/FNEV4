@@ -36,6 +36,15 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         [ObservableProperty]
         private string _currentFilter = "Toutes";
 
+        [ObservableProperty]
+        private bool _isImportInProgress = false;
+
+        [ObservableProperty]
+        private int _importProgress = 0;
+
+        [ObservableProperty]
+        private string _importProgressText = string.Empty;
+
         public int TotalFactures => FacturesImportees?.Count ?? 0;
         public int FacturesTraitees => ValidFiles;
         public int FacturesEnErreur => InvalidFiles;
@@ -227,18 +236,55 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
 
                 if (result == System.Windows.MessageBoxResult.Yes)
                 {
+                    // Début de la progression
+                    IsImportInProgress = true;
+                    ImportProgress = 0;
+                    ImportProgressText = "Démarrage de l'import...";
+                    
                     // Fermer la fenêtre d'aperçu
                     var currentWindow = System.Windows.Application.Current.Windows
                         .OfType<Views.ImportTraitement.Sage100PreviewWindow>()
                         .FirstOrDefault();
                     
-                    // Debug : Vérifier le chemin avant l'appel
-                    System.Diagnostics.Debug.WriteLine($"🔍 ImportFactures - Appel avec SourceFilePath: '{_sourceFilePath ?? "null"}'");
-                    
-                    // Lancer l'import via le ViewModel parent avec données pré-validées et chemin explicite
-                    await _parentViewModel.ProcessImportFromPreviewWithData(FacturesImportees, _sourceFilePath ?? "");
-                    
-                    currentWindow?.Close();
+                    try
+                    {
+                        // Simulation de progression (puisqu'on ne peut pas facilement tracker dans le service)
+                        for (int i = 0; i <= 30; i += 10)
+                        {
+                            ImportProgress = i;
+                            ImportProgressText = $"Préparation de l'import... ({i}%)";
+                            await Task.Delay(100);
+                        }
+                        
+                        ImportProgressText = $"Import en cours de {validInvoices} facture(s)...";
+                        ImportProgress = 40;
+                        
+                        // Debug : Vérifier le chemin avant l'appel
+                        System.Diagnostics.Debug.WriteLine($"🔍 ImportFactures - Appel avec SourceFilePath: '{_sourceFilePath ?? "null"}'");
+                        
+                        // Lancer l'import via le ViewModel parent avec données pré-validées et chemin explicite
+                        bool shouldCloseWindow = await _parentViewModel.ProcessImportFromPreviewWithData(FacturesImportees, _sourceFilePath ?? "");
+                        
+                        // Finalisation de la progression
+                        ImportProgress = 90;
+                        ImportProgressText = "Finalisation...";
+                        await Task.Delay(200);
+                        
+                        ImportProgress = 100;
+                        ImportProgressText = "Import terminé !";
+                        await Task.Delay(500);
+                        
+                        // Fermer la fenêtre d'aperçu seulement si demandé (OK cliqué, pas Détails)
+                        if (shouldCloseWindow)
+                        {
+                            currentWindow?.Close();
+                        }
+                    }
+                    finally
+                    {
+                        // Réinitialiser l'état de progression
+                        IsImportInProgress = false;
+                    }
                 }
             }
             catch (Exception ex)

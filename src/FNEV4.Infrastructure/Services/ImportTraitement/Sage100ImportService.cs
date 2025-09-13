@@ -594,7 +594,9 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                 // Vérifier si la facture existe déjà en base pour éviter les doublons
                 if (!string.IsNullOrWhiteSpace(preview.NumeroFacture))
                 {
+                    // Utiliser AsNoTracking() pour forcer une requête fraîche et ignorer le cache EF
                     var existingInvoice = await _context.FneInvoices
+                        .AsNoTracking()
                         .FirstOrDefaultAsync(f => f.InvoiceNumber == preview.NumeroFacture);
                     
                     if (existingInvoice != null)
@@ -603,6 +605,10 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                         preview.EstValide = false; // Gardons false pour empêcher l'import
                         preview.Erreurs.Add($"Facture {preview.NumeroFacture} existe déjà en base de données (ID: {existingInvoice.Id})");
                         Console.WriteLine($"[DEBUG] DOUBLON DÉTECTÉ - Facture {preview.NumeroFacture} existe déjà (ID: {existingInvoice.Id})");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[DEBUG] AUCUN DOUBLON - Facture {preview.NumeroFacture} n'existe pas en base");
                     }
                 }
 
@@ -1051,6 +1057,9 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
             
             try
             {
+                // Force le rafraîchissement du contexte EF au début de l'import
+                // pour éviter les problèmes de cache après suppression manuelle des données
+                RefreshContext();
                 // Validation du fichier source
                 if (string.IsNullOrWhiteSpace(sourceFilePath))
                 {
@@ -1233,6 +1242,15 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Force le rafraîchissement du contexte Entity Framework pour éviter les problèmes de cache
+        /// Utile après des modifications directes en base de données (ex: suppression via SQLite)
+        /// </summary>
+        public void RefreshContext()
+        {
+            _context.ChangeTracker.Clear();
         }
 
         #endregion

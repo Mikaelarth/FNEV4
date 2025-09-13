@@ -594,10 +594,13 @@ D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Resources\Styles
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Resources\Styles\MenuItemStyles.baml
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Resources\Styles\MenuStyles.baml
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Styles\MenuStyles.baml
+D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Common\CustomMessageBox.baml
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Configuration\EntrepriseConfigView.baml
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Dashboard\DashboardActionsRapidesView.baml
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\GestionClients\AjoutModificationClientView.baml
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\GestionClients\ListeClientsView.baml
+D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\ImportReportDialog.baml
+D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\Sage100FactureDetailsDialog.baml
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\Sage100PreviewWindow.baml
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\Sage100ProduitsDetailDialog.baml
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Maintenance\DatabaseSettingsDialog.baml
@@ -608,6 +611,7 @@ D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Maintenanc
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Maintenance\TableStructureDialog.baml
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Special\ImportExceptionnelDialog.baml
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Controls\CollapsibleMenuItem.g.cs
+D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Common\CustomMessageBox.g.cs
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Configuration\ApiFneConfigView.g.cs
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Configuration\CheminsDossiersConfigView.g.cs
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Configuration\EntrepriseConfigView.g.cs
@@ -617,6 +621,8 @@ D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\GestionCli
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\GestionClients\ImportClientsWindow.g.cs
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\GestionClients\ListeClientsView.g.cs
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\ImportFichiersView.g.cs
+D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\ImportReportDialog.g.cs
+D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\Sage100FactureDetailsDialog.g.cs
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\Sage100ImportView.g.cs
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\Sage100PreviewWindow.g.cs
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\Sage100ProduitsDetailDialog.g.cs
@@ -657,9 +663,3 @@ D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\refint\FNEV4.Pre
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\FNEV4.Presentation.pdb
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\FNEV4.Presentation.genruntimeconfig.cache
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\ref\FNEV4.Presentation.dll
-D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\Sage100FactureDetailsDialog.baml
-D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\Sage100FactureDetailsDialog.g.cs
-D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Common\CustomMessageBox.baml
-D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\ImportReportDialog.baml
-D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Common\CustomMessageBox.g.cs
-D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\ImportReportDialog.g.cs

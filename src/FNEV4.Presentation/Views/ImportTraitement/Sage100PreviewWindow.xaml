@@ -19,6 +19,9 @@
         FontFamily="{DynamicResource MaterialDesignFont}">
 
     <Window.Resources>
+        <!-- Convertisseurs -->
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        
         <!-- Styles conformes à la charte graphique FNEV4 -->
         <Style x:Key="HeaderIconStyle" TargetType="materialDesign:PackIcon">
             <Setter Property="Width" Value="32"/>
@@ -407,28 +410,77 @@
         <materialDesign:Card Grid.Row="4" 
                            Padding="24" 
                            materialDesign:ShadowAssist.ShadowDepth="Depth2">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <StackPanel>
                 
-                <!-- Bouton Exporter -->
-                <Button Style="{StaticResource SecondaryButtonStyle}"
-                        Command="{Binding ExportToExcelCommand}">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="FileExcel" Width="18" Height="18" Margin="0,0,8,0"/>
-                        <TextBlock Text="Exporter en Excel"/>
+                <!-- Barre de progression (visible seulement pendant l'import) -->
+                <materialDesign:Card Padding="16" 
+                                   Margin="0,0,0,16"
+                                   Background="#E3F2FD"
+                                   Visibility="{Binding IsImportInProgress, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <materialDesign:PackIcon Kind="Import" 
+                                                   Width="20" Height="20" 
+                                                   Foreground="#1976D2"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,8,0"/>
+                            <TextBlock Text="{Binding ImportProgressText}" 
+                                     FontWeight="Medium"
+                                     Foreground="#1976D2"
+                                     VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ProgressBar Value="{Binding ImportProgress}" 
+                                   Maximum="100"
+                                   Height="8"
+                                   Background="#BBDEFB"
+                                   Foreground="#1976D2"
+                                   materialDesign:TransitionAssist.DisableTransitions="False"/>
+                        <TextBlock Text="{Binding ImportProgress, StringFormat={}{0}%}" 
+                                 HorizontalAlignment="Right"
+                                 FontSize="12"
+                                 Foreground="#1976D2"
+                                 Margin="0,4,0,0"/>
                     </StackPanel>
-                </Button>
+                </materialDesign:Card>
                 
-                <!-- Bouton principal Import -->
-                <Button Style="{StaticResource ActionButtonStyle}"
-                        Command="{Binding ImportFacturesCommand}"
-                        Background="#FF5722"
-                        BorderBrush="#FF5722">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Import" Width="18" Height="18" Margin="0,0,8,0"/>
-                        <TextBlock Text="IMPORTER LES FACTURES"/>
-                    </StackPanel>
-                </Button>
-                
+                <!-- Boutons d'action -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    
+                    <!-- Bouton Exporter -->
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding ExportToExcelCommand}">
+                        <Button.IsEnabled>
+                            <Binding Path="IsImportInProgress">
+                                <Binding.Converter>
+                                    <materialDesign:NotConverter/>
+                                </Binding.Converter>
+                            </Binding>
+                        </Button.IsEnabled>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FileExcel" Width="18" Height="18" Margin="0,0,8,0"/>
+                            <TextBlock Text="Exporter en Excel"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <!-- Bouton principal Import -->
+                    <Button Style="{StaticResource ActionButtonStyle}"
+                            Command="{Binding ImportInvoicesCommand}"
+                            Background="#FF5722"
+                            BorderBrush="#FF5722">
+                        <Button.IsEnabled>
+                            <Binding Path="IsImportInProgress">
+                                <Binding.Converter>
+                                    <materialDesign:NotConverter/>
+                                </Binding.Converter>
+                            </Binding>
+                        </Button.IsEnabled>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Import" Width="18" Height="18" Margin="0,0,8,0"/>
+                            <TextBlock Text="IMPORTER LES FACTURES"/>
+                        </StackPanel>
+                    </Button>
+                    
+                </StackPanel>
             </StackPanel>
         </materialDesign:Card>
     </Grid>

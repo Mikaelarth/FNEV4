@@ -103,20 +103,24 @@ namespace FNEV4.Presentation.Views.Common
             switch (type)
             {
                 case MessageBoxType.Information:
-                    messageBox.MessageIcon.Kind = PackIconKind.Information;
-                    messageBox.MessageIcon.Foreground = new SolidColorBrush(Colors.DodgerBlue);
+                    messageBox.MessageIcon.Kind = PackIconKind.InformationOutline;
+                    messageBox.MessageIcon.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1976D2"));
+                    messageBox.IconContainer.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E3F2FD"));
                     break;
                 case MessageBoxType.Warning:
-                    messageBox.MessageIcon.Kind = PackIconKind.Warning;
-                    messageBox.MessageIcon.Foreground = new SolidColorBrush(Colors.Orange);
+                    messageBox.MessageIcon.Kind = PackIconKind.AlertOutline;
+                    messageBox.MessageIcon.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F57C00"));
+                    messageBox.IconContainer.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFF3E0"));
                     break;
                 case MessageBoxType.Error:
-                    messageBox.MessageIcon.Kind = PackIconKind.Error;
-                    messageBox.MessageIcon.Foreground = new SolidColorBrush(Colors.Red);
+                    messageBox.MessageIcon.Kind = PackIconKind.AlertCircleOutline;
+                    messageBox.MessageIcon.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D32F2F"));
+                    messageBox.IconContainer.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFEBEE"));
                     break;
                 case MessageBoxType.Success:
-                    messageBox.MessageIcon.Kind = PackIconKind.CheckCircle;
-                    messageBox.MessageIcon.Foreground = new SolidColorBrush(Colors.Green);
+                    messageBox.MessageIcon.Kind = PackIconKind.CheckCircleOutline;
+                    messageBox.MessageIcon.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#388E3C"));
+                    messageBox.IconContainer.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E8F5E8"));
                     break;
             }
 

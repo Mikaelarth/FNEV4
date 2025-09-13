@@ -2,52 +2,93 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="Message" Height="250" Width="500"
+        Title="Message" 
+        MinHeight="200" MinWidth="400" 
+        MaxHeight="600" MaxWidth="800"
+        SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="{DynamicResource MaterialDesignPaper}">
     
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <Border CornerRadius="8" Background="{DynamicResource MaterialDesignPaper}"
+            BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="1">
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <!-- En-tête avec icône et titre -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
-            <materialDesign:PackIcon x:Name="MessageIcon" 
-                                     Kind="Information" 
-                                     Width="24" Height="24" 
-                                     Margin="0,0,10,0"
-                                     VerticalAlignment="Center"/>
-            <TextBlock x:Name="TitleText" 
-                       Text="Information" 
-                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                       VerticalAlignment="Center"/>
-        </StackPanel>
+            <!-- En-tête avec icône -->
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Icône avec fond coloré -->
+                <Border Grid.Column="0" 
+                        x:Name="IconContainer"
+                        Width="48" Height="48"
+                        CornerRadius="24"
+                        Background="#E3F2FD"
+                        Margin="0,0,16,0">
+                    <materialDesign:PackIcon x:Name="MessageIcon" 
+                                             Kind="Information" 
+                                             Width="24" Height="24" 
+                                             Foreground="#1976D2"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"/>
+                </Border>
+                
+                <!-- Titre -->
+                <TextBlock Grid.Column="1"
+                           x:Name="TitleText" 
+                           Text="Information" 
+                           Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource MaterialDesignBody}"/>
+            </Grid>
 
-        <!-- Message -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <TextBlock x:Name="MessageText" 
-                       Text="Message content here" 
-                       TextWrapping="Wrap"
-                       Style="{StaticResource MaterialDesignBody1TextBlock}"/>
-        </ScrollViewer>
+            <!-- Séparateur -->
+            <Separator Grid.Row="1" Margin="0,0,0,16" 
+                       Background="{DynamicResource MaterialDesignDivider}"/>
 
-        <!-- Boutons -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-            <Button x:Name="DetailsButton" 
-                    Content="Consulter les détails" 
-                    Style="{StaticResource MaterialDesignFlatButton}"
-                    Margin="0,0,10,0"
-                    Visibility="Collapsed"
-                    Click="DetailsButton_Click"/>
-            
-            <Button Content="OK" 
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    IsDefault="True"
-                    Click="OkButton_Click"/>
-        </StackPanel>
-    </Grid>
+            <!-- Message avec meilleure présentation -->
+            <ScrollViewer Grid.Row="2" 
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          MaxHeight="300"
+                          Padding="0,0,8,0">
+                <TextBlock x:Name="MessageText" 
+                           Text="Message content here" 
+                           TextWrapping="Wrap"
+                           Style="{StaticResource MaterialDesignBody1TextBlock}"
+                           LineHeight="24"
+                           Foreground="{DynamicResource MaterialDesignBody}"
+                           Margin="0,0,0,16"/>
+            </ScrollViewer>
+
+            <!-- Boutons avec meilleur espacement -->
+            <StackPanel Grid.Row="3" 
+                        Orientation="Horizontal" 
+                        HorizontalAlignment="Right" 
+                        Margin="0,16,0,0">
+                <Button x:Name="DetailsButton" 
+                        Content="📊 Consulter les détails" 
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Margin="0,0,12,0"
+                        Padding="16,8"
+                        Visibility="Collapsed"
+                        Click="DetailsButton_Click"/>
+                
+                <Button Content="OK" 
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        IsDefault="True"
+                        Padding="24,8"
+                        Click="OkButton_Click"/>
+            </StackPanel>
+        </Grid>
+    </Border>
 </Window>
