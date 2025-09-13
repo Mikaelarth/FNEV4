@@ -1332,16 +1332,46 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         {
             try
             {
+                // Log : Traçage de l'appel d'archivage
+                await LogInfoAsync($"🗂️ ArchiveProcessedFile appelé - Fichier: '{filePath}', Factures: {result.FacturesImportees}, AutoArchiveEnabled: {AutoArchiveEnabled}", "Archive");
+                
                 var fileName = Path.GetFileName(filePath);
+                var fileNameWithoutExt = Path.GetFileNameWithoutExtension(filePath);
+                var extension = Path.GetExtension(filePath);
                 var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-                var archiveFileName = $"{timestamp}_{result.FacturesImportees}factures_{fileName}";
+                
+                // Raccourcir le nom de fichier original s'il est trop long pour éviter les erreurs Windows
+                var cleanFileName = fileNameWithoutExt;
+                if (cleanFileName.Length > 30)
+                {
+                    // Prendre les premiers caractères et ajouter un hash pour l'unicité
+                    var hash = Math.Abs(cleanFileName.GetHashCode()).ToString("X4");
+                    cleanFileName = cleanFileName.Substring(0, 20) + "_" + hash;
+                }
+                
+                var archiveFileName = $"{timestamp}_{result.FacturesImportees}factures_{cleanFileName}{extension}";
                 var archivePath = Path.Combine(_pathService.ArchiveFolderPath, archiveFileName);
+
+                // Log : Chemins utilisés
+                await LogInfoAsync($"🗂️ Chemin source: '{filePath}'", "Archive");
+                await LogInfoAsync($"🗂️ Chemin archive: '{archivePath}'", "Archive");
+                await LogInfoAsync($"🗂️ Dossier archive: '{_pathService.ArchiveFolderPath}'", "Archive");
+
+                // Vérifier si le fichier source existe
+                if (!File.Exists(filePath))
+                {
+                    await LogErrorAsync($"❌ ERREUR: Fichier source inexistant: '{filePath}'", "Archive");
+                    return;
+                }
 
                 // Créer le dossier d'archive s'il n'existe pas
                 Directory.CreateDirectory(_pathService.ArchiveFolderPath);
+                await LogInfoAsync($"📁 Dossier d'archive créé/vérifié: '{_pathService.ArchiveFolderPath}'", "Archive");
 
                 // Déplacer le fichier vers l'archive
+                await LogInfoAsync($"📦 Déplacement du fichier...", "Archive");
                 File.Move(filePath, archivePath);
+                await LogInfoAsync($"✅ Fichier archivé avec succès vers: '{archivePath}'", "Archive");
 
                 // Créer un fichier de log associé
                 var logFileName = Path.ChangeExtension(archiveFileName, ".log");
@@ -1365,8 +1395,8 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             }
             catch (Exception ex)
             {
-                // Log silencieux - ne pas perturber le processus principal
-                System.Diagnostics.Debug.WriteLine($"Erreur archivage : {ex.Message}");
+                // Log détaillé pour diagnostiquer les problèmes d'archivage
+                await LogErrorAsync($"❌ ERREUR ARCHIVAGE: {ex.Message}", "Archive", ex);
             }
         }
 
@@ -1420,7 +1450,22 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 {
                     // Mode MANUEL : Un seul fichier avec chemin complet
                     // Mode manuel - import direct
+                    await LogInfoAsync($"🔄 Mode MANUEL - Import depuis: '{sourceFilePath}'", "Import");
                     _lastImportResult = await _sage100ImportService.ImportPrevalidatedFacturesAsync(factures, sourceFilePath);
+                    
+                    // Log : Vérification des conditions d'archivage
+                    await LogInfoAsync($"🔍 Conditions archivage - IsSuccess: {_lastImportResult.IsSuccess}, FacturesImportees: {_lastImportResult.FacturesImportees}, AutoArchiveEnabled: {AutoArchiveEnabled}", "Archive");
+                    
+                    // Archiver le fichier traité avec succès en mode manuel
+                    if (_lastImportResult.IsSuccess && _lastImportResult.FacturesImportees > 0 && AutoArchiveEnabled)
+                    {
+                        await LogInfoAsync($"✅ Conditions remplies - Lancement de l'archivage", "Archive");
+                        await ArchiveProcessedFile(sourceFilePath, _lastImportResult);
+                    }
+                    else
+                    {
+                        await LogWarningAsync($"❌ Conditions non remplies - Archivage ignoré", "Archive");
+                    }
                 }
                 else
                 {
@@ -1478,12 +1523,6 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                             await ArchiveProcessedFile(processedFile, _lastImportResult);
                         }
                     }
-                }
-                
-                // Post-traitement identique
-                if (_lastImportResult.IsSuccess && _lastImportResult.FacturesImportees > 0 && AutoArchiveEnabled)
-                {
-                    await ArchiveProcessedFile(sourceFilePath, _lastImportResult);
                 }
                 
                 UpdateImportResultUI(_lastImportResult);
