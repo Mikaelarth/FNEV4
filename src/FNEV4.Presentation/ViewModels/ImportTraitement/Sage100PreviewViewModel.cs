@@ -39,6 +39,7 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         public int TotalFactures => FacturesImportees?.Count ?? 0;
         public int FacturesTraitees => ValidFiles;
         public int FacturesEnErreur => InvalidFiles;
+        public int FacturesDoublons => FacturesImportees?.Count(f => f.EstDoublon) ?? 0;
 
         #endregion
 
@@ -84,10 +85,13 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             switch (CurrentFilter)
             {
                 case "Valides":
-                    filtered = filtered.Where(f => f.EstValide);
+                    filtered = filtered.Where(f => f.EstValide && !f.EstDoublon);
                     break;
                 case "Erreurs":
-                    filtered = filtered.Where(f => !f.EstValide);
+                    filtered = filtered.Where(f => !f.EstValide && !f.EstDoublon);
+                    break;
+                case "Doublons":
+                    filtered = filtered.Where(f => f.EstDoublon);
                     break;
                 case "Toutes":
                 default:
@@ -115,6 +119,7 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
 
             // Notifier les propriétés calculées
             OnPropertyChanged(nameof(TotalFactures));
+            OnPropertyChanged(nameof(FacturesDoublons));
         }
 
         #endregion
@@ -142,6 +147,7 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             OnPropertyChanged(nameof(TotalFactures));
             OnPropertyChanged(nameof(FacturesTraitees));
             OnPropertyChanged(nameof(FacturesEnErreur));
+            OnPropertyChanged(nameof(FacturesDoublons));
         }
 
         #endregion
@@ -448,6 +454,13 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         private void ShowErrorFactures()
         {
             CurrentFilter = "Erreurs";
+            ApplyFilters();
+        }
+
+        [RelayCommand]
+        private void ShowDoublonFactures()
+        {
+            CurrentFilter = "Doublons";
             ApplyFilters();
         }
 

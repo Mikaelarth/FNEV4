@@ -659,3 +659,7 @@ D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\FNEV4.Presentati
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\ref\FNEV4.Presentation.dll
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\Sage100FactureDetailsDialog.baml
 D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\Sage100FactureDetailsDialog.g.cs
+D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Common\CustomMessageBox.baml
+D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\ImportReportDialog.baml
+D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Common\CustomMessageBox.g.cs
+D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\ImportTraitement\ImportReportDialog.g.cs

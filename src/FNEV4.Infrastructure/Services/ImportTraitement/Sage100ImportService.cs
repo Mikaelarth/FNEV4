@@ -590,6 +590,22 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                     preview.DateFacture = DateTime.FromOADate(excelDate);
                 }
 
+                // NOUVELLE FONCTIONNALITÉ: Vérification des doublons en base de données
+                // Vérifier si la facture existe déjà en base pour éviter les doublons
+                if (!string.IsNullOrWhiteSpace(preview.NumeroFacture))
+                {
+                    var existingInvoice = await _context.FneInvoices
+                        .FirstOrDefaultAsync(f => f.InvoiceNumber == preview.NumeroFacture);
+                    
+                    if (existingInvoice != null)
+                    {
+                        preview.EstDoublon = true;
+                        preview.EstValide = false; // Gardons false pour empêcher l'import
+                        preview.Erreurs.Add($"Facture {preview.NumeroFacture} existe déjà en base de données (ID: {existingInvoice.Id})");
+                        Console.WriteLine($"[DEBUG] DOUBLON DÉTECTÉ - Facture {preview.NumeroFacture} existe déjà (ID: {existingInvoice.Id})");
+                    }
+                }
+
                 // Compter produits et calculer montant
                 decimal montantTotal = 0;
                 int nombreProduits = 0;

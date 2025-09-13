@@ -150,8 +150,20 @@ namespace FNEV4.Core.Models.ImportTraitement
         // Validation et statut
         public bool EstValide { get; set; }
         public bool ClientTrouve { get; set; }
+        public bool EstDoublon { get; set; } = false;
         public List<string> Erreurs { get; set; } = new();
-        public string Statut => EstValide ? "Valide" : "Erreur";
+        public string Statut 
+        { 
+            get
+            {
+                if (EstDoublon)
+                    return "Doublon";
+                else if (EstValide)
+                    return "Valide";
+                else
+                    return "Erreur";
+            }
+        }
         
         // Liste des produits pour affichage détaillé
         public List<Sage100ProduitData> Produits { get; set; } = new();

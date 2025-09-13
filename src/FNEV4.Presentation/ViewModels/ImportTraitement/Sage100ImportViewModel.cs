@@ -418,13 +418,17 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 }
                 else
                 {
-                    MessageBox.Show(
+                    // Créer un rapport détaillé pour les détails d'échec
+                    var detailedReport = ImportDetailedReport.FromSage100Result(_lastImportResult, _selectedFilePath ?? "");
+                    
+                    // Utiliser CustomMessageBox avec rapport détaillé
+                    Views.Common.CustomMessageBox.Show(
                         $"Échec de l'import\n\n" +
                         $"❌ {_lastImportResult.Message}\n\n" +
-                        "Consultez les détails pour plus d'informations.",
+                        "Cliquez sur 'Consulter les détails' pour plus d'informations.",
                         "Échec d'import",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
+                        Views.Common.CustomMessageBox.MessageBoxType.Error,
+                        detailedReport);
                 }
             }
             catch (Exception ex)
@@ -1493,125 +1497,58 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 {
                     if (_lastImportResult.FacturesEchouees == 0)
                     {
-                        MessageBox.Show(
+                        // Créer un rapport détaillé pour les détails de succès
+                        var detailedReport = ImportDetailedReport.FromSage100Result(_lastImportResult, sourceFilePath ?? "");
+                        
+                        Views.Common.CustomMessageBox.Show(
                             $"Import réussi !\n\n" +
                             $"✅ {_lastImportResult.FacturesImportees} facture(s) importée(s)\n" +
                             $"⏱️ Durée : {_lastImportResult.DureeTraitement.TotalSeconds:F1}s",
                             "Import terminé",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Information);
+                            Views.Common.CustomMessageBox.MessageBoxType.Information,
+                            detailedReport);
                     }
                     else
                     {
-                        MessageBox.Show(
+                        // Créer un rapport détaillé pour les détails de succès partiel
+                        var detailedReport2 = ImportDetailedReport.FromSage100Result(_lastImportResult, sourceFilePath ?? "");
+                        
+                        Views.Common.CustomMessageBox.Show(
                             $"Import partiellement réussi\n\n" +
                             $"✅ {_lastImportResult.FacturesImportees} facture(s) importée(s)\n" +
                             $"❌ {_lastImportResult.FacturesEchouees} facture(s) échouée(s)\n" +
                             $"⏱️ Durée : {_lastImportResult.DureeTraitement.TotalSeconds:F1}s\n\n" +
                             "Consultez les détails pour plus d'informations.",
                             "Import terminé",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Warning);
+                            Views.Common.CustomMessageBox.MessageBoxType.Warning,
+                            detailedReport2);
                     }
                 }
                 else
                 {
-                    MessageBox.Show(
+                    // Créer un rapport détaillé pour les détails d'échec
+                    var detailedReport = ImportDetailedReport.FromSage100Result(_lastImportResult, sourceFilePath ?? "");
+                    
+                    // Utiliser CustomMessageBox avec rapport détaillé
+                    Views.Common.CustomMessageBox.Show(
                         $"Échec de l'import\n\n" +
                         $"❌ {_lastImportResult.Message}\n\n" +
-                        "Consultez les détails pour plus d'informations.",
+                        "Cliquez sur 'Consulter les détails' pour plus d'informations.",
                         "Échec d'import",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
+                        Views.Common.CustomMessageBox.MessageBoxType.Error,
+                        detailedReport);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'import :\n{ex.Message}", 
-                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                Views.Common.CustomMessageBox.Show(
+                    $"Erreur lors de l'import :\n{ex.Message}", 
+                    "Erreur", 
+                    Views.Common.CustomMessageBox.MessageBoxType.Error);
             }
         }
 
-        /// <summary>
-        /// Traite l'import depuis la fenêtre de prévisualisation avec données pré-validées (version obsolète)
-        /// </summary>
-        public async Task ProcessImportFromPreview()
-        {
-            try
-            {
-                // Debug : Vérifier le chemin du fichier
-                System.Diagnostics.Debug.WriteLine($"🔍 ProcessImportFromPreview - SelectedFilePath: '{SelectedFilePath}'");
-                
-                if (string.IsNullOrWhiteSpace(SelectedFilePath))
-                {
-                    MessageBox.Show("Erreur : Aucun fichier sélectionné pour l'import.", 
-                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-                
-                // Utiliser l'import optimisé avec données pré-validées
-                _lastImportResult = await _sage100ImportService.ImportPrevalidatedFacturesAsync(PreviewFactures, SelectedFilePath);
-                
-                // Post-traitement identique
-                if (_lastImportResult.IsSuccess && _lastImportResult.FacturesImportees > 0 && AutoArchiveEnabled)
-                {
-                    await ArchiveProcessedFile(SelectedFilePath, _lastImportResult);
-                }
-                
-                UpdateImportResultUI(_lastImportResult);
-                
-                ImportedFactures.Clear();
-                foreach (var facture in _lastImportResult.FacturesDetaillees)
-                {
-                    ImportedFactures.Add(facture);
-                }
-                
-                HasDetailedResults = ImportedFactures.Count > 0;
-                HasImportResult = true;
-                
-                // Notification selon le résultat
-                if (_lastImportResult.IsSuccess)
-                {
-                    if (_lastImportResult.FacturesEchouees == 0)
-                    {
-                        MessageBox.Show(
-                            $"Import réussi !\n\n" +
-                            $"✅ {_lastImportResult.FacturesImportees} facture(s) importée(s)\n" +
-                            $"⏱️ Durée : {_lastImportResult.DureeTraitement.TotalSeconds:F1}s",
-                            "Import terminé",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show(
-                            $"Import partiellement réussi\n\n" +
-                            $"✅ {_lastImportResult.FacturesImportees} facture(s) importée(s)\n" +
-                            $"❌ {_lastImportResult.FacturesEchouees} facture(s) échouée(s)\n" +
-                            $"⏱️ Durée : {_lastImportResult.DureeTraitement.TotalSeconds:F1}s\n\n" +
-                            "Consultez les détails pour plus d'informations.",
-                            "Import terminé",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Warning);
-                    }
-                }
-                else
-                {
-                    MessageBox.Show(
-                        $"Échec de l'import\n\n" +
-                        $"❌ {_lastImportResult.Message}\n\n" +
-                        "Consultez les détails pour plus d'informations.",
-                        "Échec d'import",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur lors de l'import :\n{ex.Message}", 
-                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
+
 
         #endregion
     }

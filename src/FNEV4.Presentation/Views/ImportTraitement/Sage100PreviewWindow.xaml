@@ -131,6 +131,16 @@
                         </StackPanel>
                     </Button>
                     
+                    <!-- Bouton filtre: Doublons -->
+                    <Button Style="{StaticResource SecondaryButtonStyle}" 
+                            Command="{Binding ShowDoublonFacturesCommand}"
+                            Height="32" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ContentDuplicate" Width="16" Height="16" Margin="0,0,6,0" Foreground="#FF9800"/>
+                            <TextBlock Text="{Binding FacturesDoublons, StringFormat='{}{0} doublons'}" FontSize="12" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Button>
+                    
                     <!-- Bouton filtre: Erreurs -->
                     <Button Style="{StaticResource SecondaryButtonStyle}" 
                             Command="{Binding ShowErrorFacturesCommand}"
@@ -343,6 +353,9 @@
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding Statut}" Value="Erreur">
                                                         <Setter Property="Foreground" Value="#F44336"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Statut}" Value="Doublon">
+                                                        <Setter Property="Foreground" Value="#FF9800"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
