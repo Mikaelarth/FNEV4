@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FNEV4.Core.Models.ImportTraitement
 {
@@ -103,6 +104,8 @@ namespace FNEV4.Core.Models.ImportTraitement
                     report.AddFailedInvoice(facture);
                 }
             }
+            
+
             
             return report;
         }

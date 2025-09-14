@@ -62,7 +62,34 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                         var factureData = await ParseFactureFromWorksheetAsync(worksheet);
                         if (factureData != null)
                         {
-                            // CORRECTION CRITIQUE: Sauvegarde réelle en base de données
+                            // VÉRIFICATION CRITIQUE: Exclure les doublons de l'import
+                            var existingInvoice = await _context.FneInvoices
+                                .AsNoTracking()
+                                .FirstOrDefaultAsync(f => f.InvoiceNumber == factureData.NumeroFacture);
+                            
+                            if (existingInvoice != null)
+                            {
+                                // Doublon détecté - ne pas importer
+                                result.FacturesEchouees++;
+                                result.Errors.Add($"Doublon ignoré: Facture {factureData.NumeroFacture} existe déjà en base (ID: {existingInvoice.Id})");
+                                result.FacturesDetaillees.Add(new Sage100FactureImportee
+                                {
+                                    NumeroFacture = factureData.NumeroFacture,
+                                    NomFeuille = worksheet.Name,
+                                    EstImportee = false,
+                                    MessageErreur = $"Doublon - Facture existe déjà en base (ID: {existingInvoice.Id})",
+                                    DateImport = DateTime.Now,
+                                    NombreProduits = factureData.Produits.Count,
+                                    MontantTotal = factureData.Produits.Sum(p => p.MontantHt)
+                                });
+                                
+                                await _loggingService.LogWarningAsync(
+                                    $"Import ignoré - Doublon détecté: Facture {factureData.NumeroFacture} existe déjà (ID: {existingInvoice.Id})", 
+                                    "Sage100Import");
+                                continue; // Passer à la facture suivante
+                            }
+                            
+                            // CORRECTION CRITIQUE: Sauvegarde réelle en base de données (uniquement si pas doublon)
                             var fneInvoice = await ConvertToFneInvoiceAsync(factureData, worksheet.Name);
                             if (fneInvoice != null)
                             {

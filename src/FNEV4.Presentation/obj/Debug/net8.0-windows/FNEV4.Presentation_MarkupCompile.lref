@@ -1,10 +1,11 @@
-﻿
+﻿D:\PROJET\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\GeneratedInternalTypeHelper.g.cs
 FD:\PROJET\FNEV4\src\FNEV4.Presentation\App.xaml;;
 FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\Configuration\ApiFneConfigView.xaml;;
 FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\Configuration\CheminsDossiersConfigView.xaml;;
 FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\Dashboard\DashboardVueEnsembleView.xaml;;
 FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\GestionClients\ImportClientsWindow.xaml;;
 FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\ImportTraitement\ImportFichiersView.xaml;;
+FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\ImportTraitement\ImportReportDialog.xaml;;
 FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\ImportTraitement\Sage100ImportView.xaml;;
 FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\Maintenance\BaseDonneesView.xaml;;
 FD:\PROJET\FNEV4\src\FNEV4.Presentation\Views\Maintenance\LogsDiagnosticsView.xaml;;

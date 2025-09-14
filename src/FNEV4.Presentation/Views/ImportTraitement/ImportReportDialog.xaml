@@ -4,8 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:FNEV4.Presentation.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="800">
+             
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+    </UserControl.Resources>
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -57,33 +63,201 @@
             </StackPanel>
         </materialDesign:Card>
 
-        <!-- Détails des échecs -->
+        <!-- Détails -->
         <materialDesign:Card Grid.Row="2">
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+                <!-- Cas d'import réussi : informations détaillées -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                              Visibility="{Binding IsSuccessfulImport, Converter={StaticResource BooleanToVisibilityConverter}}"
+                              Margin="15">
+                    <StackPanel>
+                        <TextBlock Text="Détails de l'import réussi" 
+                                   Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                                   Foreground="#4CAF50"
+                                   Margin="0,0,0,15"/>
+                        
+                        <!-- Informations du fichier -->
+                        <materialDesign:Card Padding="15" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="📁 Fichier traité" FontWeight="Bold" Margin="0,0,0,5"/>
+                                <TextBlock Text="{Binding DetailedReport.FichierSource}" 
+                                           Foreground="Gray" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </materialDesign:Card>
+                        
+                        <!-- Date et durée -->
+                        <materialDesign:Card Padding="15" Margin="0,0,0,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="📅 Date d'import" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBlock Text="{Binding DetailedReport.DateImport, StringFormat='dd/MM/yyyy HH:mm:ss'}" 
+                                               Foreground="Gray"/>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="⏱️ Durée" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBlock Text="{Binding DetailedReport.DureeTraitement, StringFormat='{}{0:mm}m {0:ss}s'}" 
+                                               Foreground="Gray"/>
+                                </StackPanel>
+                            </Grid>
+                        </materialDesign:Card>
+                        
+                        <!-- Message de résultat -->
+                        <materialDesign:Card Padding="15" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="✅ Résultat" FontWeight="Bold" Foreground="#4CAF50" Margin="0,0,0,5"/>
+                                <TextBlock Text="{Binding DetailedReport.Message}" 
+                                           Foreground="Gray" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </materialDesign:Card>
+                        
+                        <!-- Avertissements s'il y en a -->
+                        <materialDesign:Card Padding="15" Margin="0,0,0,10"
+                                           Visibility="{Binding HasWarnings, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock Text="⚠️ Avertissements" FontWeight="Bold" Foreground="#F57C00" Margin="0,0,0,10"/>
+                                <ItemsControl ItemsSource="{Binding DetailedReport.GlobalWarnings}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}" Foreground="#F57C00" 
+                                                       Margin="10,2" TextWrapping="Wrap"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </materialDesign:Card>
+                    </StackPanel>
+                </ScrollViewer>
                 
-                <TextBlock Grid.Row="0" 
-                           Text="Factures échouées (détails)" 
-                           Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
-                           Margin="15,15,15,10"/>
-                
-                <DataGrid Grid.Row="1" 
-                          ItemsSource="{Binding FailedInvoices}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          Margin="15">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="N° Facture" Binding="{Binding NumeroFacture}" Width="120"/>
-                        <DataGridTextColumn Header="Feuille" Binding="{Binding NomFeuille}" Width="150"/>
-                        <DataGridTextColumn Header="Date Import" Binding="{Binding DateImport, StringFormat=dd/MM/yyyy HH:mm}" Width="140"/>
-                        <DataGridTextColumn Header="Produits" Binding="{Binding NombreProduits}" Width="80"/>
-                        <DataGridTextColumn Header="Montant" Binding="{Binding MontantTotal, StringFormat=C}" Width="100"/>
-                        <DataGridTextColumn Header="Erreur" Binding="{Binding MessageErreur}" Width="*"/>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <!-- Cas d'import avec échecs : affichage des erreurs -->
+                <Grid Visibility="{Binding IsSuccessfulImport, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Grid.Row="0" 
+                               Text="Factures échouées (détails)" 
+                               Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                               Margin="15,15,15,10"/>
+                    
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="1" Margin="15">
+                        <StackPanel>
+            <!-- Informations sur les échecs -->
+            <TextBlock Text="{Binding FacturesEchouees, StringFormat='📊 {0} facture(s) échouée(s) détectée(s)'}" 
+                       FontWeight="Bold" Foreground="#F44336" Margin="0,0,0,15"/>                            <!-- Message si pas de détails disponibles -->
+                            <Border Background="#FFEBEE" CornerRadius="5" Padding="15" Margin="0,0,0,15"
+                                    Visibility="{Binding HasFailures, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                                <StackPanel>
+                                    <TextBlock Text="ℹ️ Détails non disponibles" FontWeight="Bold" Foreground="#F44336" Margin="0,0,0,5"/>
+                                    <TextBlock Text="Les factures ont été rejetées lors de la validation (doublons détectés). Consultez les logs pour plus d'informations." 
+                                               Foreground="#C62828" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- DataGrid des factures échouées -->
+                            <DataGrid ItemsSource="{Binding DetailedReport.FailedInvoices}"
+                                      Visibility="{Binding HasFailures, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      GridLinesVisibility="Horizontal"
+                                      HeadersVisibility="Column"
+                                      AlternatingRowBackground="#F5F5F5"
+                                      CanUserReorderColumns="False"
+                                      CanUserResizeRows="False">
+                                <DataGrid.Columns>
+                                    <!-- Indicateur visuel du type d'erreur -->
+                                    <DataGridTemplateColumn Header="📋" Width="50">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#F44336" CornerRadius="3" Width="30" Height="20">
+                                                    <TextBlock Text="❌" 
+                                                               HorizontalAlignment="Center" 
+                                                               VerticalAlignment="Center"
+                                                               Foreground="White" 
+                                                               FontSize="10"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    
+                                    <DataGridTextColumn Header="N° Facture" Binding="{Binding NumeroFacture}" Width="120">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="FontWeight" Value="Bold"/>
+                                                <Setter Property="Foreground" Value="#333"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    
+                                    <DataGridTextColumn Header="Feuille" Binding="{Binding NomFeuille}" Width="150">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#666"/>
+                                                <Setter Property="FontStyle" Value="Italic"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    
+                                    <DataGridTextColumn Header="Date Import" Binding="{Binding DateImport, StringFormat='dd/MM/yyyy HH:mm'}" Width="140"/>
+                                    
+                                    <DataGridTextColumn Header="Produits" Binding="{Binding NombreProduits}" Width="80">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                <Setter Property="FontWeight" Value="Bold"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    
+                                    <DataGridTextColumn Header="Montant" Binding="{Binding MontantTotal, StringFormat=C}" Width="100">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                <Setter Property="FontWeight" Value="Bold"/>
+                                                <Setter Property="Foreground" Value="#2E7D32"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    
+                                    <DataGridTextColumn Header="Erreur" Binding="{Binding MessageErreur}" Width="*">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextWrapping" Value="Wrap"/>
+                                                <Setter Property="Foreground" Value="#F44336"/>
+                                                <Setter Property="FontWeight" Value="Medium"/>
+                                                <Setter Property="Margin" Value="5"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            
+                            <!-- Erreurs globales s'il y en a -->
+                            <materialDesign:Card Margin="0,20,0,0" Padding="15"
+                                               Visibility="{Binding HasGlobalErrors, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <StackPanel>
+                                    <TextBlock Text="🚨 Erreurs système" FontWeight="Bold" Foreground="#F44336" Margin="0,0,0,10"/>
+                                    <ItemsControl ItemsSource="{Binding DetailedReport.GlobalErrors}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#FFEBEE" CornerRadius="5" Padding="10" Margin="0,2">
+                                                    <TextBlock Text="{Binding}" Foreground="#C62828" 
+                                                               TextWrapping="Wrap" FontWeight="Medium"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </materialDesign:Card>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
             </Grid>
         </materialDesign:Card>
     </Grid>
