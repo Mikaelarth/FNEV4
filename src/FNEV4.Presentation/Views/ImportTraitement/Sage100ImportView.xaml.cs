@@ -1,4 +1,7 @@
 using System.Windows.Controls;
+using System.Windows.Input;
+using FNEV4.Presentation.ViewModels.ImportTraitement;
+using FNEV4.Core.Models.ImportTraitement;
 
 namespace FNEV4.Presentation.Views.ImportTraitement
 {

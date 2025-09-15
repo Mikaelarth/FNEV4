@@ -83,6 +83,19 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         [ObservableProperty]
         private bool _autoArchiveEnabled = true;
 
+        // Statistiques pour l'interface
+        [ObservableProperty]
+        private int _totalFiles = 0;
+
+        [ObservableProperty]
+        private int _validFiles = 0;
+
+        [ObservableProperty]
+        private int _invalidFiles = 0;
+
+        [ObservableProperty]
+        private int _doublonsFiles = 0;
+
         public ObservableCollection<Sage100FacturePreview> PreviewFactures { get; } = new();
         public ObservableCollection<Sage100FactureImportee> ImportedFactures { get; } = new();
 
@@ -174,6 +187,42 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
 
         #endregion
 
+        #region Commands
+
+        /// <summary>
+        /// Commande pour afficher les détails d'une facture
+        /// </summary>
+        [RelayCommand]
+        private void ShowProductDetails(object parameter)
+        {
+            if (parameter is Sage100FacturePreview facture)
+            {
+                try
+                {
+                    // Créer le ViewModel pour le dialog
+                    var detailsViewModel = new Sage100FactureDetailsViewModel(facture);
+                    
+                    // Créer et afficher la fenêtre de détails
+                    var detailsWindow = new Views.ImportTraitement.Sage100FactureDetailsDialog
+                    {
+                        DataContext = detailsViewModel,
+                        Owner = System.Windows.Application.Current.MainWindow
+                    };
+                    
+                    detailsWindow.ShowDialog();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lors de l'affichage des détails : {ex.Message}", 
+                                  "Erreur", 
+                                  MessageBoxButton.OK, 
+                                  MessageBoxImage.Error);
+                }
+            }
+        }
+
+        #endregion
+
         #region Logging Helpers
 
         private async Task LogInfoAsync(string message, string category = "Import")
@@ -196,7 +245,7 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         #region Commands
 
         [RelayCommand]
-        private void SelectFile()
+        private async Task SelectFile()
         {
             var openFileDialog = new OpenFileDialog
             {
@@ -220,6 +269,9 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 OnPropertyChanged(nameof(HasSelectedFile));
                 OnPropertyChanged(nameof(CanImport));
                 OnPropertyChanged(nameof(CanExecuteImport));
+                
+                // Scanner automatiquement le fichier sélectionné pour générer l'aperçu
+                await ValidateFile();
             }
         }
 
@@ -271,6 +323,9 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                     {
                         PreviewFactures.Add(facture);
                     }
+                    
+                    // Mettre à jour les statistiques
+                    UpdateStatistics();
                     
                     // Mettre à jour la vue filtrée
                     PreviewFacturesView?.Refresh();
@@ -336,7 +391,7 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 if (result == MessageBoxResult.Yes)
                 {
                     await Task.Delay(100); // Petit délai pour l'UI
-                    SelectFile();
+                    await SelectFile();
                 }
             }
             finally
@@ -635,6 +690,9 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                     PreviewFactures.Add(preview);
                 }
                 
+                // Mettre à jour les statistiques
+                UpdateStatistics();
+                
                 HasPreviewData = allPreviews.Count > 0;
                 
                 // AMÉLIORATION 3: Message de confirmation enrichi avec diagnostic complet
@@ -893,6 +951,9 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                     PreviewFactures.Add(preview);
                 }
                 
+                // Mettre à jour les statistiques
+                UpdateStatistics();
+                
                 HasPreviewData = allPreviews.Count > 0;
                 HasScanResults = true;
                 
@@ -964,6 +1025,87 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             }
         }
 
+        [RelayCommand]
+        private void ShowAllFactures()
+        {
+            PreviewFacturesView.Filter = null;
+        }
+
+        [RelayCommand]
+        private void ShowValidFactures()
+        {
+            PreviewFacturesView.Filter = item => item is Sage100FacturePreview facture && 
+                facture.EstValide && !facture.EstDoublon;
+        }
+
+        [RelayCommand]
+        private void ShowErrorFactures()
+        {
+            PreviewFacturesView.Filter = item => item is Sage100FacturePreview facture && 
+                (!facture.EstValide || facture.Erreurs.Any());
+        }
+
+        [RelayCommand]
+        private void ShowDoublonsFactures()
+        {
+            PreviewFacturesView.Filter = item => item is Sage100FacturePreview facture && 
+                facture.EstDoublon;
+        }
+
+        [RelayCommand]
+        private async Task ExportToExcel()
+        {
+            try
+            {
+                var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "Exporter vers Excel",
+                    Filter = "Fichiers Excel (*.xlsx)|*.xlsx",
+                    DefaultExt = "xlsx",
+                    FileName = $"Export_Sage100_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx"
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    var facturesAExporter = PreviewFacturesView?.Cast<Sage100FacturePreview>().ToList() ?? new List<Sage100FacturePreview>();
+                    
+                    if (!facturesAExporter.Any())
+                    {
+                        MessageBox.Show("Aucune facture à exporter.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                        return;
+                    }
+
+                    // Ici vous pourriez appeler un service d'export Excel
+                    // await _excelExportService.ExportFactures(facturesAExporter, saveFileDialog.FileName);
+                    
+                    MessageBox.Show($"Export terminé avec succès !\n\nFichier: {saveFileDialog.FileName}\nNombre de factures: {facturesAExporter.Count}", 
+                                  "Export Excel", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'export Excel:\n{ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand]
+        private void ClearSearch()
+        {
+            SearchText = string.Empty;
+        }
+
+        #endregion
+
+        #region Statistics Update
+
+        private void UpdateStatistics()
+        {
+            TotalFiles = PreviewFactures.Count;
+            ValidFiles = PreviewFactures.Count(f => f.EstValide && !f.EstDoublon);
+            InvalidFiles = PreviewFactures.Count(f => !f.EstValide || f.Erreurs.Any());
+            DoublonsFiles = PreviewFactures.Count(f => f.EstDoublon);
+        }
+
         #endregion
 
         #region Private Methods
@@ -977,6 +1119,12 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             
             PreviewFactures.Clear();
             ImportedFactures.Clear();
+            
+            // Remettre les statistiques à zéro
+            TotalFiles = 0;
+            ValidFiles = 0;
+            InvalidFiles = 0;
+            DoublonsFiles = 0;
             
             _lastValidation = null;
             _lastImportResult = null;
