@@ -259,14 +259,14 @@
         }
       }
     },
-    "D:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj": {
+    "d:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj",
+        "projectUniqueName": "d:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj",
         "projectName": "FNEV4.Presentation",
-        "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj",
+        "projectPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj",
         "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-        "outputPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\obj\\",
+        "outputPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -411,8 +411,8 @@
               "D:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
                 "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj"
               },
-              "D:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj": {
-                "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj"
+              "d:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj": {
+                "projectPath": "d:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj"
               }
             }
           }

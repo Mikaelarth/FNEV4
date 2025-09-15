@@ -38,6 +38,20 @@ namespace FNEV4.Infrastructure.Repositories
                 .FirstOrDefaultAsync(f => f.Id == guidId);
         }
 
+        public async Task<FneInvoice?> GetByIdWithDetailsAsync(string id)
+        {
+            if (!Guid.TryParse(id, out var guidId))
+                return null;
+                
+            var invoice = await _context.FneInvoices
+                .Include(f => f.Items)
+                .Include(f => f.Client)
+                .AsSplitQuery() // Pour optimiser les requêtes multiples
+                .FirstOrDefaultAsync(f => f.Id == guidId);
+                
+            return invoice;
+        }
+
         public async Task<IEnumerable<FneInvoice>> GetFilteredAsync(
             string? searchText = null,
             string? status = null,

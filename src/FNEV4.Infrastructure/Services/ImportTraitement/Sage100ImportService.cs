@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace FNEV4.Infrastructure.Services.ImportTraitement
@@ -93,12 +94,27 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                             var fneInvoice = await ConvertToFneInvoiceAsync(factureData, worksheet.Name);
                             if (fneInvoice != null)
                             {
+                                // Ajouter la facture au contexte
                                 await _context.FneInvoices.AddAsync(fneInvoice);
+                                
+                                // CORRECTION CRITIQUE: Ajouter explicitement les articles au contexte
+                                if (fneInvoice.Items != null && fneInvoice.Items.Any())
+                                {
+                                    foreach (var item in fneInvoice.Items)
+                                    {
+                                        await _context.FneInvoiceItems.AddAsync(item);
+                                    }
+                                    
+                                    await _loggingService.LogInfoAsync(
+                                        $"Ajout de {fneInvoice.Items.Count} articles pour la facture {factureData.NumeroFacture}", 
+                                        "Sage100Import");
+                                }
+                                
                                 await _context.SaveChangesAsync();
                                 
                                 // Log de succès
                                 await _loggingService.LogInfoAsync(
-                                    $"Facture {factureData.NumeroFacture} sauvegardée avec succès (ID: {fneInvoice.Id})", 
+                                    $"Facture {factureData.NumeroFacture} sauvegardée avec succès (ID: {fneInvoice.Id}) avec {fneInvoice.Items?.Count ?? 0} articles", 
                                     "Sage100Import");
                             }
                             
@@ -237,6 +253,7 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                 using var workbook = new XLWorkbook(filePath);
                 result.NombreFeuilles = workbook.Worksheets.Count;
 
+                // Première passe : traiter toutes les feuilles
                 foreach (var worksheet in workbook.Worksheets)
                 {
                     try
@@ -259,6 +276,42 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                             EstValide = false,
                             Erreurs = { ex.Message }
                         });
+                    }
+                }
+
+                // Deuxième passe : détecter les doublons INTERNES dans le fichier même
+                var numeroFacturesVues = new Dictionary<string, List<Sage100FacturePreview>>();
+                
+                foreach (var preview in result.Apercu)
+                {
+                    if (!string.IsNullOrWhiteSpace(preview.NumeroFacture))
+                    {
+                        var numero = preview.NumeroFacture.Trim();
+                        if (!numeroFacturesVues.ContainsKey(numero))
+                        {
+                            numeroFacturesVues[numero] = new List<Sage100FacturePreview>();
+                        }
+                        numeroFacturesVues[numero].Add(preview);
+                    }
+                }
+
+                // Marquer les doublons internes
+                foreach (var (numeroFacture, factures) in numeroFacturesVues)
+                {
+                    if (factures.Count > 1)
+                    {
+                        // Toutes les factures avec ce numéro sont des doublons internes
+                        foreach (var facture in factures)
+                        {
+                            facture.EstDoublon = true;
+                            facture.EstValide = false;
+                            facture.Erreurs.Insert(0, $"⚠️ DOUBLON INTERNE: La facture {numeroFacture} apparaît {factures.Count} fois dans ce fichier Excel (feuilles: {string.Join(", ", factures.Select(f => f.NomFeuille))})");
+                        }
+                        
+                        // Décrémenter le compteur de factures détectées
+                        result.FacturesDetectees -= factures.Count;
+                        
+                        Console.WriteLine($"[DEBUG] DOUBLONS INTERNES DÉTECTÉS - Facture {numeroFacture} apparaît {factures.Count} fois dans les feuilles: {string.Join(", ", factures.Select(f => f.NomFeuille))}");
                     }
                 }
 
@@ -987,6 +1040,9 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
                     // Note: RefundReference n'existe pas dans l'entité FneInvoice actuelle
                 }
 
+                // CORRECTION CRITIQUE: Créer les articles de la facture
+                await CreateInvoiceItemsAsync(fneInvoice, factureData);
+
                 return fneInvoice;
             }
             catch (Exception ex)
@@ -1017,6 +1073,111 @@ namespace FNEV4.Infrastructure.Services.ImportTraitement
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Crée les articles (FneInvoiceItems) pour une facture
+        /// </summary>
+        private async Task CreateInvoiceItemsAsync(FneInvoice fneInvoice, Sage100FactureData factureData)
+        {
+            try
+            {
+                for (int i = 0; i < factureData.Produits.Count; i++)
+                {
+                    var produit = factureData.Produits[i];
+                    
+                    // Récupérer ou créer le type de TVA
+                    var vatType = await GetOrCreateVatTypeAsync(produit.CodeTva);
+                    
+                    var invoiceItem = new FneInvoiceItem
+                    {
+                        Id = Guid.NewGuid(),
+                        FneInvoiceId = fneInvoice.Id,
+                        ProductCode = produit.CodeProduit,
+                        Description = produit.Designation,
+                        UnitPrice = produit.PrixUnitaire,
+                        Quantity = produit.Quantite,
+                        MeasurementUnit = produit.Emballage ?? "pcs",
+                        VatTypeId = vatType.Id,
+                        VatCode = produit.CodeTva,
+                        VatRate = GetVatRateFromCode(produit.CodeTva),
+                        LineAmountHT = produit.MontantHt,
+                        LineVatAmount = GetVatAmountFromProduct(produit),
+                        LineAmountTTC = produit.MontantHt + GetVatAmountFromProduct(produit),
+                        ItemDiscount = 0, // Pas de remise par défaut
+                        LineOrder = i + 1,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    
+                    // Si c'est un avoir, les montants sont négatifs
+                    if (fneInvoice.InvoiceType == "refund")
+                    {
+                        invoiceItem.LineAmountHT = -Math.Abs(invoiceItem.LineAmountHT);
+                        invoiceItem.LineVatAmount = -Math.Abs(invoiceItem.LineVatAmount);
+                        invoiceItem.LineAmountTTC = -Math.Abs(invoiceItem.LineAmountTTC);
+                    }
+                    
+                    fneInvoice.Items.Add(invoiceItem);
+                }
+            }
+            catch (Exception ex)
+            {
+                await _loggingService.LogErrorAsync($"Erreur création articles facture {fneInvoice.InvoiceNumber}: {ex.Message}", "Sage100Import", ex);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Récupère ou crée un type de TVA
+        /// </summary>
+        private async Task<VatType> GetOrCreateVatTypeAsync(string vatCode)
+        {
+            try
+            {
+                // Chercher le type de TVA existant
+                var vatType = await _context.VatTypes.FirstOrDefaultAsync(v => v.Code == vatCode);
+                
+                if (vatType == null)
+                {
+                    // Créer un nouveau type de TVA
+                    vatType = new VatType
+                    {
+                        Id = Guid.NewGuid(),
+                        Code = vatCode,
+                        Rate = GetVatRateFromCode(vatCode),
+                        Description = GetVatDescriptionFromCode(vatCode),
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    
+                    await _context.VatTypes.AddAsync(vatType);
+                    await _context.SaveChangesAsync();
+                }
+                
+                return vatType;
+            }
+            catch (Exception ex)
+            {
+                await _loggingService.LogErrorAsync($"Erreur création/récupération type TVA {vatCode}: {ex.Message}", "Sage100Import", ex);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Obtient la description d'un code TVA
+        /// </summary>
+        private static string GetVatDescriptionFromCode(string vatCode)
+        {
+            return vatCode switch
+            {
+                "TVA" => "TVA Standard 18%",
+                "TVAB" => "TVA Réduite 9%",
+                "TVAC" => "TVA Export 0%",
+                "TVAD" => "TVA Spéciale 0%",
+                _ => $"TVA {vatCode}"
+            };
         }
 
         /// <summary>

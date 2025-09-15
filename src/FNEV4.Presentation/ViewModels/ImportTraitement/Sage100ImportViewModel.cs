@@ -1046,6 +1046,27 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 
                 IsProcessing = false;
                 
+                // DÉTECTION DE DOUBLONS INTERNES (dans la même liste d'aperçu)
+                var groupedByKey = allPreviews
+                    .Where(f => f.EstValide) // Seulement les factures valides
+                    .GroupBy(f => new { f.NumeroFacture, f.DateFacture, f.MontantTTC })
+                    .Where(g => g.Count() > 1)
+                    .ToList();
+
+                if (groupedByKey.Any())
+                {
+                    foreach (var group in groupedByKey)
+                    {
+                        var factures = group.ToList();
+                        for (int i = 1; i < factures.Count; i++) // Garder la première, marquer les autres comme doublons
+                        {
+                            factures[i].EstDoublon = true;
+                            factures[i].EstValide = false;
+                            factures[i].Erreurs.Add($"🔄 Doublon interne détecté (facture #{factures[i].NumeroFacture} du {factures[i].DateFacture:dd/MM/yyyy})");
+                        }
+                    }
+                }
+                
                 // Charger les données d'aperçu
                 PreviewFactures.Clear();
                 foreach (var preview in allPreviews)

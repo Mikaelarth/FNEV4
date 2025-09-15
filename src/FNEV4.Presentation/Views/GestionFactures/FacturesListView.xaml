@@ -191,7 +191,7 @@
                             <TextBlock Text="CA du mois" 
                                      Style="{StaticResource MaterialDesignCaptionTextBlock}"
                                      Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                            <TextBlock Text="{Binding ChiffreAffaireMois, StringFormat=C}" 
+                            <TextBlock Text="{Binding ChiffreAffaireMois, StringFormat=N2}" 
                                      Style="{StaticResource MaterialDesignHeadline5TextBlock}"
                                      FontWeight="Bold"
                                      Foreground="{DynamicResource PrimaryHueMidBrush}"/>
@@ -313,7 +313,7 @@
                         
                         <!-- Montant HT -->
                         <DataGridTextColumn Header="💰 HT" 
-                                          Binding="{Binding TotalAmountHT, StringFormat=C}" 
+                                          Binding="{Binding TotalAmountHT, StringFormat=N2}" 
                                           Width="100">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
@@ -324,8 +324,8 @@
                         </DataGridTextColumn>
                         
                         <!-- Montant TTC -->
-                        <DataGridTextColumn Header="💰 TTC" 
-                                          Binding="{Binding TotalAmountTTC, StringFormat=C}" 
+                        <DataGridTextColumn Header="💱 TTC" 
+                                          Binding="{Binding TotalAmountTTC, StringFormat=N2}" 
                                           Width="100">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
@@ -373,7 +373,7 @@
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                         <!-- Voir détails -->
                                         <Button Style="{StaticResource ActionButtonStyle}"
-                                              Command="{Binding DataContext.ViewFactureDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                              Command="{Binding DataContext.ViewFactureCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                               CommandParameter="{Binding}"
                                               ToolTip="Voir les détails">
                                             <materialDesign:PackIcon Kind="Eye" Width="16" Height="16"/>

@@ -22,6 +22,13 @@ namespace FNEV4.Core.Interfaces
         Task<FneInvoice?> GetByIdAsync(string id);
         
         /// <summary>
+        /// Récupère une facture FNE par son ID avec tous les détails (articles, client)
+        /// </summary>
+        /// <param name="id">ID de la facture</param>
+        /// <returns>Facture complète avec tous les détails ou null</returns>
+        Task<FneInvoice?> GetByIdWithDetailsAsync(string id);
+        
+        /// <summary>
         /// Récupère les factures FNE avec filtres
         /// </summary>
         /// <param name="searchText">Texte de recherche</param>

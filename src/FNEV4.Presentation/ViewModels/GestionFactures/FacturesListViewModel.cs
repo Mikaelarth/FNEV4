@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using FNEV4.Core.Entities;
 using FNEV4.Core.Interfaces;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FNEV4.Presentation.ViewModels.GestionFactures
 {
@@ -231,16 +232,46 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         }
         
         [RelayCommand]
-        private void ViewFacture(FneInvoice? facture)
+        private async Task ViewFacture(FneInvoice? facture)
         {
             if (facture == null) return;
             
-            // TODO: Ouvrir la fenêtre de visualisation détaillée
-            MessageBox.Show(
-                $"Visualisation de la facture {facture.InvoiceNumber}\n\nCette fonctionnalité sera bientôt disponible.",
-                "En développement",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            try
+            {
+                _logger.LogInformation("Ouverture des détails pour la facture {InvoiceNumber}", facture.InvoiceNumber);
+                
+                // Recharger la facture avec ses articles et client pour avoir toutes les données
+                var factureComplete = await _invoiceRepository.GetByIdWithDetailsAsync(facture.Id.ToString());
+                
+                if (factureComplete == null)
+                {
+                    MessageBox.Show("Impossible de charger les détails de la facture.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                
+                // Créer et configurer le ViewModel avec un logger null pour simplifier
+                var loggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { });
+                var detailsViewModel = new FactureDetailsViewModel(loggerFactory.CreateLogger<FactureDetailsViewModel>());
+                detailsViewModel.Initialize(factureComplete);
+                
+                // Créer et afficher la fenêtre
+                var detailsWindow = new Views.GestionFactures.FactureDetailsView
+                {
+                    DataContext = detailsViewModel,
+                    Owner = System.Windows.Application.Current.MainWindow
+                };
+                
+                detailsWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur lors de l'ouverture des détails de la facture {InvoiceNumber}", facture.InvoiceNumber);
+                MessageBox.Show(
+                    $"Impossible d'ouvrir les détails de la facture :\n\n{ex.Message}",
+                    "Erreur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
         
         [RelayCommand]
