@@ -11,6 +11,8 @@ using FNEV4.Core.Interfaces;
 using FNEV4.Infrastructure.Data;
 using FNEV4.Infrastructure.Services;
 using FNEV4.Presentation.Views.Maintenance;
+using FNEV4.Presentation.ViewModels.GestionFactures;
+using FNEV4.Presentation.Views.GestionFactures;
 
 namespace FNEV4.Presentation.ViewModels
 {
@@ -135,6 +137,11 @@ namespace FNEV4.Presentation.ViewModels
         private void NavigateToListeFactures()
         {
             CurrentModuleName = "Factures - Liste des factures";
+            
+            // Créer le ViewModel et la vue
+            var facturesViewModel = App.ServiceProvider.GetRequiredService<ViewModels.GestionFactures.FacturesListViewModel>();
+            var facturesView = new Views.GestionFactures.FacturesListView { DataContext = facturesViewModel };
+            CurrentView = facturesView;
         }
 
         [RelayCommand]

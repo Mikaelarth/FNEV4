@@ -206,6 +206,7 @@ namespace FNEV4.Presentation
 
                     // Repositories
                     services.AddScoped<IClientRepository, ClientRepository>();
+                    services.AddScoped<IInvoiceRepository, FneInvoiceRepository>();
 
                     // Use Cases
                     services.AddScoped<ListeClientsUseCase>();
@@ -257,6 +258,9 @@ namespace FNEV4.Presentation
                     services.AddTransient<ListeClientsViewModel>();
                     services.AddTransient<AjoutModificationClientViewModel>();
                     services.AddTransient<ImportClientsViewModel>();
+                    
+                    // ViewModels Gestion Factures
+                    services.AddTransient<FNEV4.Presentation.ViewModels.GestionFactures.FacturesListViewModel>();
                     
                     // ViewModels Import & Traitement
                     services.AddTransient<FNEV4.Presentation.ViewModels.ImportTraitement.ImportFichiersViewModel>();

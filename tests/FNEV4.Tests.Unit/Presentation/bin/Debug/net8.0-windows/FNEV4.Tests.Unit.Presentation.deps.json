@@ -2202,7 +2202,8 @@
           "ClosedXML": "0.102.2",
           "CommunityToolkit.Mvvm": "8.2.2",
           "FNEV4.Core": "1.0.0",
-          "FluentValidation": "11.8.1"
+          "FluentValidation": "11.8.1",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.0"
         },
         "runtime": {
           "FNEV4.Application.dll": {

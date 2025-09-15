@@ -33,7 +33,17 @@ namespace FNEV4.Infrastructure.Data
         public DbSet<Client> Clients { get; set; }
 
         /// <summary>
-        /// Factures FNE principales avec statuts
+        /// Factures d'application (nouvelles)
+        /// </summary>
+        public DbSet<Invoice> Invoices { get; set; }
+
+        /// <summary>
+        /// Lignes de facture d'application
+        /// </summary>
+        public DbSet<InvoiceItem> InvoiceItems { get; set; }
+
+        /// <summary>
+        /// Factures FNE principales avec statuts (ancien système)
         /// </summary>
         public DbSet<FneInvoice> FneInvoices { get; set; }
 
