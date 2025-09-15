@@ -365,28 +365,11 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 // Obtenir le ViewModel via l'injection de dépendance
                 var sage100ViewModel = _serviceProvider.GetRequiredService<Sage100ImportViewModel>();
                 
-                // Créer la vue d'import Sage 100
-                var sage100View = new Views.ImportTraitement.Sage100ImportView()
+                // Créer et configurer la fenêtre d'import Sage 100 avec notre nouvelle interface modale
+                var sage100Window = new Views.ImportTraitement.Sage100ImportWindow(sage100ViewModel)
                 {
-                    DataContext = sage100ViewModel
+                    Owner = System.Windows.Application.Current.MainWindow
                 };
-                
-                // Créer et configurer la fenêtre d'import Sage 100
-                var sage100Window = new Window
-                {
-                    Title = "Import Sage 100 v15 - Factures Exceptionnelles",
-                    Width = 1400,
-                    Height = 900,
-                    MinWidth = 1200,
-                    MinHeight = 800,
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
-                    WindowState = WindowState.Normal,
-                    ResizeMode = ResizeMode.CanResize,
-                    Content = sage100View
-                };
-
-                // Configurer l'icône et le style
-                sage100Window.Icon = System.Windows.Application.Current.MainWindow?.Icon;
                 
                 // Afficher la fenêtre de manière modale
                 var dialogResult = sage100Window.ShowDialog();

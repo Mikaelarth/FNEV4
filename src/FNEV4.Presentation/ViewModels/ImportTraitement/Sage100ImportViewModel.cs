@@ -96,6 +96,22 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         [ObservableProperty]
         private int _doublonsFiles = 0;
 
+        // Propriétés pour la pagination virtuelle
+        [ObservableProperty]
+        private int _currentPage = 1;
+
+        [ObservableProperty]
+        private int _itemsPerPage = 1000; // Afficher max 1000 factures à la fois
+
+        [ObservableProperty]
+        private int _totalPages = 1;
+
+        [ObservableProperty]
+        private string _paginationInfo = "Page 1 de 1";
+
+        // Propriété pour afficher/masquer les contrôles de pagination
+        public bool HasMultiplePages => TotalPages > 1;
+
         public ObservableCollection<Sage100FacturePreview> PreviewFactures { get; } = new();
         public ObservableCollection<Sage100FactureImportee> ImportedFactures { get; } = new();
 
@@ -116,6 +132,7 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
 
         // Propriétés pour la recherche et le filtrage
         private string _searchText = string.Empty;
+        private readonly System.Timers.Timer _searchTimer;
         public string SearchText
         {
             get => _searchText;
@@ -123,7 +140,9 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             {
                 if (SetProperty(ref _searchText, value))
                 {
-                    PreviewFacturesView?.Refresh();
+                    // Débouncer la recherche pour éviter les refresh trop fréquents
+                    _searchTimer?.Stop();
+                    _searchTimer?.Start();
                 }
             }
         }
@@ -136,7 +155,8 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             {
                 if (SetProperty(ref _filterEtat, value))
                 {
-                    PreviewFacturesView?.Refresh();
+                    // Refresh asynchrone pour éviter le blocage UI
+                    System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => PreviewFacturesView?.Refresh()));
                 }
             }
         }
@@ -149,7 +169,8 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             {
                 if (SetProperty(ref _filterPaiement, value))
                 {
-                    PreviewFacturesView?.Refresh();
+                    // Refresh asynchrone pour éviter le blocage UI
+                    System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => PreviewFacturesView?.Refresh()));
                 }
             }
         }
@@ -183,6 +204,17 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
             _pathService = pathService;
             _context = context;
             _loggingService = loggingService;
+            
+            // Initialiser le timer de recherche pour débouncer les refresh
+            _searchTimer = new System.Timers.Timer(300); // 300ms délai
+            _searchTimer.Elapsed += (s, e) =>
+            {
+                _searchTimer.Stop();
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    PreviewFacturesView?.Refresh();
+                });
+            };
         }
 
         #endregion
@@ -219,6 +251,58 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                                   MessageBoxImage.Error);
                 }
             }
+        }
+
+        /// <summary>
+        /// Commande pour aller à la page précédente
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanGoToPreviousPage))]
+        private void PreviousPage()
+        {
+            if (CurrentPage > 1)
+            {
+                CurrentPage--;
+                UpdatePaginationInfo();
+                RefreshView();
+            }
+        }
+
+        /// <summary>
+        /// Commande pour aller à la page suivante
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanGoToNextPage))]
+        private void NextPage()
+        {
+            if (CurrentPage < TotalPages)
+            {
+                CurrentPage++;
+                UpdatePaginationInfo();
+                RefreshView();
+            }
+        }
+
+        /// <summary>
+        /// Peut aller à la page précédente
+        /// </summary>
+        public bool CanGoToPreviousPage => CurrentPage > 1;
+
+        /// <summary>
+        /// Peut aller à la page suivante
+        /// </summary>
+        public bool CanGoToNextPage => CurrentPage < TotalPages;
+
+        /// <summary>
+        /// Rafraîchit la vue de manière optimisée
+        /// </summary>
+        private void RefreshView()
+        {
+            Task.Run(() =>
+            {
+                System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    PreviewFacturesView?.Refresh();
+                }));
+            });
         }
 
         #endregion
@@ -308,53 +392,17 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
                 
                 if (_lastValidation.IsValid)
                 {
-                    // Mise à jour du message pour la génération de l'aperçu
-                    ValidationMessage = "Génération de l'aperçu...";
-                    ValidationDetails = "Analyse des factures et validation des données";
+                    // Mise à jour du message de succès
+                    ValidationMessage = "Validation réussie";
+                    ValidationDetails = "Le fichier est valide - Ouverture de l'aperçu...";
+                    ValidationIcon = "CheckCircle";
+                    ValidationColor = new SolidColorBrush(Colors.Green);
                     
-                    // Force le rafraîchissement du contexte EF pour éviter les problèmes de cache après suppression directe en base
-                    _sage100ImportService.RefreshContext();
+                    // Petit délai pour permettre à l'utilisateur de voir le message de succès
+                    await Task.Delay(500);
                     
-                    // Générer l'aperçu
-                    var preview = await _sage100ImportService.PreviewFileAsync(SelectedFilePath);
-                    
-                    PreviewFactures.Clear();
-                    foreach (var facture in preview.Apercu)
-                    {
-                        PreviewFactures.Add(facture);
-                    }
-                    
-                    // Mettre à jour les statistiques
-                    UpdateStatistics();
-                    
-                    // Mettre à jour la vue filtrée
-                    PreviewFacturesView?.Refresh();
-                    
-                    HasPreviewData = PreviewFactures.Count > 0;
-                    
-                    if (HasPreviewData)
-                    {
-                        var validFactures = PreviewFactures.Count(f => f.EstValide);
-                        var invalidFactures = PreviewFactures.Count - validFactures;
-                        
-                        // Message de succès détaillé
-                        ValidationMessage = "Validation terminée";
-                        ValidationDetails = $"✅ {validFactures} facture(s) valide(s)";
-                        if (invalidFactures > 0)
-                        {
-                            ValidationDetails += $" | ⚠️ {invalidFactures} facture(s) avec erreurs";
-                        }
-                        ValidationDetails += $" | 📄 Total: {PreviewFactures.Count} facture(s)";
-                        ValidationIcon = "CheckCircle";
-                        ValidationColor = new SolidColorBrush(Colors.Green);
-                    }
-                    else
-                    {
-                        ValidationMessage = "Aucune facture détectée";
-                        ValidationDetails = "Le fichier ne contient aucune donnée de facture valide";
-                        ValidationIcon = "AlertCircle";
-                        ValidationColor = new SolidColorBrush(Colors.Orange);
-                    }
+                    // Lancer automatiquement l'aperçu dans le dialog externe
+                    await OpenPreviewDialog();
                 }
                 
                 HasValidationResult = true;
@@ -403,6 +451,60 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         [RelayCommand]
         private async Task Import()
         {
+            // Pour l'import manuel, on ouvre d'abord l'aperçu dans un dialog externe
+            if (string.IsNullOrEmpty(SelectedFilePath))
+            {
+                MessageBox.Show("Veuillez d'abord sélectionner un fichier Excel Sage 100.", "Fichier requis", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            if (!CanExecuteImport)
+            {
+                MessageBox.Show("Impossible d'effectuer l'import. Vérifiez que le fichier est valide.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Ouvrir l'aperçu en dialog externe
+            await OpenPreviewDialog();
+        }
+
+        private async Task OpenPreviewDialog()
+        {
+            try
+            {
+                IsProcessing = true;
+                
+                // Traitement du fichier pour générer l'aperçu
+                var previewResult = await _sage100ImportService.PreviewFileAsync(SelectedFilePath);
+                
+                // Création de la fenêtre d'aperçu
+                var previewWindow = new Views.ImportTraitement.Sage100PreviewWindow();
+                var previewViewModel = new Sage100PreviewViewModel(this, SelectedFilePath);
+                
+                // Chargement des données d'aperçu
+                previewViewModel.LoadPreviewData(previewResult);
+                
+                // Configuration de la fenêtre
+                previewWindow.DataContext = previewViewModel;
+                previewWindow.Owner = System.Windows.Application.Current.MainWindow;
+                
+                // Affichage modal
+                previewWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de la génération de l'aperçu : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsProcessing = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task DirectImport()
+        {
+            // Ancienne méthode d'import direct (pour usage interne)
             System.Diagnostics.Debug.WriteLine("🚨 DÉBUT DE L'IMPORT - Les fichiers vont être déplacés !");
             
             if (!CanExecuteImport)
@@ -1100,10 +1202,47 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
 
         private void UpdateStatistics()
         {
-            TotalFiles = PreviewFactures.Count;
-            ValidFiles = PreviewFactures.Count(f => f.EstValide && !f.EstDoublon);
-            InvalidFiles = PreviewFactures.Count(f => !f.EstValide || f.Erreurs.Any());
-            DoublonsFiles = PreviewFactures.Count(f => f.EstDoublon);
+            // Optimisation : calcul en une seule passe pour gros volumes
+            var totalCount = 0;
+            var validCount = 0;
+            var invalidCount = 0;
+            var doublonCount = 0;
+
+            foreach (var facture in PreviewFactures)
+            {
+                totalCount++;
+                
+                if (facture.EstDoublon)
+                {
+                    doublonCount++;
+                }
+                else if (facture.EstValide && !facture.Erreurs.Any())
+                {
+                    validCount++;
+                }
+                else
+                {
+                    invalidCount++;
+                }
+            }
+
+            TotalFiles = totalCount;
+            ValidFiles = validCount;
+            InvalidFiles = invalidCount;
+            DoublonsFiles = doublonCount;
+
+            // Mettre à jour les informations de pagination
+            UpdatePaginationInfo();
+        }
+
+        private void UpdatePaginationInfo()
+        {
+            TotalPages = Math.Max(1, (int)Math.Ceiling((double)TotalFiles / ItemsPerPage));
+            CurrentPage = Math.Min(CurrentPage, TotalPages);
+            PaginationInfo = $"Page {CurrentPage} de {TotalPages} ({TotalFiles} factures)";
+            
+            // Notifier le changement de HasMultiplePages
+            OnPropertyChanged(nameof(HasMultiplePages));
         }
 
         #endregion
@@ -1197,48 +1336,50 @@ namespace FNEV4.Presentation.ViewModels.ImportTraitement
         {
             if (item is not Sage100FacturePreview facture) return false;
 
-            // Filtre par recherche
-            if (!string.IsNullOrWhiteSpace(SearchText))
-            {
-                var searchLower = SearchText.ToLower();
-                if (!facture.NumeroFacture.ToLower().Contains(searchLower) &&
-                    !facture.NomClient.ToLower().Contains(searchLower) &&
-                    !facture.MontantTTC.ToString().Contains(searchLower) &&
-                    !facture.MoyenPaiement.ToLower().Contains(searchLower))
-                {
-                    return false;
-                }
-            }
+            // Optimisation : éviter les calculs si aucun filtre n'est actif
+            var hasStateFilter = FilterEtat != "All";
+            var hasPaymentFilter = FilterPaiement != "All";
+            var hasSearchText = !string.IsNullOrWhiteSpace(SearchText);
 
-            // Filtre par état
-            if (FilterEtat != "All")
+            if (!hasStateFilter && !hasPaymentFilter && !hasSearchText)
+                return true;
+
+            // Filtre par état (plus rapide en premier)
+            if (hasStateFilter)
             {
+                var isValid = facture.EstValide;
                 switch (FilterEtat)
                 {
-                    case "Valid":
-                        if (!facture.EstValide) return false;
-                        break;
-                    case "Error":
-                        if (facture.EstValide) return false;
-                        break;
+                    case "Valid" when !isValid:
+                    case "Error" when isValid:
+                        return false;
                 }
             }
 
-            // Filtre par paiement
-            if (FilterPaiement != "All")
+            // Filtre par paiement (optimisé avec cache)
+            if (hasPaymentFilter)
             {
-                switch (FilterPaiement)
+                var moyenLower = facture.MoyenPaiement?.ToLowerInvariant() ?? "";
+                var result = FilterPaiement switch
                 {
-                    case "cash":
-                        if (!facture.MoyenPaiement.ToLower().Contains("cash")) return false;
-                        break;
-                    case "default":
-                        if (!facture.MoyenPaiement.ToLower().Contains("défaut")) return false;
-                        break;
-                    case "missing":
-                        if (!facture.MoyenPaiement.ToLower().Contains("inexistant")) return false;
-                        break;
-                }
+                    "cash" => moyenLower.Contains("cash"),
+                    "default" => moyenLower.Contains("défaut"),
+                    "missing" => moyenLower.Contains("inexistant"),
+                    _ => true
+                };
+                if (!result) return false;
+            }
+
+            // Filtre par recherche (optimisé pour gros volumes)
+            if (hasSearchText)
+            {
+                var searchLower = SearchText.ToLowerInvariant();
+                
+                // Recherche optimisée : vérifier d'abord les champs les plus probables
+                return (facture.NumeroFacture?.ToLowerInvariant().Contains(searchLower) == true) ||
+                       (facture.NomClient?.ToLowerInvariant().Contains(searchLower) == true) ||
+                       (facture.CodeClient?.ToLowerInvariant().Contains(searchLower) == true) ||
+                       facture.MontantTTC.ToString("F2").Contains(searchLower);
             }
 
             return true;
