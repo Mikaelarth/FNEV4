@@ -83,6 +83,56 @@ namespace FNEV4.Core.Interfaces.Services.Fne
         /// </summary>
         /// <returns>Résultat du test de santé</returns>
         Task<FneSystemHealthResult> PerformHealthCheckAsync();
+
+        /// <summary>
+        /// Génère le QR-Code à partir du token de vérification
+        /// </summary>
+        /// <param name="verificationToken">Token de vérification FNE</param>
+        /// <returns>Données du QR-Code en base64</returns>
+        Task<string> GenerateQrCodeAsync(string verificationToken);
+
+        /// <summary>
+        /// Obtient l'URL de téléchargement/vérification de la facture certifiée
+        /// </summary>
+        /// <param name="verificationToken">Token de vérification FNE</param>
+        /// <returns>URL complète de vérification</returns>
+        string GetVerificationUrl(string verificationToken);
+
+        /// <summary>
+        /// Valide un token de vérification FNE
+        /// </summary>
+        /// <param name="verificationToken">Token à valider</param>
+        /// <returns>Résultat de validation</returns>
+        Task<FneTokenValidationResult> ValidateVerificationTokenAsync(string verificationToken);
+
+        /// <summary>
+        /// Télécharge la facture certifiée depuis la DGI
+        /// </summary>
+        /// <param name="verificationToken">Token de vérification FNE</param>
+        /// <returns>Contenu PDF de la facture certifiée</returns>
+        Task<FneCertifiedInvoiceDownloadResult> DownloadCertifiedInvoiceAsync(string verificationToken);
+
+        /// <summary>
+        /// Génère un PDF de facture avec QR-code intégré
+        /// </summary>
+        /// <param name="invoiceId">Identifiant de la facture</param>
+        /// <returns>Résultat avec le PDF et les détails</returns>
+        Task<FneCertifiedInvoiceDownloadResult> GenerateInvoicePdfWithQrCodeAsync(string invoiceId);
+
+        /// <summary>
+        /// Génère une facture PDF avec QR-Code intégré (méthode legacy)
+        /// </summary>
+        /// <param name="invoice">Facture à convertir</param>
+        /// <param name="certificationResult">Résultat de certification</param>
+        /// <returns>PDF de la facture avec QR-Code</returns>
+        Task<byte[]> GenerateInvoicePdfWithQrCodeAsync(FneInvoice invoice, FneCertificationResult certificationResult);
+
+        /// <summary>
+        /// Obtient les informations de vérification publique d'une facture
+        /// </summary>
+        /// <param name="verificationToken">Token de vérification</param>
+        /// <returns>Informations publiques de vérification</returns>
+        Task<FnePublicVerificationResult> GetPublicVerificationInfoAsync(string verificationToken);
     }
 
     #region Classes de résultat
@@ -96,18 +146,52 @@ namespace FNEV4.Core.Interfaces.Services.Fne
         public string ErrorMessage { get; set; } = string.Empty;
         public DateTime ProcessedAt { get; set; } = DateTime.UtcNow;
         
-        // Données retournées par l'API FNE
-        public string? FneReference { get; set; } // Numéro facture FNE
-        public string? VerificationToken { get; set; } // Token QR Code
-        public string? NccEntreprise { get; set; }
-        public int StickerBalance { get; set; }
-        public string? InvoiceId { get; set; } // ID facture pour avoir/annulation
+        // Données retournées par l'API FNE selon FNE-procedureapi.md
+        public string? FneReference { get; set; }        // Numéro facture FNE
+        public string? VerificationToken { get; set; }   // Token QR Code
+        public string? NccEntreprise { get; set; }       // Identifiant contribuable
+        public int StickerBalance { get; set; }         // Balance sticker facture
+        public string? InvoiceId { get; set; }          // ID facture pour avoir/annulation
+        
+        // Nouvelles données importantes selon documentation
+        public string? QrCodeData { get; set; }         // Données du QR-Code à générer
+        public string? DownloadUrl { get; set; }        // URL de téléchargement/vérification
+        public bool HasWarning { get; set; }            // Indicateur d'alerte
+        public string? WarningMessage { get; set; }     // Message d'alerte détaillé
+        
+        // Détails complets de la facture certifiée
+        public CertifiedInvoiceInfo? CertifiedInvoiceDetails { get; set; }
         
         // Gestion d'erreurs
         public List<string> Errors { get; set; } = new();
         public string? ErrorCode { get; set; }
         public int HttpStatusCode { get; set; }
         public long ProcessingTimeMs { get; set; }
+    }
+
+    /// <summary>
+    /// Informations détaillées de la facture certifiée
+    /// </summary>
+    public class CertifiedInvoiceInfo
+    {
+        public string? Id { get; set; }                  // ID pour les avoirs/annulations
+        public string? ParentId { get; set; }           // ID facture parent (pour avoirs)
+        public string? ParentReference { get; set; }    // Référence facture parent
+        public string? Reference { get; set; }          // Numéro facture FNE
+        public string? Type { get; set; }               // Type (invoice, refund, etc.)
+        public string? Subtype { get; set; }            // Sous-type (normal, exceptional)
+        public DateTime CertificationDate { get; set; } // Date de certification
+        public string? PaymentMethod { get; set; }      // Méthode de paiement
+        public decimal Amount { get; set; }             // Montant HT
+        public decimal VatAmount { get; set; }          // Montant TVA
+        public decimal FiscalStamp { get; set; }        // Timbre fiscal
+        public decimal Discount { get; set; }           // Remise
+        public string? ClientNcc { get; set; }          // NCC du client
+        public string? ClientName { get; set; }         // Nom du client
+        public string? ClientPhone { get; set; }        // Téléphone client
+        public string? ClientEmail { get; set; }        // Email client
+        public string? PointOfSale { get; set; }        // Point de vente
+        public string? Establishment { get; set; }      // Établissement
     }
 
     /// <summary>
@@ -192,6 +276,59 @@ namespace FNEV4.Core.Interfaces.Services.Fne
         
         public List<string> HealthIssues { get; set; } = new();
         public Dictionary<string, object> Metrics { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Résultat de validation d'un token FNE
+    /// </summary>
+    public class FneTokenValidationResult
+    {
+        public bool IsValid { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public string? InvoiceReference { get; set; }
+        public DateTime? CertificationDate { get; set; }
+        public string? CompanyNcc { get; set; }
+        public decimal? InvoiceAmount { get; set; }
+        public string? TokenUrl { get; set; }
+        public List<string> ValidationErrors { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Résultat de téléchargement de facture certifiée
+    /// </summary>
+    public class FneCertifiedInvoiceDownloadResult
+    {
+        public bool IsSuccess { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public byte[]? PdfContent { get; set; }
+        public string? FileName { get; set; }
+        public string? ContentType { get; set; } = "application/pdf";
+        public long FileSizeBytes { get; set; }
+        public DateTime DownloadedAt { get; set; } = DateTime.UtcNow;
+        public string? InvoiceReference { get; set; }
+        public string? VerificationUrl { get; set; }
+        public List<string> Errors { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Informations publiques de vérification d'une facture
+    /// </summary>
+    public class FnePublicVerificationResult
+    {
+        public bool IsValid { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public string? InvoiceReference { get; set; }
+        public DateTime? CertificationDate { get; set; }
+        public string? CompanyName { get; set; }
+        public string? CompanyNcc { get; set; }
+        public decimal? InvoiceAmount { get; set; }
+        public decimal? VatAmount { get; set; }
+        public string? PaymentMethod { get; set; }
+        public string? ClientName { get; set; }
+        public string? Status { get; set; } // "Valid", "Revoked", "Expired"
+        public string? QrCodeData { get; set; } // QR-Code pour affichage
+        public DateTime? ExpiryDate { get; set; }
+        public List<string> ValidationDetails { get; set; } = new();
     }
 
     #endregion

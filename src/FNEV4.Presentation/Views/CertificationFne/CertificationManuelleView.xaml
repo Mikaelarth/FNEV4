@@ -108,6 +108,59 @@
                                 </StackPanel>
                             </Button.Content>
                         </Button>
+
+                        <!-- Boutons de téléchargement -->
+                        <Button Command="{Binding DownloadCertifiedInvoiceCommand}"
+                                CommandParameter="{Binding SelectedInvoices[0]}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Margin="8,0"
+                                IsEnabled="{Binding HasSingleCertifiedInvoiceSelected}">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Download" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBlock Text="Télécharger PDF" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+
+                        <Button Command="{Binding GenerateInvoicePdfWithQrCodeCommand}"
+                                CommandParameter="{Binding SelectedInvoices[0]}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Margin="8,0"
+                                IsEnabled="{Binding HasSingleCertifiedInvoiceSelected}">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="QrcodeScan" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBlock Text="PDF + QR-code" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+
+                        <Button Command="{Binding ShowVerificationUrlCommand}"
+                                CommandParameter="{Binding SelectedInvoices[0]}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Margin="8,0"
+                                IsEnabled="{Binding HasSingleCertifiedInvoiceSelected}">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Link" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBlock Text="URL Vérification" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+
+                        <Button Command="{Binding GenerateQrCodeCommand}"
+                                CommandParameter="{Binding SelectedInvoices[0]}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Margin="8,0"
+                                IsEnabled="{Binding HasSingleCertifiedInvoiceSelected}">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Qrcode" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBlock Text="QR-code" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
                     </StackPanel>
                 </Grid>
 

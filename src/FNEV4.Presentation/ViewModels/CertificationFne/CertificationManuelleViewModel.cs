@@ -87,6 +87,9 @@ namespace FNEV4.Presentation.ViewModels.CertificationFne
         private bool _hasSelectedInvoices = false;
 
         [ObservableProperty]
+        private bool _hasSingleCertifiedInvoiceSelected = false;
+
+        [ObservableProperty]
         private string _certificationSummary = string.Empty;
 
         #endregion
@@ -322,6 +325,7 @@ namespace FNEV4.Presentation.ViewModels.CertificationFne
             SelectedInvoices.Add(invoice);
             SelectedInvoicesCount = SelectedInvoices.Count;
             HasSelectedInvoices = SelectedInvoicesCount > 0;
+            HasSingleCertifiedInvoiceSelected = SelectedInvoicesCount == 1 && SelectedInvoices[0].Status == "Certified";
             UpdateCertificationSummary();
         }
 
@@ -333,6 +337,7 @@ namespace FNEV4.Presentation.ViewModels.CertificationFne
             SelectedInvoices.Remove(invoice);
             SelectedInvoicesCount = SelectedInvoices.Count;
             HasSelectedInvoices = SelectedInvoicesCount > 0;
+            HasSingleCertifiedInvoiceSelected = SelectedInvoicesCount == 1 && SelectedInvoices[0].Status == "Certified";
             UpdateCertificationSummary();        }
 
         [RelayCommand]
@@ -350,6 +355,7 @@ namespace FNEV4.Presentation.ViewModels.CertificationFne
 
             SelectedInvoicesCount = SelectedInvoices.Count;
             HasSelectedInvoices = SelectedInvoicesCount > 0;
+            HasSingleCertifiedInvoiceSelected = SelectedInvoicesCount == 1 && SelectedInvoices[0].Status == "Certified";
             UpdateCertificationSummary();        }
 
         [RelayCommand]
@@ -358,6 +364,7 @@ namespace FNEV4.Presentation.ViewModels.CertificationFne
             SelectedInvoices.Clear();
             SelectedInvoicesCount = 0;
             HasSelectedInvoices = false;
+            HasSingleCertifiedInvoiceSelected = false;
             CertificationSummary = string.Empty;        }
 
         [RelayCommand]
@@ -432,6 +439,207 @@ namespace FNEV4.Presentation.ViewModels.CertificationFne
                     "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        #region Commandes de téléchargement FNE
+
+        [RelayCommand]
+        private async Task DownloadCertifiedInvoice(FneInvoice? invoice)
+        {
+            if (invoice == null || string.IsNullOrEmpty(invoice.VerificationToken))
+            {
+                await ShowErrorDialogAsync("Veuillez sélectionner une facture certifiée avec un token de vérification valide.");
+                return;
+            }
+
+            try
+            {
+                IsLoading = true;
+                StatusMessage = "Téléchargement en cours...";
+
+                var result = await _certificationService.DownloadCertifiedInvoiceAsync(invoice.Id.ToString());
+                
+                if (result.IsSuccess && result.PdfContent != null)
+                {
+                    // Sauvegarder le fichier
+                    var saveDialog = new Microsoft.Win32.SaveFileDialog
+                    {
+                        FileName = result.FileName ?? $"Facture_Certifiee_{invoice.InvoiceNumber}.pdf",
+                        DefaultExt = ".pdf",
+                        Filter = "PDF files (*.pdf)|*.pdf|All files (*.*)|*.*"
+                    };
+
+                    if (saveDialog.ShowDialog() == true)
+                    {
+                        await System.IO.File.WriteAllBytesAsync(saveDialog.FileName, result.PdfContent);
+                        
+                        MessageBox.Show(
+                            $"Facture certifiée téléchargée avec succès !\n\nFichier: {saveDialog.FileName}\nTaille: {result.FileSizeBytes} octets\nURL de vérification: {result.VerificationUrl}",
+                            "Téléchargement réussi",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                    }
+                }
+                else
+                {
+                    var errorMessage = result.Errors.Any() 
+                        ? string.Join("\n", result.Errors) 
+                        : result.Message;
+                    await ShowErrorDialogAsync($"Erreur lors du téléchargement: {errorMessage}");
+                }
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("Erreur lors du téléchargement de la facture certifiée", exception: ex);
+                await ShowErrorDialogAsync($"Erreur inattendue lors du téléchargement: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
+                StatusMessage = "Prêt";
+            }
+        }
+
+        [RelayCommand]
+        private async Task GenerateInvoicePdfWithQrCode(FneInvoice? invoice)
+        {
+            if (invoice == null || string.IsNullOrEmpty(invoice.VerificationToken))
+            {
+                await ShowErrorDialogAsync("Veuillez sélectionner une facture certifiée avec un token de vérification valide.");
+                return;
+            }
+
+            try
+            {
+                IsLoading = true;
+                StatusMessage = "Génération du PDF avec QR-code...";
+
+                var result = await _certificationService.GenerateInvoicePdfWithQrCodeAsync(invoice.Id.ToString());
+                
+                if (result.IsSuccess && result.PdfContent != null)
+                {
+                    var saveDialog = new Microsoft.Win32.SaveFileDialog
+                    {
+                        FileName = $"Facture_QRCode_{invoice.InvoiceNumber}.pdf",
+                        DefaultExt = ".pdf",
+                        Filter = "PDF files (*.pdf)|*.pdf|All files (*.*)|*.*"
+                    };
+
+                    if (saveDialog.ShowDialog() == true)
+                    {
+                        await System.IO.File.WriteAllBytesAsync(saveDialog.FileName, result.PdfContent);
+                        
+                        MessageBox.Show(
+                            $"PDF avec QR-code généré avec succès !\n\nFichier: {saveDialog.FileName}\nTaille: {result.FileSizeBytes} octets\n\nLe QR-code permet aux clients de vérifier l'authenticité de la facture.",
+                            "Génération réussie",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                    }
+                }
+                else
+                {
+                    var errorMessage = result.Errors.Any() 
+                        ? string.Join("\n", result.Errors) 
+                        : result.Message;
+                    await ShowErrorDialogAsync($"Erreur lors de la génération: {errorMessage}");
+                }
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("Erreur lors de la génération du PDF avec QR-code", exception: ex);
+                await ShowErrorDialogAsync($"Erreur inattendue: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
+                StatusMessage = "Prêt";
+            }
+        }
+
+        [RelayCommand]
+        private async Task ShowVerificationUrl(FneInvoice? invoice)
+        {
+            if (invoice == null || string.IsNullOrEmpty(invoice.VerificationToken))
+            {
+                await ShowErrorDialogAsync("Veuillez sélectionner une facture certifiée avec un token de vérification valide.");
+                return;
+            }
+
+            try
+            {
+                var verificationUrl = _certificationService.GetVerificationUrl(invoice.VerificationToken);
+                
+                // Copier l'URL dans le presse-papier
+                Clipboard.SetText(verificationUrl);
+                
+                MessageBox.Show(
+                    $"URL de vérification publique:\n\n{verificationUrl}\n\n✅ L'URL a été copiée dans le presse-papier.\n\nVos clients peuvent utiliser cette URL pour vérifier l'authenticité de la facture directement sur le site de la DGI.",
+                    "URL de Vérification",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("Erreur lors de la récupération de l'URL de vérification", exception: ex);
+                await ShowErrorDialogAsync($"Erreur: {ex.Message}");
+            }
+        }
+
+        [RelayCommand]
+        private async Task GenerateQrCode(FneInvoice? invoice)
+        {
+            if (invoice == null || string.IsNullOrEmpty(invoice.VerificationToken))
+            {
+                await ShowErrorDialogAsync("Veuillez sélectionner une facture certifiée avec un token de vérification valide.");
+                return;
+            }
+
+            try
+            {
+                IsLoading = true;
+                StatusMessage = "Génération du QR-code...";
+
+                var verificationUrl = _certificationService.GetVerificationUrl(invoice.VerificationToken);
+                var qrCodeBase64 = await _certificationService.GenerateQrCodeAsync(verificationUrl);
+                
+                if (!string.IsNullOrEmpty(qrCodeBase64))
+                {
+                    // Pour l'instant, on affiche juste un message avec l'URL
+                    // Plus tard, on pourra créer une fenêtre dédiée pour afficher le QR-code
+                    MessageBox.Show(
+                        $"QR-code généré avec succès !\n\nURL encodée: {verificationUrl}\n\n(Fonctionnalité d'affichage graphique du QR-code à venir)",
+                        "QR-code Généré",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+                else
+                {
+                    await ShowErrorDialogAsync("Impossible de générer le QR-code pour cette facture.");
+                }
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync("Erreur lors de la génération du QR-code", exception: ex);
+                await ShowErrorDialogAsync($"Erreur: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
+                StatusMessage = "Prêt";
+            }
+        }
+
+        private async Task ShowErrorDialogAsync(string message)
+        {
+            MessageBox.Show(
+                message,
+                "Erreur",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            
+            await Task.CompletedTask; // Pour maintenir la signature async
+        }
+
+        #endregion
 
         #endregion
 

@@ -914,3 +914,4 @@ D:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\FNEV4.Presen
 D:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\ref\FNEV4.Presentation.dll
 D:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\CertificationFne\CertificationResultDialog.baml
 D:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\CertificationFne\CertificationResultDialog.g.cs
+D:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\bin\Debug\net8.0-windows\QRCoder.dll

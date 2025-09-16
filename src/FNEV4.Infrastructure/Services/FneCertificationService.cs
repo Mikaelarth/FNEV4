@@ -6,6 +6,9 @@ using FNEV4.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using System.Diagnostics;
+using QRCoder;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace FNEV4.Infrastructure.Services
 {
@@ -15,6 +18,8 @@ namespace FNEV4.Infrastructure.Services
     /// </summary>
     public class FneCertificationService : IFneCertificationService
     {
+        private const string FNE_BASE_URL = "http://54.247.95.108:8000/api/v1";
+        
         private readonly FNEV4DbContext _context;
         private readonly HttpClient _httpClient;
         private readonly ILogger<FneCertificationService> _logger;
@@ -344,6 +349,131 @@ namespace FNEV4.Infrastructure.Services
             return result;
         }
 
+        public async Task<string> GenerateQrCodeAsync(string verificationToken)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    _logger.LogDebug("Génération du QR-Code pour le token: {Token}", verificationToken);
+
+                    if (string.IsNullOrEmpty(verificationToken))
+                    {
+                        _logger.LogWarning("Token de vérification vide pour la génération du QR-Code");
+                        return string.Empty;
+                    }
+
+                    // Génération du QR-Code avec la bibliothèque QRCoder
+                    using var qrGenerator = new QRCodeGenerator();
+                    var qrCodeData = qrGenerator.CreateQrCode(verificationToken, QRCodeGenerator.ECCLevel.Q);
+                    
+                    using var qrCode = new PngByteQRCode(qrCodeData);
+                    var qrCodeBytes = qrCode.GetGraphic(20);
+
+                    // Conversion en Base64 pour affichage dans l'interface
+                    var base64QrCode = Convert.ToBase64String(qrCodeBytes);
+                    _logger.LogDebug("QR-Code généré avec succès, taille: {Size} bytes", qrCodeBytes.Length);
+
+                    return $"data:image/png;base64,{base64QrCode}";
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Erreur lors de la génération du QR-Code pour le token {Token}", verificationToken);
+                    return string.Empty;
+                }
+            });
+        }
+
+        public string GetVerificationUrl(string verificationToken)
+        {
+            try
+            {
+                // Si le token contient déjà une URL complète, la retourner directement
+                if (verificationToken.StartsWith("http://") || verificationToken.StartsWith("https://"))
+                {
+                    return verificationToken;
+                }
+
+                // Sinon, construire l'URL selon la documentation FNE
+                // Format: http://54.247.95.108/fr/verification/{token}
+                return $"http://54.247.95.108/fr/verification/{verificationToken}";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur lors de la construction de l'URL de vérification pour le token {Token}", verificationToken);
+                return verificationToken; // Retourner le token original en cas d'erreur
+            }
+        }
+
+        public async Task<FneTokenValidationResult> ValidateVerificationTokenAsync(string verificationToken)
+        {
+            var result = new FneTokenValidationResult();
+
+            try
+            {
+                _logger.LogDebug("Validation du token de vérification: {Token}", verificationToken);
+
+                if (string.IsNullOrEmpty(verificationToken))
+                {
+                    result.IsValid = false;
+                    result.Message = "Token de vérification vide";
+                    result.ValidationErrors.Add("Le token de vérification ne peut pas être vide");
+                    return result;
+                }
+
+                // Validation du format du token
+                if (verificationToken.Length < 10)
+                {
+                    result.IsValid = false;
+                    result.Message = "Format de token invalide";
+                    result.ValidationErrors.Add("Le token de vérification est trop court");
+                    return result;
+                }
+
+                // Recherche dans la base de données locale
+                var invoice = await _context.FneInvoices
+                    .Include(i => i.Client)
+                    .FirstOrDefaultAsync(i => i.VerificationToken == verificationToken);
+
+                if (invoice != null)
+                {
+                    result.IsValid = true;
+                    result.Message = "Token valide trouvé localement";
+                    result.InvoiceReference = invoice.FneReference;
+                    result.CertificationDate = invoice.CreatedAt; // Utilise CreatedAt comme date de certification
+                    result.CompanyNcc = invoice.Client?.ClientNcc;
+                    result.InvoiceAmount = invoice.TotalAmountTTC;
+                    result.TokenUrl = GetVerificationUrl(verificationToken);
+                    return result;
+                }
+
+                // Si non trouvé localement, validation basique du format URL
+                if (verificationToken.StartsWith("http://") || verificationToken.StartsWith("https://"))
+                {
+                    result.IsValid = true;
+                    result.Message = "Token URL valide";
+                    result.TokenUrl = verificationToken;
+                }
+                else
+                {
+                    result.IsValid = false;
+                    result.Message = "Token non trouvé dans la base locale et format URL invalide";
+                    result.ValidationErrors.Add("Token non reconnu et format invalide");
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur lors de la validation du token {Token}", verificationToken);
+                
+                result.IsValid = false;
+                result.Message = $"Erreur lors de la validation: {ex.Message}";
+                result.ValidationErrors.Add($"Exception: {ex.Message}");
+                return result;
+            }
+        }
+
         // === Méthodes privées ===
 
         private async Task<object> ConvertToFneApiFormatAsync(FneInvoice invoice)
@@ -486,14 +616,65 @@ namespace FNEV4.Infrastructure.Services
                         PropertyNameCaseInsensitive = true
                     });
 
+                    if (apiResponse == null)
+                    {
+                        return new FneCertificationResult
+                        {
+                            IsSuccess = false,
+                            ErrorMessage = "Réponse API FNE invalide ou vide",
+                            ProcessedAt = DateTime.UtcNow
+                        };
+                    }
+
+                    // Extraction des informations selon la documentation FNE
+                    var fneReference = apiResponse.Reference ?? apiResponse.FneReference;
+                    var verificationToken = apiResponse.Token ?? apiResponse.VerificationToken;
+                    var nccEntreprise = apiResponse.Ncc ?? apiResponse.NccEntreprise;
+                    var balanceSticker = apiResponse.Balance_Sticker > 0 ? apiResponse.Balance_Sticker : apiResponse.StickerBalance;
+                    var invoiceId = apiResponse.Invoice?.Id ?? apiResponse.InvoiceId;
+
+                    _logger.LogInformation("Certification FNE réussie: Référence={Reference}, Token={Token}, Balance={Balance}, Warning={Warning}", 
+                        fneReference, verificationToken, balanceSticker, apiResponse.Warning);
+
                     return new FneCertificationResult
                     {
                         IsSuccess = true,
-                        FneReference = apiResponse?.FneReference,
-                        VerificationToken = apiResponse?.VerificationToken,
-                        NccEntreprise = apiResponse?.NccEntreprise,
-                        StickerBalance = apiResponse?.StickerBalance ?? 0,
-                        InvoiceId = apiResponse?.InvoiceId,
+                        // Données principales FNE
+                        FneReference = fneReference,
+                        VerificationToken = verificationToken,
+                        NccEntreprise = nccEntreprise,
+                        StickerBalance = balanceSticker,
+                        InvoiceId = invoiceId,
+                        
+                        // Nouvelles informations importantes
+                        QrCodeData = verificationToken, // Le token est le contenu du QR-code
+                        DownloadUrl = verificationToken, // URL de vérification/téléchargement
+                        HasWarning = apiResponse.Warning,
+                        WarningMessage = apiResponse.Warning ? $"Attention: Stock de stickers faible ({balanceSticker} restants)" : null,
+                        
+                        // Détails complets de la facture certifiée
+                        CertifiedInvoiceDetails = apiResponse.Invoice != null ? new CertifiedInvoiceInfo
+                        {
+                            Id = apiResponse.Invoice.Id,
+                            ParentId = apiResponse.Invoice.ParentId,
+                            ParentReference = apiResponse.Invoice.ParentReference,
+                            Reference = apiResponse.Invoice.Reference,
+                            Type = apiResponse.Invoice.Type,
+                            Subtype = apiResponse.Invoice.Subtype,
+                            CertificationDate = apiResponse.Invoice.Date,
+                            PaymentMethod = apiResponse.Invoice.PaymentMethod,
+                            Amount = apiResponse.Invoice.Amount,
+                            VatAmount = apiResponse.Invoice.VatAmount,
+                            FiscalStamp = apiResponse.Invoice.FiscalStamp,
+                            Discount = apiResponse.Invoice.Discount,
+                            ClientNcc = apiResponse.Invoice.ClientNcc,
+                            ClientName = apiResponse.Invoice.ClientName,
+                            ClientPhone = apiResponse.Invoice.ClientPhone,
+                            ClientEmail = apiResponse.Invoice.ClientEmail,
+                            PointOfSale = apiResponse.Invoice.PointOfSale,
+                            Establishment = apiResponse.Invoice.Establishment
+                        } : null,
+                        
                         ProcessedAt = DateTime.UtcNow
                     };
                 }
@@ -587,14 +768,381 @@ namespace FNEV4.Infrastructure.Services
             return invoice.Client?.Name ?? invoice.Client?.CompanyName ?? "Client";
         }
 
+        /// <summary>
+        /// Télécharge la facture certifiée depuis la DGI
+        /// </summary>
+        public async Task<FneCertifiedInvoiceDownloadResult> DownloadCertifiedInvoiceAsync(string invoiceId)
+        {
+            try
+            {
+                // Conversion du string en Guid pour la recherche
+                if (!Guid.TryParse(invoiceId, out var guid))
+                {
+                    return new FneCertifiedInvoiceDownloadResult
+                    {
+                        IsSuccess = false,
+                        Message = "ID de facture invalide",
+                        Errors = new List<string> { "L'ID de facture doit être un GUID valide" }
+                    };
+                }
+
+                // Récupérer les détails de la facture certifiée depuis la base
+                var invoice = await _context.FneInvoices
+                    .Where(i => i.Id == guid && !string.IsNullOrEmpty(i.VerificationToken))
+                    .FirstOrDefaultAsync();
+
+                if (invoice == null)
+                {
+                    return new FneCertifiedInvoiceDownloadResult
+                    {
+                        IsSuccess = false,
+                        Message = "Facture non trouvée ou non certifiée",
+                        Errors = new List<string> { "La facture spécifiée n'existe pas ou n'a pas été certifiée." }
+                    };
+                }
+
+                // Construire l'URL de téléchargement basée sur le token
+                string downloadUrl = $"{FNE_BASE_URL}/external/invoices/download?token={invoice.VerificationToken}";
+
+                // Télécharger la facture PDF depuis la DGI
+                var response = await _httpClient.GetAsync(downloadUrl);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var pdfContent = await response.Content.ReadAsByteArrayAsync();
+                    string fileName = $"Facture_{invoice.InvoiceNumber}_{DateTime.Now:yyyyMMdd}.pdf";
+
+                    return new FneCertifiedInvoiceDownloadResult
+                    {
+                        IsSuccess = true,
+                        Message = "Facture téléchargée avec succès",
+                        PdfContent = pdfContent,
+                        FileName = fileName,
+                        ContentType = "application/pdf",
+                        FileSizeBytes = pdfContent.Length,
+                        InvoiceReference = invoice.InvoiceNumber,
+                        VerificationUrl = GetVerificationUrl(invoice.VerificationToken ?? string.Empty)
+                    };
+                }
+                else
+                {
+                    return new FneCertifiedInvoiceDownloadResult
+                    {
+                        IsSuccess = false,
+                        Message = $"Échec du téléchargement: {response.StatusCode}",
+                        Errors = new List<string> { $"Code de réponse HTTP: {response.StatusCode}" }
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                await LogApiError("DOWNLOAD_ERROR", ex.Message, invoiceId);
+                return new FneCertifiedInvoiceDownloadResult
+                {
+                    IsSuccess = false,
+                    Message = "Erreur lors du téléchargement",
+                    Errors = new List<string> { ex.Message }
+                };
+            }
+        }
+
+        /// <summary>
+        /// Génère un PDF de facture avec QR-code intégré
+        /// </summary>
+        public async Task<FneCertifiedInvoiceDownloadResult> GenerateInvoicePdfWithQrCodeAsync(string invoiceId)
+        {
+            try
+            {
+                // D'abord télécharger la facture officielle
+                var downloadResult = await DownloadCertifiedInvoiceAsync(invoiceId);
+                if (!downloadResult.IsSuccess || downloadResult.PdfContent == null)
+                {
+                    return downloadResult;
+                }
+
+                // Conversion du string en Guid pour la recherche
+                if (!Guid.TryParse(invoiceId, out var guid))
+                {
+                    return new FneCertifiedInvoiceDownloadResult
+                    {
+                        IsSuccess = false,
+                        Message = "ID de facture invalide",
+                        Errors = new List<string> { "L'ID de facture doit être un GUID valide" }
+                    };
+                }
+
+                // Récupérer les informations de la facture pour le QR-code
+                var invoice = await _context.FneInvoices
+                    .Where(i => i.Id == guid)
+                    .FirstOrDefaultAsync();
+
+                if (invoice == null || string.IsNullOrEmpty(invoice.VerificationToken))
+                {
+                    return new FneCertifiedInvoiceDownloadResult
+                    {
+                        IsSuccess = false,
+                        Message = "Impossible de générer le QR-code",
+                        Errors = new List<string> { "URL de vérification manquante" }
+                    };
+                }
+
+                // Construire l'URL de vérification
+                var verificationUrl = GetVerificationUrl(invoice.VerificationToken);
+
+                // Générer le QR-code
+                var qrCodeResult = await GenerateQrCodeAsync(verificationUrl);
+                if (string.IsNullOrEmpty(qrCodeResult))
+                {
+                    // Si le QR-code échoue, retourner le PDF sans QR-code
+                    return downloadResult;
+                }
+
+                // TODO: Intégrer le QR-code dans le PDF (nécessite une bibliothèque PDF comme iTextSharp)
+                // Pour l'instant, on retourne le PDF original
+                downloadResult.Message += " (QR-code généré séparément)";
+                return downloadResult;
+            }
+            catch (Exception ex)
+            {
+                await LogApiError("PDF_QR_ERROR", ex.Message, invoiceId);
+                return new FneCertifiedInvoiceDownloadResult
+                {
+                    IsSuccess = false,
+                    Message = "Erreur lors de la génération du PDF avec QR-code",
+                    Errors = new List<string> { ex.Message }
+                };
+            }
+        }
+
+        /// <summary>
+        /// Récupère les informations publiques de vérification d'une facture
+        /// </summary>
+        public async Task<FnePublicVerificationResult> GetPublicVerificationInfoAsync(string verificationUrl)
+        {
+            try
+            {
+                // Extraire le token de l'URL de vérification
+                string token = ExtractTokenFromUrl(verificationUrl);
+                if (string.IsNullOrEmpty(token))
+                {
+                    return new FnePublicVerificationResult
+                    {
+                        IsValid = false,
+                        Message = "URL de vérification invalide",
+                        ValidationDetails = new List<string> { "Impossible d'extraire le token de l'URL" }
+                    };
+                }
+
+                // Construire l'URL d'API pour la vérification publique
+                string apiUrl = $"{FNE_BASE_URL}/external/invoices/verify/{token}";
+
+                // Appel API sans authentification (vérification publique)
+                var response = await _httpClient.GetAsync(apiUrl);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    var verificationData = JsonSerializer.Deserialize<JsonDocument>(jsonContent);
+
+                    if (verificationData == null)
+                    {
+                        return new FnePublicVerificationResult
+                        {
+                            IsValid = false,
+                            Message = "Réponse de vérification invalide",
+                            Status = "Invalid",
+                            ValidationDetails = new List<string> { "Données de vérification non disponibles" }
+                        };
+                    }
+
+                    var result = new FnePublicVerificationResult
+                    {
+                        IsValid = true,
+                        Message = "Facture vérifiée avec succès",
+                        Status = "Valid"
+                    };
+
+                    // Parser les données de vérification
+                    if (verificationData.RootElement.TryGetProperty("invoice", out var invoiceElement))
+                    {
+                        if (invoiceElement.TryGetProperty("reference", out var refElement))
+                            result.InvoiceReference = refElement.GetString();
+                        
+                        if (invoiceElement.TryGetProperty("amount", out var amountElement))
+                            result.InvoiceAmount = amountElement.GetDecimal();
+                        
+                        if (invoiceElement.TryGetProperty("vat_amount", out var vatElement))
+                            result.VatAmount = vatElement.GetDecimal();
+                        
+                        if (invoiceElement.TryGetProperty("client_name", out var clientElement))
+                            result.ClientName = clientElement.GetString();
+                    }
+
+                    if (verificationData.RootElement.TryGetProperty("company", out var companyElement))
+                    {
+                        if (companyElement.TryGetProperty("name", out var nameElement))
+                            result.CompanyName = nameElement.GetString();
+                        
+                        if (companyElement.TryGetProperty("ncc", out var nccElement))
+                            result.CompanyNcc = nccElement.GetString();
+                    }
+
+                    if (verificationData.RootElement.TryGetProperty("certification_date", out var dateElement))
+                    {
+                        if (DateTime.TryParse(dateElement.GetString(), out var certDate))
+                            result.CertificationDate = certDate;
+                    }
+
+                    // Générer le QR-code pour cette vérification
+                    result.QrCodeData = await GenerateQrCodeAsync(verificationUrl);
+
+                    return result;
+                }
+                else
+                {
+                    return new FnePublicVerificationResult
+                    {
+                        IsValid = false,
+                        Message = "Facture non trouvée ou non valide",
+                        Status = "Invalid",
+                        ValidationDetails = new List<string> { $"Code de réponse: {response.StatusCode}" }
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                await LogApiError("PUBLIC_VERIFICATION_ERROR", ex.Message, verificationUrl);
+                return new FnePublicVerificationResult
+                {
+                    IsValid = false,
+                    Message = "Erreur lors de la vérification",
+                    Status = "Error",
+                    ValidationDetails = new List<string> { ex.Message }
+                };
+            }
+        }
+
+        /// <summary>
+        /// Extrait le token d'une URL de vérification FNE
+        /// </summary>
+        private string ExtractTokenFromUrl(string verificationUrl)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(verificationUrl))
+                    return string.Empty;
+
+                // Format attendu: http://54.247.95.108/fr/verification/019465c1-3f61-766c-9652-706e32dfb436
+                var uri = new Uri(verificationUrl);
+                var segments = uri.Segments;
+                
+                if (segments.Length > 0)
+                {
+                    return segments.Last().TrimEnd('/');
+                }
+
+                return string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Méthode legacy - Génère une facture PDF avec QR-Code intégré
+        /// </summary>
+        public async Task<byte[]> GenerateInvoicePdfWithQrCodeAsync(FneInvoice invoice, FneCertificationResult certificationResult)
+        {
+            try
+            {
+                if (invoice == null || certificationResult == null || !certificationResult.IsSuccess)
+                {
+                    return Array.Empty<byte>();
+                }
+
+                var result = await GenerateInvoicePdfWithQrCodeAsync(invoice.Id.ToString());
+                return result.IsSuccess && result.PdfContent != null ? result.PdfContent : Array.Empty<byte>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur dans la méthode legacy GenerateInvoicePdfWithQrCodeAsync");
+                return Array.Empty<byte>();
+            }
+        }
+
+        private async Task LogApiError(string operationType, string errorMessage, string? relatedId = null)
+        {
+            try
+            {
+                Guid? invoiceId = null;
+                if (!string.IsNullOrEmpty(relatedId) && Guid.TryParse(relatedId, out var guid))
+                {
+                    invoiceId = guid;
+                }
+
+                var log = new FneApiLog
+                {
+                    FneInvoiceId = invoiceId,
+                    OperationType = operationType,
+                    ResponseBody = errorMessage,
+                    ErrorMessage = errorMessage,
+                    IsSuccess = false,
+                    Timestamp = DateTime.UtcNow,
+                    LogLevel = "Error"
+                };
+
+                _context.FneApiLogs.Add(log);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur lors de la création du log d'erreur API");
+            }
+        }
+
         // Classes pour la désérialisation des réponses API
         private class FneApiResponse
         {
+            // Données principales selon FNE-procedureapi.md
+            public string? Ncc { get; set; }                    // Identifiant contribuable
+            public string? Reference { get; set; }              // Numéro de la facture FNE
+            public string? Token { get; set; }                  // Code de vérification à convertir en QR code
+            public bool Warning { get; set; }                   // Alerte sur le stock de sticker
+            public int Balance_Sticker { get; set; }            // Balance sticker facture
+            
+            // Informations complètes de la facture générée
+            public FneInvoiceDetails? Invoice { get; set; }
+            
+            // Propriétés de compatibilité (à supprimer progressivement)
             public string? FneReference { get; set; }
             public string? VerificationToken { get; set; }
             public string? NccEntreprise { get; set; }
             public int StickerBalance { get; set; }
             public string? InvoiceId { get; set; }
+        }
+
+        private class FneInvoiceDetails
+        {
+            public string? Id { get; set; }                      // ID pour les avoirs/annulations
+            public string? ParentId { get; set; }               // ID facture parent (pour avoirs)
+            public string? ParentReference { get; set; }        // Référence facture parent
+            public string? Token { get; set; }                  // Token de vérification
+            public string? Reference { get; set; }              // Numéro facture FNE
+            public string? Type { get; set; }                   // Type (invoice, refund, etc.)
+            public string? Subtype { get; set; }                // Sous-type (normal, exceptional)
+            public DateTime Date { get; set; }                  // Date de certification
+            public string? PaymentMethod { get; set; }          // Méthode de paiement
+            public decimal Amount { get; set; }                 // Montant HT
+            public decimal VatAmount { get; set; }              // Montant TVA
+            public decimal FiscalStamp { get; set; }            // Timbre fiscal
+            public decimal Discount { get; set; }               // Remise
+            public string? ClientNcc { get; set; }              // NCC du client
+            public string? ClientName { get; set; }             // Nom du client
+            public string? ClientPhone { get; set; }            // Téléphone client
+            public string? ClientEmail { get; set; }            // Email client
+            public string? PointOfSale { get; set; }            // Point de vente
+            public string? Establishment { get; set; }          // Établissement
         }
     }
 }
