@@ -1,14 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FNEV4.Core.Entities;
+using FNEV4.Core.DTOs;
 using FNEV4.Core.Interfaces;
 using FNEV4.Core.Interfaces.Services.Fne;
+using FNEV4.Presentation.Views.CertificationFne;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
@@ -366,6 +370,26 @@ namespace FNEV4.Presentation.ViewModels.CertificationFne
                 return;
             }
 
+            // VÉRIFICATION CRITIQUE DE SÉCURITÉ
+            var serviceType = _certificationService.GetType().Name;
+            if (serviceType.Contains("Mock"))
+            {
+                var criticalWarning = MessageBox.Show(
+                    "🚫 ATTENTION CRITIQUE - CONFIGURATION NON SÉCURISÉE 🚫\n\n" +
+                    "L'application utilise actuellement un service de certification factice (Mock).\n" +
+                    "AUCUNE CERTIFICATION RÉELLE ne sera effectuée avec l'API DGI.\n\n" +
+                    "❌ Les résultats affichés seraient FAUX et trompeurs\n" +
+                    "❌ Aucune facture ne sera réellement certifiée\n" +
+                    "❌ Cela pourrait causer des problèmes légaux\n\n" +
+                    "Contactez immédiatement votre administrateur système pour configurer le service de certification réel.\n\n" +
+                    "Voulez-vous tout de même continuer pour voir l'erreur technique ?",
+                    "SERVICE DE CERTIFICATION NON CONFIGURÉ",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Error);
+
+                if (criticalWarning != MessageBoxResult.Yes) return;
+            }
+
             var result = MessageBox.Show(
                 $"Êtes-vous sûr de vouloir certifier {SelectedInvoicesCount} facture(s) ?\n\nCette action ne peut pas être annulée.",
                 "Confirmation de certification",
@@ -474,11 +498,20 @@ namespace FNEV4.Presentation.ViewModels.CertificationFne
 
                 int successCount = 0;
                 int errorCount = 0;
+                var detailedResults = new List<CertificationResultDetail>();
 
                 foreach (var invoice in invoicesToCertify)
                 {
                     CurrentCertificationInvoice = $"Certification {invoice.InvoiceNumber}...";
                     StatusMessage = CurrentCertificationInvoice;
+
+                    var resultDetail = new CertificationResultDetail
+                    {
+                        InvoiceNumber = invoice.InvoiceNumber,
+                        ClientName = invoice.Client?.Name ?? "Client inconnu",
+                        Amount = invoice.TotalAmountTTC,
+                        ProcessedAt = DateTime.Now
+                    };
 
                     try
                     {
@@ -487,30 +520,38 @@ namespace FNEV4.Presentation.ViewModels.CertificationFne
                         if (certificationResult.IsSuccess)
                         {
                             successCount++;
+                            resultDetail.IsSuccess = true;
+                            resultDetail.FneReference = certificationResult.FneReference ?? string.Empty;
+                            resultDetail.VerificationToken = certificationResult.VerificationToken ?? string.Empty;
                             await LogInfoAsync($"Facture {invoice.InvoiceNumber} certifiée avec succès");
                         }
                         else
                         {
                             errorCount++;
+                            resultDetail.IsSuccess = false;
+                            resultDetail.ErrorMessage = certificationResult.ErrorMessage ?? "Erreur inconnue";
                             await LogWarningAsync($"Échec certification facture {invoice.InvoiceNumber}: {certificationResult.ErrorMessage}");
                         }
                     }
                     catch (Exception ex)
                     {
                         errorCount++;
+                        resultDetail.IsSuccess = false;
+                        resultDetail.ErrorMessage = $"Exception: {ex.Message}";
                         await LogErrorAsync($"Exception lors de la certification facture {invoice.InvoiceNumber}", exception: ex);
                     }
 
+                    detailedResults.Add(resultDetail);
                     CertificationProgress++;
                     
                     // Petite pause pour éviter de surcharger l'API
                     await Task.Delay(100);
                 }
 
-                // Résumé final
-                var message = $"Certification terminée:\n\n✅ Succès: {successCount}\n❌ Échecs: {errorCount}";
-                MessageBox.Show(message, "Résultat certification", MessageBoxButton.OK, 
-                    errorCount == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                // Afficher les résultats détaillés dans un dialog
+                var resultDialog = new CertificationResultDialog(detailedResults);
+                resultDialog.Owner = System.Windows.Application.Current.MainWindow;
+                resultDialog.ShowDialog();
 
                 // Rafraîchir les données et vider la sélection
                 ClearSelection();

@@ -163,26 +163,15 @@ namespace FNEV4.Infrastructure.Repositories
 
         public async Task<IEnumerable<FneInvoice>> GetAvailableForCertificationAsync()
         {
-            // Chargement des factures avec leurs clients via une jointure explicite
-            var invoicesWithClients = await (from invoice in _context.FneInvoices
-                                              join client in _context.Clients on invoice.ClientId equals client.Id into clientJoin
-                                              from client in clientJoin.DefaultIfEmpty()
-                                              where invoice.Status == "draft" && invoice.CertifiedAt == null
-                                              select new { Invoice = invoice, Client = client })
-                                              .OrderByDescending(x => x.Invoice.InvoiceDate)
-                                              .ToListAsync();
+            // Chargement des factures avec leurs clients ET leurs articles via Include
+            var invoices = await _context.FneInvoices
+                .Include(i => i.Items)  // Charger les articles de chaque facture
+                .Include(i => i.Client) // Charger les clients  
+                .Where(i => i.Status == "draft" && i.CertifiedAt == null)
+                .OrderByDescending(i => i.InvoiceDate)
+                .ToListAsync();
 
-            // Assigner manuellement les clients aux factures
-            var result = invoicesWithClients.Select(x =>
-            {
-                if (x.Client != null)
-                {
-                    x.Invoice.Client = x.Client;
-                }
-                return x.Invoice;
-            }).ToList();
-
-            return result;
+            return invoices;
         }
     }
 }

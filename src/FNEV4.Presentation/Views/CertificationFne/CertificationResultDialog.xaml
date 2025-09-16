@@ -1,0 +1,167 @@
+<Window x:Class="FNEV4.Presentation.Views.CertificationFne.CertificationResultDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Détails de la Certification FNE" 
+        Height="600" 
+        Width="1000"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        Style="{StaticResource MaterialDesignWindow}">
+
+    <Window.Resources>
+        <Style TargetType="DataGridRow">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSuccess}" Value="True">
+                    <Setter Property="Background" Value="#E8F5E8"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsSuccess}" Value="False">
+                    <Setter Property="Background" Value="#FDF2F2"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tête -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="Résultats de la Certification FNE" 
+                       FontSize="24" 
+                       FontWeight="Bold" 
+                       Foreground="{DynamicResource MaterialDesignBody}"/>
+            <TextBlock Text="{Binding ProcessedAt, StringFormat='Processé le {0:dd/MM/yyyy à HH:mm:ss}'}" 
+                       FontSize="14" 
+                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                       Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <!-- Résumé -->
+        <materialDesign:Card Grid.Row="1" 
+                             Padding="15" 
+                             Margin="0,0,0,20"
+                             materialDesign:ShadowAssist.ShadowDepth="Depth2">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                    <materialDesign:PackIcon Kind="FileMultiple" 
+                                           Width="32" Height="32" 
+                                           Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                    <TextBlock Text="{Binding TotalCount}" 
+                               FontSize="20" FontWeight="Bold" 
+                               HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                    <TextBlock Text="Total" 
+                               FontSize="12" 
+                               Foreground="{DynamicResource MaterialDesignBodyLight}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                    <materialDesign:PackIcon Kind="CheckCircle" 
+                                           Width="32" Height="32" 
+                                           Foreground="#4CAF50"/>
+                    <TextBlock Text="{Binding SuccessCount}" 
+                               FontSize="20" FontWeight="Bold" 
+                               Foreground="#4CAF50"
+                               HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                    <TextBlock Text="Succès" 
+                               FontSize="12" 
+                               Foreground="{DynamicResource MaterialDesignBodyLight}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                    <materialDesign:PackIcon Kind="AlertCircle" 
+                                           Width="32" Height="32" 
+                                           Foreground="#F44336"/>
+                    <TextBlock Text="{Binding ErrorCount}" 
+                               FontSize="20" FontWeight="Bold" 
+                               Foreground="#F44336"
+                               HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                    <TextBlock Text="Échecs" 
+                               FontSize="12" 
+                               Foreground="{DynamicResource MaterialDesignBodyLight}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="3" HorizontalAlignment="Center">
+                    <materialDesign:PackIcon Kind="Percent" 
+                                           Width="32" Height="32" 
+                                           Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                    <TextBlock Text="{Binding SuccessPercentage, StringFormat='{}{0:F1}%'}" 
+                               FontSize="20" FontWeight="Bold" 
+                               HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                    <TextBlock Text="Réussite" 
+                               FontSize="12" 
+                               Foreground="{DynamicResource MaterialDesignBodyLight}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- Détails -->
+        <DataGrid Grid.Row="2" 
+                  ItemsSource="{Binding Results}"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  IsReadOnly="True"
+                  materialDesign:DataGridAssist.CellPadding="8"
+                  materialDesign:DataGridAssist.ColumnHeaderPadding="8">
+            
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="N° Facture" 
+                                    Binding="{Binding InvoiceNumber}" 
+                                    Width="120"/>
+                <DataGridTextColumn Header="Client" 
+                                    Binding="{Binding ClientName}" 
+                                    Width="200"/>
+                <DataGridTextColumn Header="Montant" 
+                                    Binding="{Binding Amount, StringFormat='{}{0:N2} TND'}" 
+                                    Width="120"/>
+                <DataGridTextColumn Header="Statut" 
+                                    Binding="{Binding Status}" 
+                                    Width="100"/>
+                <DataGridTextColumn Header="Détails" 
+                                    Binding="{Binding Details}" 
+                                    Width="*"/>
+                <DataGridTextColumn Header="Traité à" 
+                                    Binding="{Binding ProcessedAt, StringFormat='{}{0:HH:mm:ss}'}" 
+                                    Width="80"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Boutons -->
+        <StackPanel Grid.Row="3" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right" 
+                    Margin="0,20,0,0">
+            
+            <Button Content="Exporter" 
+                    Click="ExportButton_Click"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Margin="0,0,10,0">
+                <Button.ToolTip>
+                    <ToolTip>Exporter les résultats vers Excel</ToolTip>
+                </Button.ToolTip>
+            </Button>
+            
+            <Button Content="Fermer" 
+                    Click="CloseButton_Click"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    IsDefault="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

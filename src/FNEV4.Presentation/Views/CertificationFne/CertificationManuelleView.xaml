@@ -240,7 +240,7 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Vertical">
-                                            <TextBlock Text="{Binding Client.Name}" 
+                                            <TextBlock Text="{Binding ClientDisplayName}" 
                                                        FontWeight="Medium"
                                                        Foreground="{DynamicResource MaterialDesignBody}"/>
                                             <TextBlock Text="{Binding ClientCode}" 
@@ -343,40 +343,96 @@
                         </StackPanel>
                     </Border>
 
-                    <ListBox Grid.Row="1" 
-                             ItemsSource="{Binding SelectedInvoices}"
-                             Margin="8">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <materialDesign:Card Margin="4" Padding="8">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        
-                                        <StackPanel Grid.Column="0">
-                                            <TextBlock Text="{Binding InvoiceNumber}" 
-                                                       Style="{StaticResource MaterialDesignSubtitle2TextBlock}" />
-                                            <TextBlock Text="{Binding Client.Name}" 
-                                                       Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                                                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
-                                            <TextBlock Text="{Binding TotalAmountTTC, StringFormat='{}TTC: {0:N2} TND'}" 
-                                                       Style="{StaticResource MaterialDesignCaptionTextBlock}" />
-                                        </StackPanel>
-                                        
-                                        <Button Grid.Column="1"
-                                                Command="{Binding DataContext.RemoveFromSelectionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}"
-                                                Style="{StaticResource MaterialDesignIconButton}"
-                                                ToolTip="Retirer de la sélection">
-                                            <materialDesign:PackIcon Kind="Close" />
-                                        </Button>
-                                    </Grid>
-                                </materialDesign:Card>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <ScrollViewer Grid.Row="1" 
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  Margin="4">
+                        <ItemsControl ItemsSource="{Binding SelectedInvoices}">
+                            <!-- Panel pour disposer les cartes en wrapping (plusieurs par ligne) -->
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            
+                            <!-- Template plus compact pour chaque carte -->
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <materialDesign:Card Width="200" 
+                                                         Height="85" 
+                                                         Margin="2" 
+                                                         Padding="6,3"
+                                                         materialDesign:ShadowAssist.ShadowDepth="Depth1">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            
+                                            <!-- Header avec numéro facture et indicateur couleur type -->
+                                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,2">
+                                                <TextBlock Text="{Binding InvoiceNumber}" 
+                                                           FontSize="13"
+                                                           FontWeight="SemiBold"
+                                                           VerticalAlignment="Center" />
+                                                <Ellipse Width="10" 
+                                                         Height="10" 
+                                                         Margin="6,0,0,0"
+                                                         VerticalAlignment="Center">
+                                                    <Ellipse.Style>
+                                                        <Style TargetType="Ellipse">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding InvoiceType}" Value="sale">
+                                                                    <Setter Property="Fill" Value="LightGreen" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding InvoiceType}" Value="refund">
+                                                                    <Setter Property="Fill" Value="LightCoral" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding InvoiceType}" Value="purchase">
+                                                                    <Setter Property="Fill" Value="LightBlue" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Ellipse.Style>
+                                                </Ellipse>
+                                            </StackPanel>
+                                            
+                                            <!-- Bouton fermer -->
+                                            <Button Grid.Row="0" Grid.Column="1"
+                                                    Width="16"
+                                                    Height="16"
+                                                    Command="{Binding DataContext.RemoveFromSelectionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignIconButton}"
+                                                    Padding="0"
+                                                    ToolTip="Retirer de la sélection">
+                                                <materialDesign:PackIcon Kind="Close" 
+                                                                         Width="9" 
+                                                                         Height="9" />
+                                            </Button>
+                                            
+                                            <!-- Infos client et montant -->
+                                            <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,1">
+                                                <TextBlock Text="{Binding ClientDisplayName}" 
+                                                           FontSize="11"
+                                                           Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Margin="0,0,0,1" />
+                                                <TextBlock Text="{Binding TotalAmountTTC, StringFormat='{}{0:N0} TND'}" 
+                                                           FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource PrimaryHueMidBrush}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </materialDesign:Card>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
 
                     <!-- Résumé de sélection -->
                     <Border Grid.Row="2" 

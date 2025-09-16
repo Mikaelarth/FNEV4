@@ -230,11 +230,12 @@ namespace FNEV4.Presentation
                     
                     // Services DGI (nouveau et legacy pour compatibilité)
                     services.AddScoped<FneIDgiService, MockDgiService>();
+                    services.AddScoped<FNEV4.Core.Interfaces.Services.Fne.IDgiService, MockDgiService>();
                     services.AddScoped<LegacyIDgiService>(provider => 
                         new DgiServiceLegacyAdapter(provider.GetRequiredService<FneIDgiService>()));
 
                     // Services FNE Certification
-                    services.AddScoped<IFneCertificationService, MockFneCertificationService>();
+                    services.AddScoped<IFneCertificationService, FNEV4.Infrastructure.Services.FneCertificationService>();
 
                     // Services de notification
                     services.AddSingleton<IDatabaseConfigurationNotificationService, DatabaseConfigurationNotificationService>();

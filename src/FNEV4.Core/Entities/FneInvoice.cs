@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FNEV4.Core.Entities
 {
@@ -203,5 +204,43 @@ namespace FNEV4.Core.Entities
         /// Navigation - Logs API associés
         /// </summary>
         public virtual ICollection<FneApiLog> ApiLogs { get; set; } = new List<FneApiLog>();
+
+        #region Propriétés calculées pour l'affichage
+
+        /// <summary>
+        /// Retourne le nom d'affichage du client : nom réel pour clients divers, nom du client sinon
+        /// Pour les clients divers (1999), extrait le nom depuis CommercialMessage
+        /// </summary>
+        [NotMapped]
+        public string ClientDisplayName
+        {
+            get
+            {
+                // Pour les clients divers (code 1999)
+                if (ClientCode == "1999" && !string.IsNullOrEmpty(CommercialMessage))
+                {
+                    // Format dans CommercialMessage: "Client: NOM_REEL_CLIENT"
+                    if (CommercialMessage.StartsWith("Client: "))
+                    {
+                        var realName = CommercialMessage.Substring("Client: ".Length).Trim();
+                        if (!string.IsNullOrEmpty(realName) && realName != "DIVERS CLIENTS CARBURANTS")
+                        {
+                            return realName; // Nom réel du client divers
+                        }
+                    }
+                }
+                
+                // Pour les clients normaux ou si pas d'info dans CommercialMessage
+                return Client?.Name ?? "Client inconnu";
+            }
+        }
+
+        /// <summary>
+        /// Indique si c'est un client divers (code 1999)
+        /// </summary>
+        [NotMapped]
+        public bool IsClientDivers => ClientCode == "1999";
+
+        #endregion
     }
 }

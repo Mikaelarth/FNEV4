@@ -8,17 +8,18 @@ using Microsoft.EntityFrameworkCore;
 namespace FNEV4.Infrastructure.Services
 {
     /// <summary>
-    /// Implémentation mock du service de certification FNE pour les tests et développement
+    /// Service de certification FNE pour tests et développement (Mode Mock)
+    /// ⚠️ NE PAS UTILISER EN PRODUCTION - Retourne des données fictives
     /// </summary>
-    public class MockFneCertificationService : IFneCertificationService
+    public class FneCertificationServiceMock : IFneCertificationService
     {
         private readonly FNEV4DbContext _context;
-        private readonly ILogger<MockFneCertificationService> _logger;
+        private readonly ILogger<FneCertificationServiceMock> _logger;
         private readonly IDgiService _dgiService;
 
-        public MockFneCertificationService(
+        public FneCertificationServiceMock(
             FNEV4DbContext context,
-            ILogger<MockFneCertificationService> logger,
+            ILogger<FneCertificationServiceMock> logger,
             IDgiService dgiService)
         {
             _context = context;
@@ -28,17 +29,17 @@ namespace FNEV4.Infrastructure.Services
 
         public async Task<FneCertificationResult> CertifyInvoiceAsync(FneInvoice invoice, FneConfiguration configuration)
         {
-            _logger.LogInformation("Simulation certification facture {InvoiceNumber}", invoice.InvoiceNumber);
+            _logger.LogError("🚫 ERREUR CRITIQUE - Service de certification non configuré pour la production ! Aucune certification réelle ne peut être effectuée.");
             
-            // Simulation
-            await Task.Delay(100);
+            await Task.Delay(50); // Petit délai pour éviter spam
             
             return new FneCertificationResult
             {
-                IsSuccess = true,
-                ErrorMessage = string.Empty,
-                FneReference = $"FNE{invoice.InvoiceNumber}",
-                VerificationToken = Guid.NewGuid().ToString()
+                IsSuccess = false,
+                ErrorMessage = "ERREUR CRITIQUE: Service de certification non configuré pour la production. Contactez l'administrateur système.",
+                FneReference = null,
+                VerificationToken = null,
+                ProcessedAt = DateTime.UtcNow
             };
         }
 
