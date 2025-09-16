@@ -295,8 +295,9 @@ public class EntrepriseConfigViewModel : INotifyPropertyChanged
     private IDgiService CreateDefaultDgiService()
     {
         var httpClient = new System.Net.Http.HttpClient();
-        var logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<FNEV4.Infrastructure.Services.DgiService>();
-        return new FNEV4.Infrastructure.Services.DgiService(httpClient, logger);
+        var logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<FNEV4.Infrastructure.Services.MockDgiService>();
+        var dgiService = new FNEV4.Infrastructure.Services.MockDgiService(logger);
+        return new FNEV4.Infrastructure.Services.DgiServiceLegacyAdapter(dgiService);
     }
     #endregion
 

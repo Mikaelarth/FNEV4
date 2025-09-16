@@ -9049,11 +9049,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj",
+      "projectUniqueName": "D:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj",
       "projectName": "FNEV4.Presentation",
-      "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj",
+      "projectPath": "D:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj",
       "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-      "outputPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Presentation\\obj\\",
+      "outputPath": "D:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Presentation\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -9068,14 +9068,14 @@
         "net8.0-windows7.0": {
           "targetAlias": "net8.0-windows",
           "projectReferences": {
-            "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
-              "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj"
+            "D:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj": {
+              "projectPath": "D:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj"
             },
-            "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
-              "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
+            "D:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
+              "projectPath": "D:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
             },
-            "D:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
-              "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj"
+            "D:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj": {
+              "projectPath": "D:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Infrastructure\\FNEV4.Infrastructure.csproj"
             }
           }
         }

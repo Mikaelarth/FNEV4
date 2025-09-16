@@ -5116,11 +5116,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj",
+      "projectUniqueName": "d:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj",
       "projectName": "FNEV4.Application",
-      "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj",
+      "projectPath": "d:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Application\\FNEV4.Application.csproj",
       "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-      "outputPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Application\\obj\\",
+      "outputPath": "d:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Application\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -5135,8 +5135,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
-              "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
+            "D:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj": {
+              "projectPath": "D:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj"
             }
           }
         }

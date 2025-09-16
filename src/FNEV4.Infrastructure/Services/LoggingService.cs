@@ -137,14 +137,32 @@ namespace FNEV4.Infrastructure.Services
             await LogAsync(AppLogLevel.Info, message, category);
         }
 
+        // Méthode requise par l'interface ILoggingService
+        public async Task LogInformationAsync(string message, string category = "General")
+        {
+            await LogAsync(AppLogLevel.Info, message, category);
+        }
+
         public async Task LogWarningAsync(string message, string category = "Warning")
         {
             await LogAsync(AppLogLevel.Warning, message, category);
         }
 
+        public async Task LogErrorAsync(string message, Exception? exception = null, string category = "Error")
+        {
+            await LogAsync(AppLogLevel.Error, message, category, exception);
+        }
+
+        // Surcharge pour compatibilité
         public async Task LogErrorAsync(string message, string category = "Error", Exception? exception = null)
         {
             await LogAsync(AppLogLevel.Error, message, category, exception);
+        }
+
+        // Méthode requise par l'interface ILoggingService
+        public async Task LogCriticalAsync(string message, Exception? exception = null, string category = "General")
+        {
+            await LogAsync(AppLogLevel.Critical, message, category, exception);
         }
 
         public async Task ClearOldLogsAsync(DateTime olderThan)
@@ -499,6 +517,71 @@ namespace FNEV4.Infrastructure.Services
             }
             return $"{len:0.##} {sizes[order]}";
         }
+
+        #region Configuration Methods (Interface ILoggingService)
+
+        /// <summary>
+        /// Configure le niveau de log minimum.
+        /// </summary>
+        public async Task SetLogLevelAsync(FNEV4.Core.Interfaces.LogLevel logLevel)
+        {
+            // Implementation basique - pourrait être étendue pour persister la configuration
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Configure la rotation automatique des logs.
+        /// </summary>
+        public async Task ConfigureLogRotationAsync(bool enabled, long maxFileSize = 10485760, int maxFiles = 10)
+        {
+            // Implementation basique - pourrait être étendue pour persister la configuration
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Configure le formatage des logs.
+        /// </summary>
+        public async Task ConfigureLogFormatAsync(bool includeTimestamp = true, bool includeLevel = true, bool includeCategory = true)
+        {
+            // Implementation basique - pourrait être étendue pour persister la configuration
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Obtient le chemin du fichier de log actuel.
+        /// </summary>
+        public string GetLatestLogFile(string logsFolderPath)
+        {
+            if (!Directory.Exists(logsFolderPath))
+                return string.Empty;
+
+            var logFiles = Directory.GetFiles(logsFolderPath, "FNEV4_*.log")
+                .OrderByDescending(f => File.GetLastWriteTime(f))
+                .FirstOrDefault();
+
+            return logFiles ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Archive les logs anciens.
+        /// </summary>
+        public async Task<int> ArchiveOldLogsAsync(string logsFolderPath, string archiveFolderPath)
+        {
+            // Implementation basique
+            await Task.CompletedTask;
+            return 0;
+        }
+
+        /// <summary>
+        /// Obtient les statistiques des logs.
+        /// </summary>
+        public async Task<FNEV4.Core.Interfaces.LogStatistics> GetLogStatisticsAsync(string logsFolderPath)
+        {
+            await Task.CompletedTask;
+            return new FNEV4.Core.Interfaces.LogStatistics();
+        }
+
+        #endregion
 
     }
 }

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "PQxLJLEqw48=",
+  "dgSpecHash": "gvNRa9YjdAU=",
   "success": true,
-  "projectFilePath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj",
+  "projectFilePath": "D:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\HP\\.nuget\\packages\\fluentvalidation\\11.8.1\\fluentvalidation.11.8.1.nupkg.sha512"
   ],

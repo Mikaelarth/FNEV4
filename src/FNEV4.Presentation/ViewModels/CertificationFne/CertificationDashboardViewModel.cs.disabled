@@ -1,0 +1,483 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using FNEV4.Core.Entities;
+using FNEV4.Core.Interfaces.Services.Fne;
+using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace FNEV4.Presentation.ViewModels.CertificationFne
+{
+    /// <summary>
+    /// ViewModel pour le dashboard de certification FNE
+    /// Affiche une vue d'ensemble des activités de certification
+    /// </summary>
+    public partial class CertificationDashboardViewModel : ObservableObject
+    {
+        private readonly IFneCertificationService _certificationService;
+        private readonly IDgiService _dgiService;
+
+        // État général
+        [ObservableProperty]
+        private string _currentStatusMessage = "Système prêt";
+
+        [ObservableProperty]
+        private bool _isSystemHealthy = true;
+
+        [ObservableProperty]
+        private DateTime _lastSystemCheck = DateTime.Now;
+
+        // Statistiques globales
+        [ObservableProperty]
+        private int _totalInvoicesToday = 0;
+
+        [ObservableProperty]
+        private int _totalCertifiedToday = 0;
+
+        [ObservableProperty]
+        private int _totalPendingInvoices = 0;
+
+        [ObservableProperty]
+        private int _totalErrorInvoices = 0;
+
+        [ObservableProperty]
+        private decimal _totalAmountToday = 0m;
+
+        [ObservableProperty]
+        private decimal _certifiedAmountToday = 0m;
+
+        // Activités récentes
+        [ObservableProperty]
+        private ObservableCollection<RecentActivityModel> _recentActivities = new();
+
+        // Mode de certification
+        [ObservableProperty]
+        private bool _isManualModeActive = false;
+
+        [ObservableProperty]
+        private bool _isAutoModeActive = false;
+
+        [ObservableProperty]
+        private DateTime? _nextAutoCheck;
+
+        [ObservableProperty]
+        private string _autoCheckInterval = "Pas défini";
+
+        // Configuration API
+        [ObservableProperty]
+        private bool _isApiConfigured = false;
+
+        [ObservableProperty]
+        private string _apiConnectionStatus = "Non connecté";
+
+        [ObservableProperty]
+        private DateTime? _lastApiTest;
+
+        // Certifications récentes
+        [ObservableProperty]
+        private ObservableCollection<RecentCertificationModel> _recentCertifications = new();
+
+        // Performance
+        [ObservableProperty]
+        private double _certificationSuccessRate = 0.0;
+
+        [ObservableProperty]
+        private TimeSpan _averageCertificationTime = TimeSpan.Zero;
+
+        [ObservableProperty]
+        private int _certificationsLastHour = 0;
+
+        /// <summary>
+        /// Initialise une nouvelle instance du ViewModel dashboard
+        /// </summary>
+        public CertificationDashboardViewModel(
+            IFneCertificationService certificationService,
+            IDgiService dgiService)
+        {
+            _certificationService = certificationService;
+            _dgiService = dgiService;
+
+            InitializeCommands();
+            _ = LoadDashboardDataAsync();
+        }
+
+        /// <summary>
+        /// Initialise les commandes
+        /// </summary>
+        private void InitializeCommands()
+        {
+            RefreshDashboardCommand = new AsyncRelayCommand(LoadDashboardDataAsync);
+            TestApiConnectionCommand = new AsyncRelayCommand(TestApiConnectionAsync);
+            ViewAllActivitiesCommand = new RelayCommand(() => NavigateToActivities?.Invoke());
+            ViewAllCertificationsCommand = new RelayCommand(() => NavigateToCertifications?.Invoke());
+            StartManualCertificationCommand = new RelayCommand(() => NavigateToManual?.Invoke());
+            ConfigureAutoModeCommand = new RelayCommand(() => NavigateToAutoMode?.Invoke());
+            ViewSystemLogsCommand = new RelayCommand(() => NavigateToSystemLogs?.Invoke());
+            ExportReportCommand = new AsyncRelayCommand(ExportDashboardReportAsync);
+        }
+
+        #region Commands
+
+        /// <summary>
+        /// Commande pour actualiser le dashboard
+        /// </summary>
+        public IAsyncRelayCommand RefreshDashboardCommand { get; private set; }
+
+        /// <summary>
+        /// Commande pour tester la connexion API
+        /// </summary>
+        public IAsyncRelayCommand TestApiConnectionCommand { get; private set; }
+
+        /// <summary>
+        /// Commande pour voir toutes les activités
+        /// </summary>
+        public IRelayCommand ViewAllActivitiesCommand { get; private set; }
+
+        /// <summary>
+        /// Commande pour voir toutes les certifications
+        /// </summary>
+        public IRelayCommand ViewAllCertificationsCommand { get; private set; }
+
+        /// <summary>
+        /// Commande pour démarrer une certification manuelle
+        /// </summary>
+        public IRelayCommand StartManualCertificationCommand { get; private set; }
+
+        /// <summary>
+        /// Commande pour configurer le mode automatique
+        /// </summary>
+        public IRelayCommand ConfigureAutoModeCommand { get; private set; }
+
+        /// <summary>
+        /// Commande pour voir les logs système
+        /// </summary>
+        public IRelayCommand ViewSystemLogsCommand { get; private set; }
+
+        /// <summary>
+        /// Commande pour exporter un rapport
+        /// </summary>
+        public IAsyncRelayCommand ExportReportCommand { get; private set; }
+
+        #endregion
+
+        #region Navigation Events
+
+        /// <summary>
+        /// Événement pour naviguer vers les activités
+        /// </summary>
+        public event Action? NavigateToActivities;
+
+        /// <summary>
+        /// Événement pour naviguer vers les certifications
+        /// </summary>
+        public event Action? NavigateToCertifications;
+
+        /// <summary>
+        /// Événement pour naviguer vers la certification manuelle
+        /// </summary>
+        public event Action? NavigateToManual;
+
+        /// <summary>
+        /// Événement pour naviguer vers le mode automatique
+        /// </summary>
+        public event Action? NavigateToAutoMode;
+
+        /// <summary>
+        /// Événement pour naviguer vers les logs système
+        /// </summary>
+        public event Action? NavigateToSystemLogs;
+
+        #endregion
+
+        #region Propriétés calculées
+
+        /// <summary>
+        /// Pourcentage de factures certifiées aujourd'hui
+        /// </summary>
+        public double CertificationProgressPercentage => 
+            TotalInvoicesToday > 0 ? (double)TotalCertifiedToday / TotalInvoicesToday * 100 : 0;
+
+        /// <summary>
+        /// Pourcentage d'erreurs aujourd'hui
+        /// </summary>
+        public double ErrorPercentage => 
+            TotalInvoicesToday > 0 ? (double)TotalErrorInvoices / TotalInvoicesToday * 100 : 0;
+
+        /// <summary>
+        /// Pourcentage du montant certifié
+        /// </summary>
+        public double AmountCertificationPercentage => 
+            TotalAmountToday > 0 ? (double)(CertifiedAmountToday / TotalAmountToday) * 100 : 0;
+
+        /// <summary>
+        /// Statut coloré du système
+        /// </summary>
+        public string SystemHealthColor => IsSystemHealthy ? "Green" : "Red";
+
+        /// <summary>
+        /// Icône du statut du système
+        /// </summary>
+        public string SystemHealthIcon => IsSystemHealthy ? "CheckCircle" : "AlertCircle";
+
+        #endregion
+
+        #region Méthodes principales
+
+        /// <summary>
+        /// Charge toutes les données du dashboard
+        /// </summary>
+        public async Task LoadDashboardDataAsync()
+        {
+            try
+            {
+                await LoadStatisticsAsync();
+                await LoadRecentActivitiesAsync();
+                await LoadRecentCertificationsAsync();
+                await CheckSystemHealthAsync();
+                await LoadPerformanceMetricsAsync();
+
+                LastSystemCheck = DateTime.Now;
+                CurrentStatusMessage = IsSystemHealthy ? "Système opérationnel" : "Problèmes détectés";
+            }
+            catch (Exception ex)
+            {
+                CurrentStatusMessage = $"Erreur de chargement: {ex.Message}";
+                IsSystemHealthy = false;
+            }
+        }
+
+        /// <summary>
+        /// Charge les statistiques globales
+        /// </summary>
+        private async Task LoadStatisticsAsync()
+        {
+            var today = DateTime.Today;
+            var todayInvoices = await _certificationService.GetInvoicesForPeriodAsync(today, today.AddDays(1));
+
+            TotalInvoicesToday = todayInvoices.Count;
+            TotalCertifiedToday = todayInvoices.Count(i => i.FneStatus == FneInvoiceStatus.Certified);
+            TotalErrorInvoices = todayInvoices.Count(i => i.FneStatus == FneInvoiceStatus.Error);
+            TotalPendingInvoices = todayInvoices.Count(i => i.FneStatus == FneInvoiceStatus.Pending);
+
+            TotalAmountToday = todayInvoices.Sum(i => i.TotalAmount ?? 0);
+            CertifiedAmountToday = todayInvoices
+                .Where(i => i.FneStatus == FneInvoiceStatus.Certified)
+                .Sum(i => i.TotalAmount ?? 0);
+        }
+
+        /// <summary>
+        /// Charge les activités récentes
+        /// </summary>
+        private async Task LoadRecentActivitiesAsync()
+        {
+            try
+            {
+                var activities = await _certificationService.GetRecentActivitiesAsync(10);
+                
+                RecentActivities.Clear();
+                foreach (var activity in activities)
+                {
+                    RecentActivities.Add(new RecentActivityModel
+                    {
+                        Time = activity.CreatedAt,
+                        Type = activity.ActivityType,
+                        Message = activity.Message,
+                        Level = activity.Level,
+                        InvoiceNumber = activity.InvoiceNumber,
+                        Details = activity.Details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                AddActivity("System", $"Erreur lors du chargement des activités: {ex.Message}", "Error");
+            }
+        }
+
+        /// <summary>
+        /// Charge les certifications récentes
+        /// </summary>
+        private async Task LoadRecentCertificationsAsync()
+        {
+            try
+            {
+                var recentCertifications = await _certificationService.GetRecentCertificationsAsync(5);
+                
+                RecentCertifications.Clear();
+                foreach (var cert in recentCertifications)
+                {
+                    RecentCertifications.Add(new RecentCertificationModel
+                    {
+                        InvoiceNumber = cert.InvoiceNumber,
+                        ClientName = cert.ClientName,
+                        Amount = cert.TotalAmount ?? 0,
+                        CertificationTime = cert.CertifiedAt ?? DateTime.Now,
+                        Status = cert.FneStatus.ToString(),
+                        ProcessingTime = cert.ProcessingTimeMs ?? 0
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                AddActivity("System", $"Erreur lors du chargement des certifications: {ex.Message}", "Error");
+            }
+        }
+
+        /// <summary>
+        /// Vérifie la santé du système
+        /// </summary>
+        private async Task CheckSystemHealthAsync()
+        {
+            bool apiConnected = false;
+            
+            try
+            {
+                // Test de connexion API
+                apiConnected = await _dgiService.TestConnectionAsync();
+                IsApiConfigured = apiConnected;
+                ApiConnectionStatus = apiConnected ? "Connecté" : "Déconnecté";
+                LastApiTest = DateTime.Now;
+            }
+            catch (Exception ex)
+            {
+                ApiConnectionStatus = $"Erreur: {ex.Message}";
+                IsApiConfigured = false;
+            }
+
+            // Vérification générale de la santé du système
+            IsSystemHealthy = apiConnected && TotalErrorInvoices < (TotalInvoicesToday * 0.1); // Moins de 10% d'erreurs
+        }
+
+        /// <summary>
+        /// Charge les métriques de performance
+        /// </summary>
+        private async Task LoadPerformanceMetricsAsync()
+        {
+            try
+            {
+                var performanceData = await _certificationService.GetPerformanceMetricsAsync();
+                
+                CertificationSuccessRate = performanceData.SuccessRate;
+                AverageCertificationTime = performanceData.AverageTime;
+                CertificationsLastHour = performanceData.CertificationsLastHour;
+            }
+            catch (Exception ex)
+            {
+                AddActivity("System", $"Erreur lors du chargement des métriques: {ex.Message}", "Warning");
+                CertificationSuccessRate = TotalInvoicesToday > 0 ? 
+                    (double)TotalCertifiedToday / TotalInvoicesToday * 100 : 0;
+            }
+        }
+
+        /// <summary>
+        /// Teste la connexion à l'API DGI
+        /// </summary>
+        private async Task TestApiConnectionAsync()
+        {
+            try
+            {
+                var isConnected = await _dgiService.TestConnectionAsync();
+                IsApiConfigured = isConnected;
+                ApiConnectionStatus = isConnected ? "Connexion réussie" : "Connexion échouée";
+                LastApiTest = DateTime.Now;
+                
+                AddActivity("API Test", 
+                    isConnected ? "Connexion API réussie" : "Échec de connexion API", 
+                    isConnected ? "Success" : "Error");
+            }
+            catch (Exception ex)
+            {
+                ApiConnectionStatus = $"Erreur: {ex.Message}";
+                IsApiConfigured = false;
+                AddActivity("API Test", $"Erreur de connexion: {ex.Message}", "Error");
+            }
+        }
+
+        /// <summary>
+        /// Exporte un rapport du dashboard
+        /// </summary>
+        private async Task ExportDashboardReportAsync()
+        {
+            try
+            {
+                // Implémentation de l'export à venir
+                AddActivity("Export", "Export du rapport dashboard demandé", "Info");
+                await Task.Delay(100); // Placeholder
+            }
+            catch (Exception ex)
+            {
+                AddActivity("Export", $"Erreur lors de l'export: {ex.Message}", "Error");
+            }
+        }
+
+        /// <summary>
+        /// Ajoute une activité au journal
+        /// </summary>
+        private void AddActivity(string type, string message, string level)
+        {
+            System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+            {
+                RecentActivities.Insert(0, new RecentActivityModel
+                {
+                    Time = DateTime.Now,
+                    Type = type,
+                    Message = message,
+                    Level = level
+                });
+
+                // Limite à 50 activités
+                while (RecentActivities.Count > 50)
+                {
+                    RecentActivities.RemoveAt(RecentActivities.Count - 1);
+                }
+            });
+        }
+
+        #endregion
+    }
+
+    #region Modèles de données
+
+    /// <summary>
+    /// Modèle pour une activité récente
+    /// </summary>
+    public class RecentActivityModel
+    {
+        public DateTime Time { get; set; }
+        public string Type { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public string Level { get; set; } = "Info";
+        public string? InvoiceNumber { get; set; }
+        public string? Details { get; set; }
+
+        public string FormattedTime => Time.ToString("HH:mm:ss");
+        public string LevelIcon => Level switch
+        {
+            "Success" => "✓",
+            "Warning" => "⚠",
+            "Error" => "✗",
+            _ => "ℹ"
+        };
+    }
+
+    /// <summary>
+    /// Modèle pour une certification récente
+    /// </summary>
+    public class RecentCertificationModel
+    {
+        public string InvoiceNumber { get; set; } = string.Empty;
+        public string ClientName { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public DateTime CertificationTime { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public long ProcessingTime { get; set; }
+
+        public string FormattedAmount => $"{Amount:N2} TND";
+        public string FormattedTime => CertificationTime.ToString("HH:mm");
+        public string FormattedProcessingTime => $"{ProcessingTime}ms";
+    }
+
+    #endregion
+}

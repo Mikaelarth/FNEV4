@@ -11,6 +11,7 @@ using FNEV4.Presentation.ViewModels.Maintenance;
 using FNEV4.Presentation.ViewModels.Configuration;
 using FNEV4.Presentation.ViewModels.GestionClients;
 using FNEV4.Presentation.ViewModels.ImportTraitement;
+using FNEV4.Presentation.ViewModels.CertificationFne;
 using FNEV4.Presentation.Services;
 using FNEV4.Core.Interfaces;
 using FNEV4.Core.Services;
@@ -20,8 +21,11 @@ using FNEV4.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
 using Microsoft.Extensions.Configuration;
+using FNEV4.Core.Interfaces.Services.Fne;
 using CoreLogging = FNEV4.Core.Interfaces.ILoggingService;
 using InfraLogging = FNEV4.Infrastructure.Services.ILoggingService;
+using LegacyIDgiService = FNEV4.Core.Interfaces.IDgiService;
+using FneIDgiService = FNEV4.Core.Interfaces.Services.Fne.IDgiService;
 
 namespace FNEV4.Presentation
 {
@@ -223,7 +227,14 @@ namespace FNEV4.Presentation
                     // Services externes
                     services.AddSingleton<HttpClient>();
                     services.AddLogging();
-                    services.AddScoped<IDgiService, DgiService>();
+                    
+                    // Services DGI (nouveau et legacy pour compatibilité)
+                    services.AddScoped<FneIDgiService, MockDgiService>();
+                    services.AddScoped<LegacyIDgiService>(provider => 
+                        new DgiServiceLegacyAdapter(provider.GetRequiredService<FneIDgiService>()));
+
+                    // Services FNE Certification
+                    services.AddScoped<IFneCertificationService, MockFneCertificationService>();
 
                     // Services de notification
                     services.AddSingleton<IDatabaseConfigurationNotificationService, DatabaseConfigurationNotificationService>();
@@ -245,7 +256,7 @@ namespace FNEV4.Presentation
                             provider.GetService<IDatabaseConfigurationNotificationService>()));
                     services.AddTransient<EntrepriseConfigViewModel>(provider =>
                         new EntrepriseConfigViewModel(
-                            provider.GetService<IDgiService>(),
+                            provider.GetService<LegacyIDgiService>(),
                             provider.GetRequiredService<IDatabaseService>(),
                             provider.GetRequiredService<FNEV4DbContext>()));
                     services.AddTransient<ApiFneConfigViewModel>(provider =>
@@ -258,6 +269,28 @@ namespace FNEV4.Presentation
                     services.AddTransient<ListeClientsViewModel>();
                     services.AddTransient<AjoutModificationClientViewModel>();
                     services.AddTransient<ImportClientsViewModel>();
+                    
+                    // ViewModels Certification FNE
+                    services.AddTransient<CertificationMainViewModel>(provider =>
+                        new CertificationMainViewModel(
+                            provider.GetRequiredService<IFneCertificationService>(),
+                            provider.GetRequiredService<FNEV4.Core.Interfaces.ILoggingService>()));
+                    services.AddTransient<CertificationDashboardViewModel>(provider =>
+                        new CertificationDashboardViewModel(
+                            provider.GetRequiredService<IFneCertificationService>(),
+                            provider.GetRequiredService<FNEV4.Core.Interfaces.ILoggingService>()));
+                    services.AddTransient<CertificationManuelleViewModel>(provider =>
+                        new CertificationManuelleViewModel(
+                            provider.GetRequiredService<IFneCertificationService>(),
+                            provider.GetRequiredService<IInvoiceRepository>(),
+                            provider.GetRequiredService<FNEV4.Core.Interfaces.ILoggingService>()));
+                    services.AddTransient<CertificationAutomatiqueViewModel>(provider =>
+                        new CertificationAutomatiqueViewModel(
+                            provider.GetRequiredService<IFneCertificationService>(),
+                            provider.GetRequiredService<IInvoiceRepository>(),
+                            provider.GetRequiredService<IPathConfigurationService>(),
+                            provider.GetRequiredService<FNEV4.Core.Interfaces.ILoggingService>(),
+                            provider.GetRequiredService<ILogger<CertificationAutomatiqueViewModel>>()));
                     
                     // ViewModels Gestion Factures
                     services.AddTransient<FNEV4.Presentation.ViewModels.GestionFactures.FacturesListViewModel>();

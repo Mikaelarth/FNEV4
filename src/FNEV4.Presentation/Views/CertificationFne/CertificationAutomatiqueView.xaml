@@ -1,0 +1,416 @@
+<UserControl x:Class="FNEV4.Presentation.Views.CertificationFne.CertificationAutomatiqueView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:FNEV4.Presentation.Converters"
+             mc:Ignorable="d"
+             Background="{DynamicResource MaterialDesignPaper}">
+
+    <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+        
+        <!-- Style pour les cartes de statut -->
+        <Style x:Key="StatusCardStyle" TargetType="materialDesign:Card">
+            <Setter Property="Margin" Value="8" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth2" />
+        </Style>
+
+        <!-- Style pour les indicateurs de niveau de log -->
+        <Style x:Key="LogLevelStyle" TargetType="TextBlock">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Level}" Value="Success">
+                    <Setter Property="Foreground" Value="Green" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="Warning">
+                    <Setter Property="Foreground" Value="Orange" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="Error">
+                    <Setter Property="Foreground" Value="Red" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- En-tête avec statut et contrôles -->
+        <materialDesign:Card Grid.Row="0" Style="{StaticResource StatusCardStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                
+                <!-- Titre et statut principal -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0" Orientation="Vertical">
+                        <TextBlock Text="Certification Automatique FNE" 
+                                   Style="{StaticResource MaterialDesignHeadline5TextBlock}" 
+                                   Margin="0,0,0,8" />
+                        <TextBlock Text="{Binding CurrentStatus}" 
+                                   Style="{StaticResource MaterialDesignBody1TextBlock}"
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                    </StackPanel>
+                    
+                    <!-- Bouton principal de contrôle -->
+                    <ToggleButton Grid.Column="1"
+                                  IsChecked="{Binding IsAutoModeEnabled}"
+                                  Command="{Binding ToggleAutoModeCommand}"
+                                  Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                  ToolTip="{Binding IsAutoModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}"
+                                  materialDesign:ToggleButtonAssist.SwitchTrackOnBackground="{DynamicResource SecondaryHueMidBrush}"
+                                  materialDesign:ToggleButtonAssist.SwitchTrackOffBackground="{DynamicResource MaterialDesignCheckBoxOff}"
+                                  Width="60" Height="34" />
+                </Grid>
+
+                <!-- Informations de timing -->
+                <Grid Grid.Row="1" Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Vertical">
+                        <TextBlock Text="Dernière vérification" 
+                                   Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        <TextBlock Text="{Binding LastCheckTime, StringFormat='{}{0:HH:mm:ss}', TargetNullValue='Jamais'}" 
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Vertical">
+                        <TextBlock Text="Prochaine vérification" 
+                                   Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        <TextBlock Text="{Binding NextCheckTime, StringFormat='{}{0:HH:mm:ss}', TargetNullValue='Aucune'}" 
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Vertical">
+                        <TextBlock Text="Action suivante" 
+                                   Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        <TextBlock Text="{Binding NextActionMessage}" 
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}" />
+                    </StackPanel>
+
+                    <Button Grid.Column="3"
+                            Command="{Binding RunManualCheckCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            IsEnabled="{Binding IsCertificationRunning, Converter={StaticResource InverseBooleanConverter}}">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="PlayCircle" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBlock Text="Vérifier maintenant" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                </Grid>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- Statistiques et configuration -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Statistiques du jour -->
+            <materialDesign:Card Grid.Column="0" Style="{StaticResource StatusCardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" 
+                               Text="Statistiques du jour" 
+                               Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                               Margin="0,0,0,16" />
+
+                    <Grid Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Factures en attente -->
+                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                   Text="Factures en attente:"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Row="0" Grid.Column="1"
+                                Content="{Binding PendingInvoicesCount}"
+                                Command="{Binding ViewPendingInvoicesCommand}"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                HorizontalAlignment="Right" />
+
+                        <!-- Certifiées aujourd'hui -->
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                   Text="Certifiées aujourd'hui:"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="1" Grid.Column="1"
+                                   Text="{Binding TotalCertifiedToday}"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   Foreground="Green"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Center" />
+
+                        <!-- Erreurs aujourd'hui -->
+                        <TextBlock Grid.Row="2" Grid.Column="0"
+                                   Text="Erreurs aujourd'hui:"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="2" Grid.Column="1"
+                                   Text="{Binding TotalErrorsToday}"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   Foreground="Red"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Center" />
+
+                        <!-- Montant total -->
+                        <TextBlock Grid.Row="3" Grid.Column="0"
+                                   Text="Montant certifié:"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="3" Grid.Column="1"
+                                   Text="{Binding TotalAmountCertifiedToday, StringFormat='{}{0:N2} TND'}"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                </Grid>
+            </materialDesign:Card>
+
+            <!-- Configuration -->
+            <materialDesign:Card Grid.Column="1" Style="{StaticResource StatusCardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" 
+                               Text="Configuration" 
+                               Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                               Margin="0,0,0,16" />
+
+                    <Grid Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Intervalle de vérification -->
+                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                   Text="Intervalle (minutes):"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   VerticalAlignment="Center" />
+                        <ComboBox Grid.Row="0" Grid.Column="1"
+                                  SelectedValue="{Binding AutoCheckIntervalMinutes}"
+                                  ItemsSource="{Binding AvailableIntervals}"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  MinWidth="100"
+                                  HorizontalAlignment="Left" />
+
+                        <!-- Options de certification -->
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                   Text="Certifier à l'import:"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,8,0,0" />
+                        <CheckBox Grid.Row="1" Grid.Column="1"
+                                  IsChecked="{Binding CertifyOnImport}"
+                                  Style="{StaticResource MaterialDesignCheckBox}"
+                                  Margin="0,8,0,0" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0"
+                                   Text="Certifier les brouillons:"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,8,0,0" />
+                        <CheckBox Grid.Row="2" Grid.Column="1"
+                                  IsChecked="{Binding CertifyDraftInvoices}"
+                                  Style="{StaticResource MaterialDesignCheckBox}"
+                                  Margin="0,8,0,0" />
+
+                        <TextBlock Grid.Row="3" Grid.Column="0"
+                                   Text="Certifier les validées:"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,8,0,0" />
+                        <CheckBox Grid.Row="3" Grid.Column="1"
+                                  IsChecked="{Binding CertifyValidatedInvoices}"
+                                  Style="{StaticResource MaterialDesignCheckBox}"
+                                  Margin="0,8,0,0" />
+
+                        <TextBlock Grid.Row="4" Grid.Column="0"
+                                   Text="Retry sur erreurs:"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,8,0,0" />
+                        <CheckBox Grid.Row="4" Grid.Column="1"
+                                  IsChecked="{Binding RetryErrorInvoices}"
+                                  Style="{StaticResource MaterialDesignCheckBox}"
+                                  Margin="0,8,0,0" />
+
+                        <TextBlock Grid.Row="5" Grid.Column="0"
+                                   Text="Tentatives max:"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,8,0,0"
+                                   IsEnabled="{Binding RetryErrorInvoices}" />
+                        <TextBox Grid.Row="5" Grid.Column="1"
+                                 Text="{Binding MaxRetryAttempts}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 IsEnabled="{Binding RetryErrorInvoices}"
+                                 Width="80"
+                                 HorizontalAlignment="Left"
+                                 Margin="0,8,0,0" />
+                    </Grid>
+
+                    <!-- Bouton de sauvegarde -->
+                    <Button Grid.Row="2"
+                            Command="{Binding SaveConfigurationCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            HorizontalAlignment="Right"
+                            Margin="0,16,0,0">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ContentSave" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBlock Text="Sauvegarder" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                </Grid>
+            </materialDesign:Card>
+        </Grid>
+
+        <!-- Journal d'activité -->
+        <materialDesign:Card Grid.Row="2" Style="{StaticResource StatusCardStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- En-tête du journal -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                               Text="Journal d'activité" 
+                               Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                               VerticalAlignment="Center" />
+
+                    <Button Grid.Column="1"
+                            Command="{Binding ClearActivityLogCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Delete" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBlock Text="Vider" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                </Grid>
+
+                <!-- Liste du journal -->
+                <ScrollViewer Grid.Row="1" 
+                              VerticalScrollBarVisibility="Auto"
+                              Margin="0,16,0,0">
+                    <ListBox ItemsSource="{Binding RecentActivity}"
+                             Background="Transparent"
+                             BorderThickness="0">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <materialDesign:Card Margin="0,2" Padding="12,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding LevelIcon}"
+                                                   Style="{StaticResource LogLevelStyle}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,8,0" />
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding FormattedTime}"
+                                                   Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,16,0" />
+
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding Message}"
+                                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                                   VerticalAlignment="Center"
+                                                   TextWrapping="Wrap" />
+                                    </Grid>
+                                </materialDesign:Card>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </ScrollViewer>
+
+                <!-- Overlay en cours de certification -->
+                <Grid Grid.Row="1"
+                      Background="{DynamicResource MaterialDesignPaper}"
+                      Opacity="0.9"
+                      Visibility="{Binding IsCertificationRunning, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                                     IsIndeterminate="True"
+                                     Width="48" Height="48" />
+                        <TextBlock Text="Certification en cours..." 
+                                   Style="{StaticResource MaterialDesignSubtitle2TextBlock}"
+                                   Margin="0,16,0,0"
+                                   HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </materialDesign:Card>
+    </Grid>
+</UserControl>

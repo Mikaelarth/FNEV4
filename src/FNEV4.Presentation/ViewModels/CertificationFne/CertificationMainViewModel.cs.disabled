@@ -1,0 +1,459 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using FNEV4.Core.Entities;
+using FNEV4.Core.Interfaces.Services.Fne;
+using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace FNEV4.Presentation.ViewModels.CertificationFne
+{
+    /// <summary>
+    /// ViewModel principal pour la gestion de la certification FNE
+    /// Coordonne les différents modes de certification (manuel, automatique, dashboard)
+    /// </summary>
+    public partial class CertificationMainViewModel : ObservableObject
+    {
+        private readonly IFneCertificationService _certificationService;
+        private readonly IDgiService _dgiService;
+
+        // ViewModels des sous-composants
+        public CertificationManuelleViewModel ManualCertificationViewModel { get; }
+        public CertificationAutomatiqueViewModel AutoCertificationViewModel { get; }
+        public CertificationDashboardViewModel DashboardViewModel { get; }
+
+        // Vue active
+        [ObservableProperty]
+        private string _activeView = "Dashboard";
+
+        // État général
+        [ObservableProperty]
+        private bool _isSystemReady = false;
+
+        [ObservableProperty]
+        private string _systemStatusMessage = "Initialisation...";
+
+        [ObservableProperty]
+        private bool _hasApiConfiguration = false;
+
+        [ObservableProperty]
+        private int _totalPendingInvoices = 0;
+
+        [ObservableProperty]
+        private bool _isAnyOperationRunning = false;
+
+        // Navigation
+        [ObservableProperty]
+        private ObservableCollection<NavigationItem> _navigationItems = new();
+
+        /// <summary>
+        /// Initialise une nouvelle instance du ViewModel principal de certification
+        /// </summary>
+        public CertificationMainViewModel(
+            IFneCertificationService certificationService,
+            IDgiService dgiService,
+            CertificationManuelleViewModel manualViewModel,
+            CertificationAutomatiqueViewModel autoViewModel,
+            CertificationDashboardViewModel dashboardViewModel)
+        {
+            _certificationService = certificationService;
+            _dgiService = dgiService;
+            
+            ManualCertificationViewModel = manualViewModel;
+            AutoCertificationViewModel = autoViewModel;
+            DashboardViewModel = dashboardViewModel;
+
+            InitializeNavigation();
+            InitializeCommands();
+            SubscribeToEvents();
+            
+            _ = InitializeSystemAsync();
+        }
+
+        /// <summary>
+        /// Initialise les éléments de navigation
+        /// </summary>
+        private void InitializeNavigation()
+        {
+            NavigationItems = new ObservableCollection<NavigationItem>
+            {
+                new NavigationItem 
+                { 
+                    Name = "Dashboard", 
+                    Icon = "ViewDashboard", 
+                    Description = "Vue d'ensemble",
+                    IsActive = true
+                },
+                new NavigationItem 
+                { 
+                    Name = "Manual", 
+                    Icon = "PlayCircle", 
+                    Description = "Certification manuelle",
+                    IsActive = false
+                },
+                new NavigationItem 
+                { 
+                    Name = "Auto", 
+                    Icon = "AutoFix", 
+                    Description = "Mode automatique",
+                    IsActive = false
+                },
+                new NavigationItem 
+                { 
+                    Name = "Configuration", 
+                    Icon = "Settings", 
+                    Description = "Configuration",
+                    IsActive = false
+                },
+                new NavigationItem 
+                { 
+                    Name = "Logs", 
+                    Icon = "TextBoxMultiple", 
+                    Description = "Journal d'activités",
+                    IsActive = false
+                }
+            };
+        }
+
+        /// <summary>
+        /// Initialise les commandes
+        /// </summary>
+        private void InitializeCommands()
+        {
+            NavigateToViewCommand = new RelayCommand<string>(NavigateToView);
+            RefreshSystemStatusCommand = new AsyncRelayCommand(RefreshSystemStatusAsync);
+            QuickCertifyPendingCommand = new AsyncRelayCommand(QuickCertifyPendingAsync);
+            TestSystemHealthCommand = new AsyncRelayCommand(TestSystemHealthAsync);
+        }
+
+        /// <summary>
+        /// S'abonne aux événements des sous-ViewModels
+        /// </summary>
+        private void SubscribeToEvents()
+        {
+            // Événements du dashboard pour navigation
+            DashboardViewModel.NavigateToManual += () => NavigateToView("Manual");
+            DashboardViewModel.NavigateToAutoMode += () => NavigateToView("Auto");
+            DashboardViewModel.NavigateToActivities += () => NavigateToView("Logs");
+
+            // Surveillance des changements d'état
+            ManualCertificationViewModel.PropertyChanged += OnSubViewModelPropertyChanged;
+            AutoCertificationViewModel.PropertyChanged += OnSubViewModelPropertyChanged;
+            DashboardViewModel.PropertyChanged += OnSubViewModelPropertyChanged;
+        }
+
+        /// <summary>
+        /// Gère les changements de propriétés des sous-ViewModels
+        /// </summary>
+        private void OnSubViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            // Synchronise l'état général avec les sous-composants
+            switch (e.PropertyName)
+            {
+                case nameof(CertificationManuelleViewModel.IsCertificationRunning):
+                case nameof(CertificationAutomatiqueViewModel.IsCertificationRunning):
+                    UpdateRunningStatus();
+                    break;
+                
+                case nameof(CertificationManuelleViewModel.PendingInvoicesCount):
+                case nameof(CertificationAutomatiqueViewModel.PendingInvoicesCount):
+                    UpdatePendingCount();
+                    break;
+            }
+        }
+
+        #region Commands
+
+        /// <summary>
+        /// Commande pour naviguer vers une vue
+        /// </summary>
+        public IRelayCommand<string> NavigateToViewCommand { get; private set; }
+
+        /// <summary>
+        /// Commande pour rafraîchir le statut du système
+        /// </summary>
+        public IAsyncRelayCommand RefreshSystemStatusCommand { get; private set; }
+
+        /// <summary>
+        /// Commande pour certification rapide des factures en attente
+        /// </summary>
+        public IAsyncRelayCommand QuickCertifyPendingCommand { get; private set; }
+
+        /// <summary>
+        /// Commande pour tester la santé du système
+        /// </summary>
+        public IAsyncRelayCommand TestSystemHealthCommand { get; private set; }
+
+        #endregion
+
+        #region Propriétés calculées
+
+        /// <summary>
+        /// Indique si le mode automatique est actif
+        /// </summary>
+        public bool IsAutoModeActive => AutoCertificationViewModel.IsAutoModeEnabled;
+
+        /// <summary>
+        /// Indique si une certification manuelle est en cours
+        /// </summary>
+        public bool IsManualCertificationRunning => ManualCertificationViewModel.IsCertificationRunning;
+
+        /// <summary>
+        /// Message de statut consolidé
+        /// </summary>
+        public string ConsolidatedStatus
+        {
+            get
+            {
+                if (!IsSystemReady) return "Système non initialisé";
+                if (IsAnyOperationRunning) return "Opération en cours...";
+                if (!HasApiConfiguration) return "Configuration API requise";
+                if (TotalPendingInvoices > 0) return $"{TotalPendingInvoices} factures en attente";
+                return "Système opérationnel";
+            }
+        }
+
+        /// <summary>
+        /// Couleur du statut système
+        /// </summary>
+        public string SystemStatusColor
+        {
+            get
+            {
+                if (!IsSystemReady || !HasApiConfiguration) return "Red";
+                if (IsAnyOperationRunning) return "Orange";
+                if (TotalPendingInvoices > 0) return "Orange";
+                return "Green";
+            }
+        }
+
+        #endregion
+
+        #region Méthodes principales
+
+        /// <summary>
+        /// Initialise le système de certification
+        /// </summary>
+        private async Task InitializeSystemAsync()
+        {
+            try
+            {
+                SystemStatusMessage = "Vérification de la configuration...";
+                
+                // Vérification de la configuration API
+                HasApiConfiguration = await _dgiService.IsConfiguredAsync();
+                
+                if (HasApiConfiguration)
+                {
+                    SystemStatusMessage = "Test de connexion API...";
+                    var isConnected = await _dgiService.TestConnectionAsync();
+                    
+                    if (isConnected)
+                    {
+                        SystemStatusMessage = "Chargement des données...";
+                        await RefreshSystemStatusAsync();
+                        IsSystemReady = true;
+                        SystemStatusMessage = "Système initialisé avec succès";
+                    }
+                    else
+                    {
+                        SystemStatusMessage = "Erreur de connexion API";
+                    }
+                }
+                else
+                {
+                    SystemStatusMessage = "Configuration API requise";
+                }
+            }
+            catch (Exception ex)
+            {
+                SystemStatusMessage = $"Erreur d'initialisation: {ex.Message}";
+                IsSystemReady = false;
+            }
+        }
+
+        /// <summary>
+        /// Navigue vers une vue spécifique
+        /// </summary>
+        private void NavigateToView(string? viewName)
+        {
+            if (string.IsNullOrEmpty(viewName)) return;
+
+            // Met à jour la vue active
+            ActiveView = viewName;
+
+            // Met à jour l'état des éléments de navigation
+            foreach (var item in NavigationItems)
+            {
+                item.IsActive = item.Name == viewName;
+            }
+
+            // Actions spécifiques selon la vue
+            switch (viewName)
+            {
+                case "Manual":
+                    _ = ManualCertificationViewModel.LoadAvailableInvoicesAsync();
+                    break;
+                
+                case "Auto":
+                    _ = AutoCertificationViewModel.LoadConfigurationAsync();
+                    break;
+                
+                case "Dashboard":
+                    _ = DashboardViewModel.LoadDashboardDataAsync();
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Rafraîchit le statut général du système
+        /// </summary>
+        private async Task RefreshSystemStatusAsync()
+        {
+            try
+            {
+                // Compte des factures en attente
+                var pendingCount = await _certificationService.GetPendingInvoicesCountAsync();
+                TotalPendingInvoices = pendingCount;
+
+                // Test de santé de l'API
+                if (HasApiConfiguration)
+                {
+                    var isHealthy = await _dgiService.TestConnectionAsync();
+                    if (!isHealthy)
+                    {
+                        SystemStatusMessage = "Problème de connexion API";
+                        IsSystemReady = false;
+                    }
+                }
+
+                // Mise à jour de l'état
+                UpdateRunningStatus();
+                OnPropertyChanged(nameof(ConsolidatedStatus));
+                OnPropertyChanged(nameof(SystemStatusColor));
+            }
+            catch (Exception ex)
+            {
+                SystemStatusMessage = $"Erreur de mise à jour: {ex.Message}";
+            }
+        }
+
+        /// <summary>
+        /// Certification rapide des factures en attente
+        /// </summary>
+        private async Task QuickCertifyPendingAsync()
+        {
+            if (!IsSystemReady || !HasApiConfiguration)
+            {
+                return;
+            }
+
+            try
+            {
+                IsAnyOperationRunning = true;
+                SystemStatusMessage = "Certification rapide en cours...";
+
+                var result = await _certificationService.CertifyPendingInvoicesAsync(maxCount: 10);
+                
+                SystemStatusMessage = $"Certification rapide terminée: {result.SuccessCount} réussies, {result.ErrorCount} erreurs";
+                
+                await RefreshSystemStatusAsync();
+            }
+            catch (Exception ex)
+            {
+                SystemStatusMessage = $"Erreur de certification rapide: {ex.Message}";
+            }
+            finally
+            {
+                IsAnyOperationRunning = false;
+            }
+        }
+
+        /// <summary>
+        /// Teste la santé complète du système
+        /// </summary>
+        private async Task TestSystemHealthAsync()
+        {
+            try
+            {
+                SystemStatusMessage = "Test de santé en cours...";
+
+                var healthResult = await _certificationService.PerformHealthCheckAsync();
+                
+                IsSystemReady = healthResult.IsHealthy;
+                HasApiConfiguration = healthResult.HasApiConfig;
+                SystemStatusMessage = healthResult.StatusMessage;
+
+                OnPropertyChanged(nameof(ConsolidatedStatus));
+                OnPropertyChanged(nameof(SystemStatusColor));
+            }
+            catch (Exception ex)
+            {
+                SystemStatusMessage = $"Erreur de test de santé: {ex.Message}";
+                IsSystemReady = false;
+            }
+        }
+
+        /// <summary>
+        /// Met à jour le statut des opérations en cours
+        /// </summary>
+        private void UpdateRunningStatus()
+        {
+            IsAnyOperationRunning = ManualCertificationViewModel.IsCertificationRunning || 
+                                   AutoCertificationViewModel.IsCertificationRunning;
+            
+            OnPropertyChanged(nameof(ConsolidatedStatus));
+            OnPropertyChanged(nameof(SystemStatusColor));
+        }
+
+        /// <summary>
+        /// Met à jour le compte des factures en attente
+        /// </summary>
+        private void UpdatePendingCount()
+        {
+            var manualPending = ManualCertificationViewModel.PendingInvoicesCount;
+            var autoPending = AutoCertificationViewModel.PendingInvoicesCount;
+            
+            TotalPendingInvoices = Math.Max(manualPending, autoPending);
+            
+            OnPropertyChanged(nameof(ConsolidatedStatus));
+        }
+
+        #endregion
+    }
+
+    #region Classes de support
+
+    /// <summary>
+    /// Élément de navigation pour l'interface
+    /// </summary>
+    public partial class NavigationItem : ObservableObject
+    {
+        [ObservableProperty]
+        private string _name = string.Empty;
+
+        [ObservableProperty]
+        private string _icon = string.Empty;
+
+        [ObservableProperty]
+        private string _description = string.Empty;
+
+        [ObservableProperty]
+        private bool _isActive = false;
+
+        [ObservableProperty]
+        private bool _isEnabled = true;
+
+        [ObservableProperty]
+        private int _badgeCount = 0;
+
+        /// <summary>
+        /// Indique si le badge doit être affiché
+        /// </summary>
+        public bool ShowBadge => BadgeCount > 0;
+    }
+
+    #endregion
+}

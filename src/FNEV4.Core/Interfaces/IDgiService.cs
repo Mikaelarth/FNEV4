@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace FNEV4.Core.Interfaces
+namespace FNEV4.Core.Interfaces.Services.Fne
 {
     /// <summary>
     /// Interface pour les services d'intégration avec l'API DGI (Direction Générale des Impôts)
@@ -21,6 +21,18 @@ namespace FNEV4.Core.Interfaces
         /// </summary>
         /// <returns>True si l'API DGI est accessible</returns>
         Task<bool> TestConnectivityAsync();
+
+        /// <summary>
+        /// Teste la connexion à l'API DGI
+        /// </summary>
+        /// <returns>True si la connexion est établie</returns>
+        Task<bool> TestConnectionAsync();
+
+        /// <summary>
+        /// Vérifie si l'API DGI est configurée
+        /// </summary>
+        /// <returns>True si la configuration est valide</returns>
+        Task<bool> IsConfiguredAsync();
 
         /// <summary>
         /// Obtient les informations d'une entreprise via son NCC

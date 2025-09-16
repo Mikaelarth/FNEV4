@@ -13,6 +13,7 @@ using FNEV4.Infrastructure.Services;
 using FNEV4.Presentation.Views.Maintenance;
 using FNEV4.Presentation.ViewModels.GestionFactures;
 using FNEV4.Presentation.Views.GestionFactures;
+using FNEV4.Presentation.Views.CertificationFne;
 
 namespace FNEV4.Presentation.ViewModels
 {
@@ -169,24 +170,28 @@ namespace FNEV4.Presentation.ViewModels
         private void NavigateToCertificationManuelle()
         {
             CurrentModuleName = "Certification - Certification manuelle";
+            CurrentView = new CertificationManuelleView();
         }
 
         [RelayCommand]
         private void NavigateToCertificationAutomatique()
         {
             CurrentModuleName = "Certification - Certification automatique";
+            CurrentView = new CertificationAutomatiqueView();
         }
 
         [RelayCommand]
         private void NavigateToSuiviCertifications()
         {
             CurrentModuleName = "Certification - Suivi des certifications";
+            CurrentView = new CertificationDashboardView();
         }
 
         [RelayCommand]
         private void NavigateToRetryReprises()
         {
             CurrentModuleName = "Certification - Retry & Reprises";
+            CurrentView = new CertificationMainView();
         }
 
         /// <summary>

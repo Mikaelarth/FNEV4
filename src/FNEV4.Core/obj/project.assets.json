@@ -53,11 +53,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj",
+      "projectUniqueName": "D:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj",
       "projectName": "FNEV4.Core",
-      "projectPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj",
+      "projectPath": "D:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Core\\FNEV4.Core.csproj",
       "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-      "outputPath": "D:\\PROJET\\FNEV4\\src\\FNEV4.Core\\obj\\",
+      "outputPath": "D:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Core\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"

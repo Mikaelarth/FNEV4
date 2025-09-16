@@ -68,6 +68,12 @@ namespace FNEV4.Core.Interfaces
         /// </summary>
         /// <returns>Statistiques des factures</returns>
         Task<InvoiceStatistics> GetStatisticsAsync();
+        
+        /// <summary>
+        /// Récupère les factures disponibles pour certification FNE
+        /// </summary>
+        /// <returns>Liste des factures prêtes pour certification</returns>
+        Task<IEnumerable<FneInvoice>> GetAvailableForCertificationAsync();
     }
     
     /// <summary>

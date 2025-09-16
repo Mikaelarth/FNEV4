@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using FNEV4.Core.Interfaces;
+using FNEV4.Core.Interfaces.Services.Fne;
 
 namespace FNEV4.Infrastructure.Services
 {
@@ -293,6 +293,36 @@ namespace FNEV4.Infrastructure.Services
         {
             var verificationResult = await VerifyNccAsync(nccNumber);
             return verificationResult.CompanyInfo;
+        }
+
+        /// <summary>
+        /// Teste la connexion à l'API DGI
+        /// </summary>
+        /// <returns>True si la connexion est établie</returns>
+        public async Task<bool> TestConnectionAsync()
+        {
+            return await TestConnectivityAsync();
+        }
+
+        /// <summary>
+        /// Vérifie si l'API DGI est configurée
+        /// </summary>
+        /// <returns>True si la configuration est valide</returns>
+        public async Task<bool> IsConfiguredAsync()
+        {
+            try
+            {
+                // Vérifier que l'URL de base est configurée
+                if (string.IsNullOrEmpty(_baseUrl))
+                    return false;
+
+                // Test de connectivité simple
+                return await TestConnectivityAsync();
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private static bool IsValidNccFormat(string nccNumber)

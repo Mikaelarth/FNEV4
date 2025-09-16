@@ -1,0 +1,290 @@
+<UserControl x:Class="FNEV4.Presentation.Views.CertificationFne.CertificationMainView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:FNEV4.Presentation.Converters"
+             xmlns:local="clr-namespace:FNEV4.Presentation.Views.CertificationFne"
+             mc:Ignorable="d"
+             Background="{DynamicResource MaterialDesignPaper}">
+
+    <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        
+        <!-- Style pour les boutons de navigation -->
+        <Style x:Key="NavigationButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Setter Property="Height" Value="60" />
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="BorderThickness" Value="0,0,4,0" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource PrimaryHueLightBrush}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource PrimaryHueDarkBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsActive}" Value="False">
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderBrush" Value="Transparent" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Style pour les badges de notification -->
+        <Style x:Key="BadgeStyle" TargetType="Border">
+            <Setter Property="Background" Value="Red" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="MinWidth" Value="20" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="Padding" Value="4,2" />
+        </Style>
+
+        <!-- DataTemplate pour les éléments de navigation -->
+        <DataTemplate x:Key="NavigationItemTemplate">
+            <Button Command="{Binding DataContext.NavigateToViewCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    CommandParameter="{Binding Name}"
+                    Style="{StaticResource NavigationButtonStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Icône -->
+                    <materialDesign:PackIcon Grid.Column="0" 
+                                             Kind="{Binding Icon}" 
+                                             Width="24" Height="24" 
+                                             VerticalAlignment="Center"
+                                             Margin="0,0,16,0" />
+
+                    <!-- Texte -->
+                    <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Name}" 
+                                   Style="{StaticResource MaterialDesignBody1TextBlock}"
+                                   FontWeight="Medium" />
+                        <TextBlock Text="{Binding Description}" 
+                                   Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                   Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    </StackPanel>
+
+                    <!-- Badge de notification -->
+                    <Border Grid.Column="2"
+                            Style="{StaticResource BadgeStyle}"
+                            Visibility="{Binding ShowBadge, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <TextBlock Text="{Binding BadgeCount}" 
+                                   Foreground="White" 
+                                   FontSize="10" 
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                    </Border>
+                </Grid>
+            </Button>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Panneau de navigation gauche -->
+        <materialDesign:Card Grid.Column="0" 
+                             materialDesign:ShadowAssist.ShadowDepth="Depth2"
+                             Margin="8,8,4,8">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- En-tête -->
+                <StackPanel Grid.Row="0" 
+                            Orientation="Vertical" 
+                            Margin="20,24,20,16">
+                    <TextBlock Text="Certification FNE" 
+                               Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                               HorizontalAlignment="Center" 
+                               Margin="0,0,0,8" />
+                    <Separator Style="{StaticResource MaterialDesignSeparator}" />
+                </StackPanel>
+
+                <!-- Statut système -->
+                <materialDesign:Card Grid.Row="1" 
+                                     Margin="12,0,12,16" 
+                                     Padding="12">
+                    <StackPanel Orientation="Vertical">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            
+                            <materialDesign:PackIcon Grid.Column="0" 
+                                                     Kind="Circle" 
+                                                     Foreground="{Binding SystemStatusColor}"
+                                                     Width="12" Height="12" 
+                                                     VerticalAlignment="Center"
+                                                     Margin="0,0,8,0" />
+                            
+                            <TextBlock Grid.Column="1" 
+                                       Text="Statut Système"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                       FontWeight="Medium"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+                        
+                        <TextBlock Text="{Binding ConsolidatedStatus}" 
+                                   Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                   TextWrapping="Wrap"
+                                   Margin="20,4,0,8" />
+
+                        <!-- Actions rapides -->
+                        <StackPanel Orientation="Horizontal" 
+                                    HorizontalAlignment="Right"
+                                    Margin="0,4,0,0">
+                            <Button Command="{Binding RefreshSystemStatusCommand}"
+                                    Style="{StaticResource MaterialDesignToolButton}"
+                                    ToolTip="Actualiser le statut"
+                                    Width="32" Height="32">
+                                <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" />
+                            </Button>
+                            
+                            <Button Command="{Binding TestSystemHealthCommand}"
+                                    Style="{StaticResource MaterialDesignToolButton}"
+                                    ToolTip="Test de santé"
+                                    Width="32" Height="32">
+                                <materialDesign:PackIcon Kind="Stethoscope" Width="16" Height="16" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Menu de navigation -->
+                <ScrollViewer Grid.Row="2" 
+                              VerticalScrollBarVisibility="Auto"
+                              Margin="8,0">
+                    <ItemsControl ItemsSource="{Binding NavigationItems}"
+                                  ItemTemplate="{StaticResource NavigationItemTemplate}" />
+                </ScrollViewer>
+
+                <!-- Action rapide -->
+                <StackPanel Grid.Row="3" 
+                            Orientation="Vertical" 
+                            Margin="12,16,12,20">
+                    <Button Command="{Binding QuickCertifyPendingCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Background="{DynamicResource SecondaryHueMidBrush}"
+                            BorderBrush="{DynamicResource SecondaryHueMidBrush}"
+                            IsEnabled="{Binding IsSystemReady}"
+                            Height="40">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Flash" 
+                                                     Width="18" Height="18" 
+                                                     VerticalAlignment="Center"
+                                                     Margin="0,0,8,0" />
+                            <TextBlock Text="Certification rapide" 
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <TextBlock Text="{Binding TotalPendingInvoices, StringFormat='{}{0} factures en attente'}" 
+                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}"
+                               HorizontalAlignment="Center"
+                               Margin="0,4,0,0"
+                               Visibility="{Binding Path=TotalPendingInvoices, Converter={StaticResource BoolToVisibilityConverter}}" />
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- Contenu principal -->
+        <materialDesign:Card Grid.Column="1" 
+                             materialDesign:ShadowAssist.ShadowDepth="Depth1"
+                             Margin="4,8,8,8">
+            <Grid>
+                <!-- Overlay de chargement -->
+                <Grid Background="{DynamicResource MaterialDesignPaper}"
+                      Opacity="0.8"
+                      Visibility="{Binding IsAnyOperationRunning, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                                     IsIndeterminate="True"
+                                     Width="64" Height="64" />
+                        <TextBlock Text="{Binding SystemStatusMessage}" 
+                                   Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                                   Margin="0,16,0,0"
+                                   HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Contenu selon la vue active -->
+                <ContentControl>
+                    <ContentControl.Style>
+                        <Style TargetType="ContentControl">
+                            <Style.Triggers>
+                                <!-- Dashboard -->
+                                <DataTrigger Binding="{Binding ActiveView}" Value="Dashboard">
+                                    <Setter Property="Content">
+                                        <Setter.Value>
+                                            <local:CertificationDashboardView DataContext="{Binding DashboardViewModel}" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+
+                                <!-- Certification Manuelle -->
+                                <DataTrigger Binding="{Binding ActiveView}" Value="Manual">
+                                    <Setter Property="Content">
+                                        <Setter.Value>
+                                            <local:CertificationManuelleView DataContext="{Binding ManualCertificationViewModel}" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+
+                                <!-- Certification Automatique -->
+                                <DataTrigger Binding="{Binding ActiveView}" Value="Auto">
+                                    <Setter Property="Content">
+                                        <Setter.Value>
+                                            <local:CertificationAutomatiqueView DataContext="{Binding AutoCertificationViewModel}" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+
+                                <!-- Configuration -->
+                                <DataTrigger Binding="{Binding ActiveView}" Value="Configuration">
+                                    <Setter Property="Content">
+                                        <Setter.Value>
+                                            <TextBlock Text="Configuration FNE - À venir" 
+                                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+
+                                <!-- Logs -->
+                                <DataTrigger Binding="{Binding ActiveView}" Value="Logs">
+                                    <Setter Property="Content">
+                                        <Setter.Value>
+                                            <TextBlock Text="Journal d'activités détaillé - À venir" 
+                                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ContentControl.Style>
+                </ContentControl>
+            </Grid>
+        </materialDesign:Card>
+    </Grid>
+</UserControl>
