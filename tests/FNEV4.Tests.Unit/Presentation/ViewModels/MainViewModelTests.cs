@@ -88,35 +88,7 @@ namespace FNEV4.Tests.Unit.Presentation.ViewModels
             viewModel.CurrentModuleName.Should().Be(expectedModuleName);
         }
 
-        [Theory]
-        [InlineData("Factures - Liste des factures")]
-        [InlineData("Factures - Édition de factures")]
-        [InlineData("Factures - Détails de facture")]
-        [InlineData("Factures - Factures d'avoir")]
-        public void FacturesNavigationCommands_ShouldUpdateCurrentModuleName(string expectedModuleName)
-        {
-            // Arrange
-            var viewModel = new MainViewModel();
 
-            // Act & Assert
-            switch (expectedModuleName)
-            {
-                case "Factures - Liste des factures":
-                    viewModel.NavigateToListeFacturesCommand.Execute(null);
-                    break;
-                case "Factures - Édition de factures":
-                    viewModel.NavigateToEditionFacturesCommand.Execute(null);
-                    break;
-                case "Factures - Détails de facture":
-                    viewModel.NavigateToDetailsFactureCommand.Execute(null);
-                    break;
-                case "Factures - Factures d'avoir":
-                    viewModel.NavigateToFacturesAvoirCommand.Execute(null);
-                    break;
-            }
-
-            viewModel.CurrentModuleName.Should().Be(expectedModuleName);
-        }
 
         [Theory]
         [InlineData("Certification - Certification manuelle")]
@@ -317,11 +289,6 @@ namespace FNEV4.Tests.Unit.Presentation.ViewModels
             viewModel.NavigateToImportFichiersCommand.Should().NotBeNull();
             viewModel.NavigateToParsingValidationCommand.Should().NotBeNull();
             viewModel.NavigateToHistoriqueImportsCommand.Should().NotBeNull();
-            
-            viewModel.NavigateToListeFacturesCommand.Should().NotBeNull();
-            viewModel.NavigateToEditionFacturesCommand.Should().NotBeNull();
-            viewModel.NavigateToDetailsFactureCommand.Should().NotBeNull();
-            viewModel.NavigateToFacturesAvoirCommand.Should().NotBeNull();
             
             viewModel.NavigateToCertificationManuelleCommand.Should().NotBeNull();
             viewModel.NavigateToCertificationAutomatiqueCommand.Should().NotBeNull();

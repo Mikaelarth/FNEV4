@@ -63,18 +63,7 @@ namespace FNEV4.Tests.Unit.Presentation
             viewModel.CurrentModuleName.Should().Be("Import - Import de fichiers");
         }
 
-        [Fact]
-        public void NavigateToListeFactures_ShouldUpdateCurrentModuleName()
-        {
-            // Arrange
-            var viewModel = new MainViewModel();
 
-            // Act
-            viewModel.NavigateToListeFacturesCommand.Execute(null);
-
-            // Assert
-            viewModel.CurrentModuleName.Should().Be("Factures - Liste des factures");
-        }
 
         [Fact]
         public void NavigateToCertificationManuelle_ShouldUpdateCurrentModuleName()

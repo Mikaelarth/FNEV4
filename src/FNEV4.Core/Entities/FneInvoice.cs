@@ -166,6 +166,40 @@ namespace FNEV4.Core.Entities
         public DateTime? CertifiedAt { get; set; }
 
         /// <summary>
+        /// Numéro de certificat FNE
+        /// </summary>
+        [MaxLength(100)]
+        public string? FneCertificationNumber { get; set; }
+
+        /// <summary>
+        /// Date de certification FNE retournée par l'API
+        /// </summary>
+        public DateTime? FneCertificationDate { get; set; }
+
+        /// <summary>
+        /// Code QR de certification FNE
+        /// </summary>
+        [MaxLength(2000)]
+        public string? FneQrCode { get; set; }
+
+        /// <summary>
+        /// Signature numérique FNE
+        /// </summary>
+        [MaxLength(2000)]
+        public string? FneDigitalSignature { get; set; }
+
+        /// <summary>
+        /// URL de validation FNE
+        /// </summary>
+        [MaxLength(500)]
+        public string? FneValidationUrl { get; set; }
+
+        /// <summary>
+        /// Indique si la facture est certifiée FNE
+        /// </summary>
+        public bool IsCertified { get; set; }
+
+        /// <summary>
         /// Messages d'erreur de certification
         /// </summary>
         public string? ErrorMessages { get; set; }

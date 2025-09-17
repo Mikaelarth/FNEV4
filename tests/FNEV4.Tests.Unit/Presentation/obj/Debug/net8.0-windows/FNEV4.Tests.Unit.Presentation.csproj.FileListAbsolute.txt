@@ -847,6 +847,7 @@ D:\PROJET\FNE\FNEV4\tests\FNEV4.Tests.Unit\Presentation\bin\Debug\net8.0-windows
 D:\PROJET\FNE\FNEV4\tests\FNEV4.Tests.Unit\Presentation\bin\Debug\net8.0-windows\NuGet.Frameworks.dll
 D:\PROJET\FNE\FNEV4\tests\FNEV4.Tests.Unit\Presentation\bin\Debug\net8.0-windows\Polly.dll
 D:\PROJET\FNE\FNEV4\tests\FNEV4.Tests.Unit\Presentation\bin\Debug\net8.0-windows\Polly.Extensions.Http.dll
+D:\PROJET\FNE\FNEV4\tests\FNEV4.Tests.Unit\Presentation\bin\Debug\net8.0-windows\QRCoder.dll
 D:\PROJET\FNE\FNEV4\tests\FNEV4.Tests.Unit\Presentation\bin\Debug\net8.0-windows\Serilog.dll
 D:\PROJET\FNE\FNEV4\tests\FNEV4.Tests.Unit\Presentation\bin\Debug\net8.0-windows\Serilog.Sinks.Console.dll
 D:\PROJET\FNE\FNEV4\tests\FNEV4.Tests.Unit\Presentation\bin\Debug\net8.0-windows\Serilog.Sinks.File.dll
@@ -1022,4 +1023,3 @@ D:\PROJET\FNE\FNEV4\tests\FNEV4.Tests.Unit\Presentation\obj\Debug\net8.0-windows
 D:\PROJET\FNE\FNEV4\tests\FNEV4.Tests.Unit\Presentation\obj\Debug\net8.0-windows\FNEV4.Tests.Unit.Presentation.pdb
 D:\PROJET\FNE\FNEV4\tests\FNEV4.Tests.Unit\Presentation\obj\Debug\net8.0-windows\FNEV4.Tests.Unit.Presentation.genruntimeconfig.cache
 D:\PROJET\FNE\FNEV4\tests\FNEV4.Tests.Unit\Presentation\obj\Debug\net8.0-windows\ref\FNEV4.Tests.Unit.Presentation.dll
-D:\PROJET\FNE\FNEV4\tests\FNEV4.Tests.Unit\Presentation\bin\Debug\net8.0-windows\QRCoder.dll

@@ -16,6 +16,7 @@
                 <ResourceDictionary Source="Resources/Styles/ButtonStyles.xaml" />
                 <ResourceDictionary Source="Resources/Styles/CardStyles.xaml" />
                 <ResourceDictionary Source="Resources/Styles/MenuItemStyles.xaml" />
+                
             </ResourceDictionary.MergedDictionaries>
             
             <!-- Convertisseurs globaux -->

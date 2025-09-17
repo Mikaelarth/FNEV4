@@ -1,4 +1,4 @@
-﻿D:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\GeneratedInternalTypeHelper.g.cs
+﻿
 FD:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\App.xaml;;
 FD:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\Views\CertificationFne\CertificationAutomatiqueView.xaml;;
 FD:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\Views\CertificationFne\CertificationDashboardView.xaml;;
@@ -8,6 +8,8 @@ FD:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\Views\Configuration\ApiFneConfigView
 FD:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\Views\Configuration\CheminsDossiersConfigView.xaml;;
 FD:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\Views\Dashboard\DashboardVueEnsembleView.xaml;;
 FD:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\Views\GestionClients\ImportClientsWindow.xaml;;
+FD:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\Views\GestionFactures\FactureFneDetailsDialog.xaml;;
+FD:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\Views\GestionFactures\FacturesFneView.xaml;;
 FD:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\Views\GestionFactures\FacturesListView.xaml;;
 FD:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\Views\ImportTraitement\ImportFichiersView.xaml;;
 FD:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\Views\ImportTraitement\ImportReportDialog.xaml;;

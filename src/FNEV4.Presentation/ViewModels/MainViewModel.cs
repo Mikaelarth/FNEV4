@@ -135,6 +135,17 @@ namespace FNEV4.Presentation.ViewModels
         /// Commandes pour naviguer vers Gestion des Factures
         /// </summary>
         [RelayCommand]
+        private void NavigateToFacturesFneGestion()
+        {
+            CurrentModuleName = "Factures FNE - Gestion";
+            
+            // Créer le ViewModel et la vue
+            var facturesFneViewModel = App.ServiceProvider.GetRequiredService<ViewModels.GestionFactures.FacturesFneViewModel>();
+            var facturesFneView = new Views.GestionFactures.FacturesFneView { DataContext = facturesFneViewModel };
+            CurrentView = facturesFneView;
+        }
+
+        [RelayCommand]
         private void NavigateToListeFactures()
         {
             CurrentModuleName = "Factures - Liste des factures";

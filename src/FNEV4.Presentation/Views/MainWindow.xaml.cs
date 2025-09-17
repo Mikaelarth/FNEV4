@@ -50,19 +50,11 @@ namespace FNEV4.Presentation.Views
         }
 
         /// <summary>
-        /// Gère l'expansion/contraction de la section Factures
+        /// Gère l'expansion/contraction de la section Factures FNE Unifié
         /// </summary>
-        private void ToggleFacturesSection(object sender, RoutedEventArgs e)
+        private void ToggleFacturesFneSection(object sender, RoutedEventArgs e)
         {
-            ToggleMenuSection("FacturesSubMenu", "FacturesChevron");
-        }
-
-        /// <summary>
-        /// Gère l'expansion/contraction de la section Certification
-        /// </summary>
-        private void ToggleCertificationSection(object sender, RoutedEventArgs e)
-        {
-            ToggleMenuSection("CertificationSubMenu", "CertificationChevron");
+            ToggleMenuSection("FacturesFneSubMenu", "FacturesFneChevron");
         }
 
         /// <summary>
@@ -127,12 +119,12 @@ namespace FNEV4.Presentation.Views
         /// </summary>
         public void CloseAllSubMenus()
         {
-            var subMenuNames = new[] { "DashboardSubMenu", "ImportSubMenu", "FacturesSubMenu", 
-                                     "CertificationSubMenu", "ClientsSubMenu", "RapportsSubMenu", 
+            var subMenuNames = new[] { "DashboardSubMenu", "ImportSubMenu", "FacturesFneSubMenu", 
+                                     "ClientsSubMenu", "RapportsSubMenu", 
                                      "ConfigurationSubMenu", "MaintenanceSubMenu", "AideSubMenu" };
             
-            var chevronNames = new[] { "DashboardChevron", "ImportChevron", "FacturesChevron", 
-                                     "CertificationChevron", "ClientsChevron", "RapportsChevron", 
+            var chevronNames = new[] { "DashboardChevron", "ImportChevron", "FacturesFneChevron", 
+                                     "ClientsChevron", "RapportsChevron", 
                                      "ConfigurationChevron", "MaintenanceChevron", "AideChevron" };
 
             for (int i = 0; i < subMenuNames.Length; i++)

@@ -74,6 +74,28 @@ namespace FNEV4.Core.Interfaces
         /// </summary>
         /// <returns>Liste des factures prêtes pour certification</returns>
         Task<IEnumerable<FneInvoice>> GetAvailableForCertificationAsync();
+
+        /// <summary>
+        /// Récupère les factures avec filtrage unifié - NOUVELLE MÉTHODE PRINCIPALE
+        /// Utilisée par le menu unifié "Factures FNE"
+        /// </summary>
+        /// <param name="filter">Filtres à appliquer (null = toutes les factures)</param>
+        /// <returns>Liste des factures filtrées</returns>
+        Task<IEnumerable<FneInvoice>> GetInvoicesAsync(Models.Filters.InvoiceFilter? filter = null);
+
+        /// <summary>
+        /// Compte le nombre de factures selon un filtre
+        /// </summary>
+        /// <param name="filter">Filtres à appliquer</param>
+        /// <returns>Nombre de factures correspondantes</returns>
+        Task<int> CountInvoicesAsync(Models.Filters.InvoiceFilter? filter = null);
+
+        /// <summary>
+        /// Récupère les statistiques étendues des factures
+        /// </summary>
+        /// <param name="filter">Filtres à appliquer (null = toutes les factures)</param>
+        /// <returns>Statistiques détaillées</returns>
+        Task<ExtendedInvoiceStatistics> GetExtendedStatisticsAsync(Models.Filters.InvoiceFilter? filter = null);
     }
     
     /// <summary>
@@ -85,5 +107,27 @@ namespace FNEV4.Core.Interfaces
         public int CertifiedInvoices { get; set; }
         public int PendingInvoices { get; set; }
         public decimal MonthlyRevenue { get; set; }
+    }
+
+    /// <summary>
+    /// Statistiques étendues pour le nouveau menu unifié
+    /// </summary>
+    public class ExtendedInvoiceStatistics : InvoiceStatistics
+    {
+        public int DraftInvoices { get; set; }
+        public int ValidatedInvoices { get; set; }
+        public int ErrorInvoices { get; set; }
+        public int RefundInvoices { get; set; }
+        
+        public decimal TotalAmountDraft { get; set; }
+        public decimal TotalAmountCertified { get; set; }
+        public decimal TotalAmountError { get; set; }
+        
+        public double SuccessRate { get; set; }
+        public double AverageProcessingTime { get; set; }
+        
+        public Dictionary<string, int> InvoicesByStatus { get; set; } = new();
+        public Dictionary<string, decimal> AmountsByStatus { get; set; } = new();
+        public Dictionary<string, int> InvoicesByType { get; set; } = new();
     }
 }

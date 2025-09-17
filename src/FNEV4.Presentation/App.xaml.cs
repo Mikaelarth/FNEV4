@@ -293,8 +293,12 @@ namespace FNEV4.Presentation
                             provider.GetRequiredService<FNEV4.Core.Interfaces.ILoggingService>(),
                             provider.GetRequiredService<ILogger<CertificationAutomatiqueViewModel>>()));
                     
-                    // ViewModels Gestion Factures
+                    // ViewModels Gestion Factures (Legacy - à supprimer après migration)
                     services.AddTransient<FNEV4.Presentation.ViewModels.GestionFactures.FacturesListViewModel>();
+                    
+                    // NOUVEAU: ViewModel pour le sous-menu Factures FNE
+                    services.AddTransient<FNEV4.Presentation.ViewModels.GestionFactures.FacturesFneViewModel>();
+                    services.AddTransient<FNEV4.Presentation.ViewModels.GestionFactures.FactureFneDetailsViewModel>();
                     
                     // ViewModels Import & Traitement
                     services.AddTransient<FNEV4.Presentation.ViewModels.ImportTraitement.ImportFichiersViewModel>();

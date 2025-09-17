@@ -267,15 +267,15 @@
                                     Content="Historique des imports" />
                         </StackPanel>
 
-                        <!-- MODULE 3: GESTION DES FACTURES -->
-                        <Border x:Name="FacturesSection" Margin="0,4">
+                        <!-- MODULE 3: FACTURES FNE -->
+                        <Border x:Name="FacturesFneSection" Margin="0,4">
                             <!-- Header du module -->
                             <Button Style="{StaticResource MenuSectionButton}"
-                                    Click="ToggleFacturesSection"
+                                    Click="ToggleFacturesFneSection"
                                     HorizontalContentAlignment="Left"
                                     Height="48"
                                     Padding="8,0"
-                                    ToolTip="Gestion des Factures">
+                                    ToolTip="Gestion des factures">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="40" />
@@ -284,13 +284,14 @@
                                     </Grid.ColumnDefinitions>
                                     
                                     <materialDesign:PackIcon Grid.Column="0" 
-                                                           Kind="Receipt" 
+                                                           Kind="FileDocumentEdit" 
                                                            Width="24" Height="24"
                                                            VerticalAlignment="Center"
-                                                           HorizontalAlignment="Center" />
+                                                           HorizontalAlignment="Center"
+                                                           Foreground="{DynamicResource PrimaryHueMidBrush}" />
                                                            
                                     <TextBlock Grid.Column="1" 
-                                             Text="Gestion des Factures"
+                                             Text="Gestion des factures"
                                              VerticalAlignment="Center"
                                              Margin="8,0,0,0"
                                              FontSize="14"
@@ -302,84 +303,36 @@
                                                            Kind="ChevronDown" 
                                                            Width="16" Height="16"
                                                            VerticalAlignment="Center"
-                                                           x:Name="FacturesChevron"
+                                                           x:Name="FacturesFneChevron"
                                                            Visibility="{Binding IsMenuExpanded, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                 </Grid>
                             </Button>
                         </Border>
                         
-                        <!-- Sous-menu Factures -->
-                        <StackPanel x:Name="FacturesSubMenu" 
+                        <!-- Sous-menu Factures FNE -->
+                        <StackPanel x:Name="FacturesFneSubMenu" 
                                   Margin="48,0,0,8" 
                                   Visibility="Collapsed">
+                            <!-- Vue principale de gestion -->
                             <Button Style="{StaticResource MenuSubItemButton}"
-                                    Command="{Binding NavigateToListeFacturesCommand}"
+                                    Command="{Binding NavigateToFacturesFneGestionCommand}"
                                     HorizontalContentAlignment="Left"
                                     Height="36"
-                                    Content="Liste des factures" />
+                                    Content="Factures FNE" />
+                                    
+                            <!-- Certification FNE -->
                             <Button Style="{StaticResource MenuSubItemButton}"
-                                    Command="{Binding NavigateToEditionFacturesCommand}"
+                                    Command="{Binding NavigateToFacturesFneCertificationCommand}"
                                     HorizontalContentAlignment="Left"
                                     Height="36"
-                                    Content="Édition de factures" />
+                                    Content="Certification FNE" />
+                            
+                            <!-- Analytics et rapports -->
                             <Button Style="{StaticResource MenuSubItemButton}"
-                                    Command="{Binding NavigateToDetailsFactureCommand}"
+                                    Command="{Binding NavigateToFacturesFneAnalyticsCommand}"
                                     HorizontalContentAlignment="Left"
                                     Height="36"
-                                    Content="Détails de facture" />
-                            <Button Style="{StaticResource MenuSubItemButton}"
-                                    Command="{Binding NavigateToFacturesAvoirCommand}"
-                                    HorizontalContentAlignment="Left"
-                                    Height="36"
-                                    Content="Factures d'avoir" />
-                        </StackPanel>
-
-                        <!-- MODULE 4: CERTIFICATION FNE -->
-                        <Border x:Name="CertificationSection" Margin="0,4">
-                            <Button Style="{StaticResource MenuSectionButton}"
-                                    Click="ToggleCertificationSection"
-                                    ToolTip="Certification FNE">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="40" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <materialDesign:PackIcon Grid.Column="0" Kind="Certificate" 
-                                                           Width="24" Height="24"
-                                                           VerticalAlignment="Center"
-                                                           HorizontalAlignment="Center" />
-                                    <TextBlock Grid.Column="1" Text="Certification FNE"
-                                             VerticalAlignment="Center" Margin="8,0,0,0"
-                                             FontSize="14" FontWeight="Medium"
-                                             Foreground="{DynamicResource MaterialDesignBody}"
-                                             Visibility="{Binding IsMenuExpanded, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                                    <materialDesign:PackIcon Grid.Column="2" 
-                                                           Kind="ChevronDown" 
-                                                           Width="16" Height="16"
-                                                           VerticalAlignment="Center"
-                                                           x:Name="CertificationChevron"
-                                                           Visibility="{Binding IsMenuExpanded, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                                </Grid>
-                            </Button>
-                        </Border>
-                        
-                        <!-- Sous-menu Certification -->
-                        <StackPanel x:Name="CertificationSubMenu" 
-                                  Margin="48,0,0,8" 
-                                  Visibility="Collapsed">
-                            <Button Style="{StaticResource MenuSubItemButton}"
-                                    Command="{Binding NavigateToCertificationManuelleCommand}"
-                                    Content="Certification manuelle" />
-                            <Button Style="{StaticResource MenuSubItemButton}"
-                                    Command="{Binding NavigateToCertificationAutomatiqueCommand}"
-                                    Content="Certification automatique" />
-                            <Button Style="{StaticResource MenuSubItemButton}"
-                                    Command="{Binding NavigateToSuiviCertificationsCommand}"
-                                    Content="Suivi des certifications" />
-                            <Button Style="{StaticResource MenuSubItemButton}"
-                                    Command="{Binding NavigateToRetryReprisesCommand}"
-                                    Content="Retry &amp; Reprises" />
+                                    Content="Analytics" />
                         </StackPanel>
 
                         <!-- MODULE 5: GESTION CLIENTS -->
