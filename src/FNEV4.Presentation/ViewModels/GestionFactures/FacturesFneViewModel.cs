@@ -138,8 +138,10 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
                 // Trouver la fenêtre principale actuelle
                 var mainWindow = System.Windows.Application.Current.MainWindow;
                 
-                // Créer et afficher le dialogue
-                var dialog = new Views.GestionFactures.FactureFneDetailsDialog
+                // Créer et afficher le dialogue avec le service provider
+                var dialog = new Views.GestionFactures.FactureFneDetailsDialog(
+                    serviceProvider: App.ServiceProvider, 
+                    logger: App.ServiceProvider?.GetService<Microsoft.Extensions.Logging.ILogger<Views.GestionFactures.FactureFneDetailsDialog>>())
                 {
                     DataContext = dialogViewModel,
                     Owner = mainWindow,
