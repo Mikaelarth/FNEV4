@@ -5,24 +5,37 @@ using System.Runtime.CompilerServices;
 using System.Windows.Media;
 using FNEV4.Core.Entities;
 using System.Linq;
+using System.Windows.Input;
+using System.Windows.Media.Imaging;
+using System.Diagnostics;
+using System.IO;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Windows;
+using Microsoft.Win32;
+using System.Text;
 
 namespace FNEV4.Presentation.ViewModels.GestionFactures
 {
     /// <summary>
     /// ViewModel pour le dialog de détails d'une facture FNE
     /// Basé sur la structure du Sage100FactureDetailsDialog
+    /// Étendu pour exploiter toutes les données enrichies de l'API FNE
     /// </summary>
     public class FactureFneDetailsViewModel : INotifyPropertyChanged
     {
         private FneInvoice _facture;
         private ObservableCollection<FneInvoiceItem> _articles;
+        private BitmapImage? _qrCodeImageSource;
 
         public FactureFneDetailsViewModel(FneInvoice facture)
         {
             _facture = facture ?? throw new ArgumentNullException(nameof(facture));
             _articles = new ObservableCollection<FneInvoiceItem>(facture.Items ?? new List<FneInvoiceItem>());
             
+            InitializeCommands();
             CalculateProperties();
+            GenerateQrCodeImage();
         }
 
         public FneInvoice Facture
@@ -33,6 +46,7 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
                 _facture = value;
                 OnPropertyChanged();
                 CalculateProperties();
+                GenerateQrCodeImage();
             }
         }
 
@@ -45,6 +59,451 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
                 OnPropertyChanged();
             }
         }
+
+        #region Propriétés enrichies FNE
+
+        /// <summary>
+        /// Image source pour l'affichage du QR Code
+        /// </summary>
+        public BitmapImage? QrCodeImageSource
+        {
+            get => _qrCodeImageSource;
+            set
+            {
+                _qrCodeImageSource = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Hash de certification tronqué pour l'affichage
+        /// </summary>
+        public string CertificationHashShort
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Facture?.FneCertificationHash))
+                    return "Non générée";
+                
+                var hash = Facture.FneCertificationHash;
+                if (hash.Length > 16)
+                    return $"{hash.Substring(0, 8)}...{hash.Substring(hash.Length - 8)}";
+                return hash;
+            }
+        }
+
+        /// <summary>
+        /// Token de vérification public tronqué pour l'affichage
+        /// Utilise FnePublicVerificationToken (juste l'ID) plutôt que VerificationToken (URL complète)
+        /// </summary>
+        public string VerificationTokenShort
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(Facture?.FnePublicVerificationToken))
+                {
+                    var token = Facture.FnePublicVerificationToken;
+                    if (token.Length > 20)
+                        return $"{token.Substring(0, 10)}...{token.Substring(token.Length - 10)}";
+                    return token;
+                }
+                else if (!string.IsNullOrEmpty(Facture?.VerificationToken))
+                {
+                    // Fallback: extraire l'ID de l'URL complète
+                    var url = Facture.VerificationToken;
+                    var lastSlashIndex = url.LastIndexOf('/');
+                    if (lastSlashIndex >= 0 && lastSlashIndex < url.Length - 1)
+                    {
+                        var tokenId = url.Substring(lastSlashIndex + 1);
+                        if (tokenId.Length > 20)
+                            return $"{tokenId.Substring(0, 10)}...{tokenId.Substring(tokenId.Length - 10)}";
+                        return tokenId;
+                    }
+                }
+                
+                return "Non disponible";
+            }
+        }
+
+        /// <summary>
+        /// URL de téléchargement
+        /// </summary>
+        public string DownloadUrl
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Facture?.FneDownloadUrl))
+                    return "Non disponible";
+                return Facture.FneDownloadUrl;
+            }
+        }
+
+        /// <summary>
+        /// NCC de l'entreprise
+        /// </summary>
+        public string CompanyNcc
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Facture?.FneCompanyNcc))
+                    return "Non défini";
+                return Facture.FneCompanyNcc;
+            }
+        }
+
+        /// <summary>
+        /// Couleur de fond pour le statut de traitement
+        /// </summary>
+        public Brush ProcessingStatusBackground
+        {
+            get
+            {
+                return Facture?.FneProcessingStatus?.ToLower() switch
+                {
+                    "success" or "completed" => new SolidColorBrush(Color.FromRgb(76, 175, 80)),   // Vert
+                    "processing" or "in-progress" => new SolidColorBrush(Color.FromRgb(255, 152, 0)), // Orange
+                    "pending" => new SolidColorBrush(Color.FromRgb(33, 150, 243)),  // Bleu
+                    "error" or "failed" => new SolidColorBrush(Color.FromRgb(244, 67, 54)),       // Rouge
+                    _ => new SolidColorBrush(Color.FromRgb(158, 158, 158))      // Gris
+                };
+            }
+        }
+
+        /// <summary>
+        /// Données QR Code formatées pour l'affichage avec saut de ligne si nécessaire
+        /// </summary>
+        public string QrCodeDataFormatted
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Facture?.FneQrCodeData))
+                    return "Données QR Code non générées";
+                
+                // Si les données sont très longues, les formater pour une meilleure lisibilité
+                var qrData = Facture.FneQrCodeData;
+                if (qrData.Length > 60)
+                {
+                    // Essayer de diviser sur les délimiteurs logiques (pipe, virgule, etc.)
+                    if (qrData.Contains('|'))
+                        return qrData.Replace("|", "|\n");
+                    if (qrData.Contains(','))
+                        return qrData.Replace(",", ",\n");
+                    
+                    // Sinon, diviser par chunks de 60 caractères
+                    var result = new StringBuilder();
+                    for (int i = 0; i < qrData.Length; i += 60)
+                    {
+                        var length = Math.Min(60, qrData.Length - i);
+                        result.AppendLine(qrData.Substring(i, length));
+                    }
+                    return result.ToString().TrimEnd();
+                }
+                
+                return qrData;
+            }
+        }
+
+        /// <summary>
+        /// Données QR Code courtes pour les tooltips et affichages compacts
+        /// </summary>
+        public string QrCodeDataShort
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Facture?.FneQrCodeData))
+                    return "Non généré";
+                
+                var qrData = Facture.FneQrCodeData;
+                if (qrData.Length > 50)
+                    return $"{qrData.Substring(0, 25)}...{qrData.Substring(qrData.Length - 20)}";
+                
+                return qrData;
+            }
+        }
+
+        public ICommand CopyQrDataCommand { get; private set; }
+        public ICommand ShowQrDataCommand { get; private set; }
+        public ICommand DownloadPdfCommand { get; private set; }
+        public ICommand VerifyOnlineCommand { get; private set; }
+        public ICommand ShowFullDetailsCommand { get; private set; }
+
+        private void InitializeCommands()
+        {
+            CopyQrDataCommand = new RelayCommand(CopyQrData, CanCopyQrData);
+            ShowQrDataCommand = new RelayCommand(ShowQrData, CanCopyQrData);
+            DownloadPdfCommand = new RelayCommand(async () => await DownloadPdf(), CanDownloadPdf);
+            VerifyOnlineCommand = new RelayCommand(VerifyOnline, CanVerifyOnline);
+            ShowFullDetailsCommand = new RelayCommand(ShowFullDetails, CanShowFullDetails);
+        }
+
+        private bool CanCopyQrData()
+        {
+            return !string.IsNullOrEmpty(Facture?.FneQrCodeData);
+        }
+
+        private void CopyQrData()
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(Facture?.FneQrCodeData))
+                {
+                    Clipboard.SetText(Facture.FneQrCodeData);
+                    MessageBox.Show("Données QR Code copiées dans le presse-papiers!", "Copie réussie", 
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de la copie: {ex.Message}", "Erreur", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ShowQrData()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(Facture?.FneQrCodeData))
+                {
+                    MessageBox.Show("Aucune donnée QR Code disponible", "Information", 
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                var qrDataWindow = new Window
+                {
+                    Title = $"Données QR Code - Facture {Facture.InvoiceNumber}",
+                    Width = 600,
+                    Height = 400,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    ResizeMode = ResizeMode.CanResize
+                };
+
+                var grid = new System.Windows.Controls.Grid();
+                grid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
+                grid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = System.Windows.GridLength.Auto });
+
+                var scrollViewer = new System.Windows.Controls.ScrollViewer
+                {
+                    VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto,
+                    HorizontalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto,
+                    Padding = new Thickness(16)
+                };
+
+                var textBlock = new System.Windows.Controls.TextBlock
+                {
+                    Text = Facture.FneQrCodeData,
+                    FontFamily = new FontFamily("Consolas"),
+                    FontSize = 12,
+                    TextWrapping = TextWrapping.Wrap
+                };
+
+                scrollViewer.Content = textBlock;
+                System.Windows.Controls.Grid.SetRow(scrollViewer, 0);
+                grid.Children.Add(scrollViewer);
+
+                // Boutons
+                var buttonPanel = new System.Windows.Controls.StackPanel
+                {
+                    Orientation = System.Windows.Controls.Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    Margin = new Thickness(16)
+                };
+
+                var copyButton = new System.Windows.Controls.Button
+                {
+                    Content = "Copier",
+                    Padding = new Thickness(16, 8, 16, 8),
+                    Margin = new Thickness(0, 0, 8, 0)
+                };
+                copyButton.Click += (s, e) =>
+                {
+                    Clipboard.SetText(Facture.FneQrCodeData);
+                    MessageBox.Show("Données QR copiées!", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                };
+
+                var closeButton = new System.Windows.Controls.Button
+                {
+                    Content = "Fermer",
+                    Padding = new Thickness(16, 8, 16, 8),
+                    IsCancel = true
+                };
+                closeButton.Click += (s, e) => qrDataWindow.Close();
+
+                buttonPanel.Children.Add(copyButton);
+                buttonPanel.Children.Add(closeButton);
+                System.Windows.Controls.Grid.SetRow(buttonPanel, 1);
+                grid.Children.Add(buttonPanel);
+
+                qrDataWindow.Content = grid;
+                qrDataWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'affichage des données QR: {ex.Message}", "Erreur", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool CanDownloadPdf()
+        {
+            return !string.IsNullOrEmpty(Facture?.FneDownloadUrl);
+        }
+
+        private async Task DownloadPdf()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(Facture?.FneDownloadUrl))
+                {
+                    MessageBox.Show("URL de téléchargement non disponible", "Erreur", 
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Dialog de sauvegarde
+                var saveFileDialog = new SaveFileDialog
+                {
+                    Title = "Enregistrer la facture certifiée",
+                    FileName = $"Facture_FNE_{Facture.InvoiceNumber}_{DateTime.Now:yyyyMMdd}.pdf",
+                    Filter = "Fichiers PDF (*.pdf)|*.pdf|Tous les fichiers (*.*)|*.*",
+                    DefaultExt = "pdf"
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    using var httpClient = new HttpClient();
+                    var response = await httpClient.GetAsync(Facture.FneDownloadUrl);
+                    
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var content = await response.Content.ReadAsByteArrayAsync();
+                        await File.WriteAllBytesAsync(saveFileDialog.FileName, content);
+                        
+                        var result = MessageBox.Show(
+                            $"Facture téléchargée avec succès !\n\nFichier: {saveFileDialog.FileName}\n\nVoulez-vous l'ouvrir maintenant ?",
+                            "Téléchargement réussi", 
+                            MessageBoxButton.YesNo, 
+                            MessageBoxImage.Information);
+
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            Process.Start(new ProcessStartInfo(saveFileDialog.FileName) { UseShellExecute = true });
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Erreur lors du téléchargement: {response.StatusCode}", "Erreur de téléchargement", 
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du téléchargement: {ex.Message}", "Erreur", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool CanVerifyOnline()
+        {
+            return !string.IsNullOrEmpty(Facture?.VerificationToken);
+        }
+
+        private void VerifyOnline()
+        {
+            try
+            {
+                // Le VerificationToken contient déjà l'URL complète de vérification DGI
+                // Format: "http://54.247.95.108/fr/verification/019465c1-3f61-766c-9652-706e32dfb436"
+                if (string.IsNullOrEmpty(Facture?.VerificationToken))
+                {
+                    MessageBox.Show("Token de vérification non disponible", "Erreur", 
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var verificationUrl = Facture.VerificationToken;
+                
+                // Vérifier que c'est bien une URL valide
+                if (!Uri.TryCreate(verificationUrl, UriKind.Absolute, out _))
+                {
+                    MessageBox.Show("L'URL de vérification n'est pas valide", "Erreur", 
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                Process.Start(new ProcessStartInfo(verificationUrl) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Impossible d'ouvrir l'URL de vérification: {ex.Message}", "Erreur", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool CanShowFullDetails()
+        {
+            return Facture != null;
+        }
+
+        private void ShowFullDetails()
+        {
+            var details = new StringBuilder();
+            details.AppendLine("=== DÉTAILS COMPLETS DE CERTIFICATION FNE ===");
+            details.AppendLine($"Facture N°: {Facture?.InvoiceNumber}");
+            details.AppendLine($"Client: {Facture?.ClientDisplayName} ({Facture?.ClientCode})");
+            details.AppendLine($"Date facture: {Facture?.InvoiceDate:dd/MM/yyyy}");
+            details.AppendLine();
+            
+            details.AppendLine("--- Certification ---");
+            details.AppendLine($"Référence FNE: {Facture?.FneReference ?? "Non certifiée"}");
+            details.AppendLine($"Date certification: {Facture?.FneCertificationTimestamp?.ToString("dd/MM/yyyy HH:mm:ss") ?? "Non certifiée"}");
+            details.AppendLine($"Statut traitement: {Facture?.FneProcessingStatus ?? "Non défini"}");
+            details.AppendLine($"Hash certification: {Facture?.FneCertificationHash ?? "Non généré"}");
+            details.AppendLine();
+            
+            details.AppendLine("--- Informations DGI ---");
+            details.AppendLine($"Balance Sticker: {Facture?.FneBalanceSticker ?? "Non disponible"}");
+            details.AppendLine($"NCC Entreprise: {Facture?.FneCompanyNcc ?? "Non défini"}");
+            details.AppendLine($"Token vérification: {Facture?.VerificationToken ?? "Non disponible"}");
+            details.AppendLine();
+            
+            details.AppendLine("--- QR Code ---");
+            details.AppendLine($"Données QR: {Facture?.FneQrCodeData ?? "Non généré"}");
+            details.AppendLine();
+            
+            details.AppendLine("--- Téléchargement ---");
+            details.AppendLine($"URL PDF: {Facture?.FneDownloadUrl ?? "Non disponible"}");
+
+            var detailsWindow = new Window
+            {
+                Title = "Détails complets FNE",
+                Width = 800,
+                Height = 600,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+
+            var scrollViewer = new System.Windows.Controls.ScrollViewer
+            {
+                VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto,
+                Padding = new Thickness(16)
+            };
+
+            var textBlock = new System.Windows.Controls.TextBlock
+            {
+                Text = details.ToString(),
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 12,
+                TextWrapping = TextWrapping.Wrap
+            };
+
+            scrollViewer.Content = textBlock;
+            detailsWindow.Content = scrollViewer;
+            detailsWindow.ShowDialog();
+        }
+
+        #endregion
 
         #region Propriétés calculées pour l'affichage
 
@@ -246,6 +705,61 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
             OnPropertyChanged(nameof(ReferenceFormatee));
             OnPropertyChanged(nameof(DateCertificationFormatee));
             OnPropertyChanged(nameof(MessageCommercialCourt));
+            
+            // Propriétés enrichies FNE
+            OnPropertyChanged(nameof(CertificationHashShort));
+            OnPropertyChanged(nameof(VerificationTokenShort));
+            OnPropertyChanged(nameof(QrCodeDataFormatted));
+            OnPropertyChanged(nameof(QrCodeDataShort));
+            OnPropertyChanged(nameof(DownloadUrl));
+            OnPropertyChanged(nameof(CompanyNcc));
+            OnPropertyChanged(nameof(ProcessingStatusBackground));
+        }
+
+        /// <summary>
+        /// Génère l'image QR Code à partir des données FNE
+        /// Pour l'instant, affiche un placeholder - à implémenter avec ZXing.Net
+        /// </summary>
+        private void GenerateQrCodeImage()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(Facture?.FneQrCodeData))
+                {
+                    QrCodeImageSource = null;
+                    return;
+                }
+
+                // TODO: Implémenter la génération QR Code avec ZXing.Net
+                // Pour l'instant, on utilise un placeholder
+                QrCodeImageSource = CreatePlaceholderImage();
+            }
+            catch (Exception)
+            {
+                // En cas d'erreur, utiliser le placeholder
+                QrCodeImageSource = CreatePlaceholderImage();
+            }
+        }
+
+        /// <summary>
+        /// Crée une image placeholder en attendant l'implémentation du QR Code
+        /// </summary>
+        private BitmapImage? CreatePlaceholderImage()
+        {
+            try
+            {
+                // Créer une image simple avec le texte "QR CODE"
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                // Vous pouvez créer une image programmatiquement ou utiliser une ressource
+                // Pour l'instant, on retourne null pour éviter les erreurs
+                bitmap.EndInit();
+                return null; // Retourner null pour l'instant
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         #endregion
@@ -260,5 +774,36 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Implémentation simple de ICommand pour les commandes du ViewModel
+    /// </summary>
+    public class RelayCommand : ICommand
+    {
+        private readonly Action _execute;
+        private readonly Func<bool>? _canExecute;
+
+        public RelayCommand(Action execute, Func<bool>? canExecute = null)
+        {
+            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+            _canExecute = canExecute;
+        }
+
+        public event EventHandler? CanExecuteChanged
+        {
+            add { CommandManager.RequerySuggested += value; }
+            remove { CommandManager.RequerySuggested -= value; }
+        }
+
+        public bool CanExecute(object? parameter)
+        {
+            return _canExecute?.Invoke() ?? true;
+        }
+
+        public void Execute(object? parameter)
+        {
+            _execute();
+        }
     }
 }

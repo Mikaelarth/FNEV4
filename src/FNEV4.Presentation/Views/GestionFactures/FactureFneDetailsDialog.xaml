@@ -24,6 +24,12 @@
         <!-- Converter pour les couleurs TVA -->
         <converters:TvaCodeToBrushConverter x:Key="TvaCodeToBrushConverter"/>
         
+        <!-- Converter pour la visibilité des objets null -->
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        
+        <!-- Converter personnalisé pour null vers visibilité -->
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        
         <!-- Style pour les en-têtes de section -->
         <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="16"/>
@@ -48,6 +54,7 @@
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -224,8 +231,268 @@
             </Grid>
         </materialDesign:Card>
 
+        <!-- Section FNE Certification (nouvelle) -->
+        <materialDesign:Card Grid.Row="2" 
+                             Margin="0,0,0,16"
+                             Padding="16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- En-tête FNE -->
+                <TextBlock Grid.Row="0"
+                           Text="🏛️ CERTIFICATION FNE - INFORMATIONS COMPLÈTES"
+                           Style="{StaticResource SectionHeaderStyle}"
+                           HorizontalAlignment="Center"
+                           FontSize="18"
+                           Margin="0,0,0,16"/>
+
+                <!-- Contenu FNE en colonnes -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Colonne 1: Statut et Processus -->
+                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                        <TextBlock Text="📋 STATUT DE CERTIFICATION" Style="{StaticResource SectionHeaderStyle}"/>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Statut:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
+                            <Border Grid.Row="0" Grid.Column="1" 
+                                    Background="{Binding ProcessingStatusBackground}"
+                                    CornerRadius="8"
+                                    Padding="8,4"
+                                    HorizontalAlignment="Left"
+                                    Margin="8,2">
+                                <TextBlock Text="{Binding Facture.FneProcessingStatus}" 
+                                           FontWeight="SemiBold"
+                                           Foreground="White"/>
+                            </Border>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Date Certification:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Facture.FneCertificationTimestamp, StringFormat=dd/MM/yyyy HH:mm:ss}" Style="{StaticResource ValueStyle}"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Hash Certification:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding CertificationHashShort}" 
+                                       Style="{StaticResource ValueStyle}"
+                                       FontFamily="Consolas"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource SecondaryHueMidBrush}"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Balance Sticker:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Facture.FneBalanceSticker}" 
+                                       Style="{StaticResource ValueStyle}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="NCC Entreprise:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding CompanyNcc}" Style="{StaticResource ValueStyle}"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Colonne 2: QR Code et Visualisation -->
+                    <StackPanel Grid.Column="1" Margin="0,0,16,0">
+                        <TextBlock Text="📱 CODE QR" Style="{StaticResource SectionHeaderStyle}"/>
+                        
+                        <!-- Zone QR Code -->
+                        <Border Background="White"
+                                BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                BorderThickness="2"
+                                CornerRadius="8"
+                                Padding="16"
+                                HorizontalAlignment="Center"
+                                Margin="0,8">
+                            <StackPanel HorizontalAlignment="Center">
+                                <!-- Image QR Code (sera générée) -->
+                                <Image Name="QrCodeImage"
+                                       Source="{Binding QrCodeImageSource}"
+                                       Width="150"
+                                       Height="150"
+                                       Stretch="Uniform"/>
+                                
+                                <!-- Placeholder si pas d'image QR -->
+                                <Border Name="QrCodePlaceholder"
+                                        Width="150"
+                                        Height="150"
+                                        Background="{DynamicResource MaterialDesignChipBackground}"
+                                        CornerRadius="4"
+                                        Visibility="{Binding QrCodeImageSource, Converter={StaticResource NullToVisibilityConverter}}">
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <materialDesign:PackIcon Kind="QrcodeScan" 
+                                                                 Width="48" 
+                                                                 Height="48"
+                                                                 Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                        <TextBlock Text="QR Code" 
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,8,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <!-- Données QR résumées -->
+                                <TextBlock Text="Données QR Code:"
+                                           FontWeight="SemiBold"
+                                           Margin="0,12,0,4"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding QrCodeDataShort}"
+                                           FontFamily="Consolas"
+                                           FontSize="9"
+                                           TextAlignment="Center"
+                                           MaxWidth="180"
+                                           Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                           ToolTip="{Binding Facture.FneQrCodeData}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Boutons QR Code -->
+                        <UniformGrid Columns="2" Margin="0,8,0,0">
+                            <Button Content="📋 Copier"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Command="{Binding CopyQrDataCommand}"
+                                    Margin="0,0,4,0"
+                                    ToolTip="Copier les données QR dans le presse-papiers"/>
+                            <Button Content="🔍 Voir"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Command="{Binding ShowQrDataCommand}"
+                                    Margin="4,0,0,0"
+                                    ToolTip="Afficher les données QR complètes"/>
+                        </UniformGrid>
+                    </StackPanel>
+
+                    <!-- Colonne 3: Actions et Téléchargement -->
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="💾 ACTIONS" Style="{StaticResource SectionHeaderStyle}"/>
+                        
+                        <!-- Informations de téléchargement -->
+                        <Border Background="{DynamicResource MaterialDesignCardBackground}"
+                                BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="12"
+                                Margin="0,8">
+                            <StackPanel>
+                                <TextBlock Text="📄 Document Certifié" 
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,8"/>
+                                
+                                <TextBlock Text="URL de Téléchargement:"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,4"/>
+                                <ScrollViewer MaxHeight="50" 
+                                              VerticalScrollBarVisibility="Auto">
+                                    <TextBlock Text="{Binding DownloadUrl}"
+                                               FontFamily="Consolas"
+                                               FontSize="9"
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                </ScrollViewer>
+                                
+                                <TextBlock Text="Token de Vérification:"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           Margin="0,8,0,4"/>
+                                <TextBlock Text="{Binding VerificationTokenShort}"
+                                           FontFamily="Consolas"
+                                           FontSize="9"
+                                           Foreground="{DynamicResource SecondaryHueMidBrush}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Boutons d'action -->
+                        <StackPanel Orientation="Vertical" 
+                                    HorizontalAlignment="Stretch"
+                                    Margin="0,8,0,0">
+                            
+                            <Button Content="📥 Télécharger PDF"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Background="{DynamicResource PrimaryHueMidBrush}"
+                                    Foreground="White"
+                                    Command="{Binding DownloadPdfCommand}"
+                                    Margin="0,4"
+                                    Padding="12,10"
+                                    ToolTip="Télécharger le PDF certifié de la facture">
+                                <Button.Effect>
+                                    <DropShadowEffect ShadowDepth="2" BlurRadius="4" Opacity="0.3"/>
+                                </Button.Effect>
+                            </Button>
+                            
+                            <Button Content="🌐 Vérifier en Ligne"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Command="{Binding VerifyOnlineCommand}"
+                                    Margin="0,4"
+                                    Padding="12,10"
+                                    ToolTip="Ouvrir le portail de vérification DGI dans le navigateur"/>
+                            
+                            <Button Content="📊 Détails Complets"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Command="{Binding ShowFullDetailsCommand}"
+                                    Margin="0,4"
+                                    Padding="12,10"
+                                    ToolTip="Afficher tous les détails techniques de certification"/>
+
+                            <!-- Séparateur -->
+                            <Separator Margin="0,8"/>
+                            
+                            <!-- Informations rapides -->
+                            <TextBlock Text="ℹ️ Informations Rapides" 
+                                       FontWeight="SemiBold"
+                                       FontSize="12"
+                                       Margin="0,8,0,4"/>
+                            
+                            <StackPanel Orientation="Horizontal" Margin="0,2">
+                                <TextBlock Text="Balance Sticker: " FontSize="11" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding Facture.FneBalanceSticker}" FontSize="11" 
+                                           Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                            </StackPanel>
+                            
+                            <StackPanel Orientation="Horizontal" Margin="0,2">
+                                <TextBlock Text="Statut Traitement: " FontSize="11" FontWeight="SemiBold"/>
+                                <Border Background="{Binding ProcessingStatusBackground}"
+                                        CornerRadius="8"
+                                        Padding="4,2">
+                                    <TextBlock Text="{Binding Facture.FneProcessingStatus}" 
+                                               FontSize="9" 
+                                               Foreground="White"
+                                               FontWeight="SemiBold"/>
+                                </Border>
+                            </StackPanel>
+                            
+                            <StackPanel Orientation="Horizontal" Margin="0,2"
+                                        Visibility="{Binding Facture.FneHasWarning, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <TextBlock Text="⚠️ Avertissement: " FontSize="11" FontWeight="SemiBold" 
+                                           Foreground="Orange"/>
+                                <TextBlock Text="{Binding Facture.FneWarningMessage}" 
+                                           FontSize="11" 
+                                           Foreground="Orange"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </materialDesign:Card>
+
         <!-- DataGrid des articles -->
-        <materialDesign:Card Grid.Row="2" Padding="0">
+        <materialDesign:Card Grid.Row="3" Padding="0">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -373,7 +640,7 @@
         </materialDesign:Card>
 
         <!-- Boutons d'action -->
-        <StackPanel Grid.Row="3" 
+        <StackPanel Grid.Row="4" 
                     Orientation="Horizontal" 
                     HorizontalAlignment="Right" 
                     Margin="0,16,0,0">

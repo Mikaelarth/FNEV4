@@ -68,11 +68,33 @@ namespace FNEV4.Infrastructure.Services
                     
                     if (result.IsSuccess)
                     {
-                        // Mise à jour du statut en cas de succès
+                        // Mise à jour avec toutes les données enrichies FNE
                         invoice.Status = "Certified";
                         invoice.FneReference = result.FneReference;
                         invoice.VerificationToken = result.VerificationToken;
-                        // CertificationDate supprimée car n'existe pas dans l'entité
+                        
+                        // Nouvelles données enrichies pour exploitation maximale
+                        invoice.FneQrCodeData = result.QrCodeData;
+                        invoice.FneBalanceSticker = result.StickerBalance > 0 ? result.StickerBalance.ToString() : null;
+                        invoice.FneCertificationTimestamp = result.ProcessedAt;
+                        invoice.FneProcessingStatus = "PROCESSED";
+                        invoice.FneCertificationHash = GenerateCertificationHash(invoice, result);
+                        
+                        // Données additionnelles si disponibles
+                        if (result.CertifiedInvoiceDetails != null)
+                        {
+                            invoice.FneCertifiedInvoiceDetails = System.Text.Json.JsonSerializer.Serialize(result.CertifiedInvoiceDetails);
+                            invoice.FneInvoiceId = result.CertifiedInvoiceDetails.Id;
+                        }
+                        
+                        if (result.HasWarning)
+                        {
+                            invoice.FneHasWarning = true;
+                            invoice.FneWarningMessage = result.WarningMessage;
+                        }
+                        
+                        invoice.FneCompanyNcc = result.NccEntreprise;
+                        invoice.FneDownloadUrl = result.DownloadUrl;
 
                         LogCertificationAttempt(invoice, configuration, "SUCCESS", true);
                         await _context.SaveChangesAsync();
@@ -639,20 +661,20 @@ namespace FNEV4.Infrastructure.Services
                     return new FneCertificationResult
                     {
                         IsSuccess = true,
-                        // Données principales FNE
+                        // Données principales FNE selon documentation API
                         FneReference = fneReference,
                         VerificationToken = verificationToken,
                         NccEntreprise = nccEntreprise,
                         StickerBalance = balanceSticker,
                         InvoiceId = invoiceId,
                         
-                        // Nouvelles informations importantes
+                        // Nouvelles informations enrichies pour exploitation maximale
                         QrCodeData = verificationToken, // Le token est le contenu du QR-code
-                        DownloadUrl = verificationToken, // URL de vérification/téléchargement
+                        DownloadUrl = GetDownloadUrlFromToken(verificationToken), // URL de téléchargement PDF
                         HasWarning = apiResponse.Warning,
-                        WarningMessage = apiResponse.Warning ? $"Attention: Stock de stickers faible ({balanceSticker} restants)" : null,
+                        WarningMessage = apiResponse.Warning ? $"⚠️ Stock de stickers faible ({balanceSticker} restants)" : null,
                         
-                        // Détails complets de la facture certifiée
+                        // Détails complets de la facture certifiée pour exploitation
                         CertifiedInvoiceDetails = apiResponse.Invoice != null ? new CertifiedInvoiceInfo
                         {
                             Id = apiResponse.Invoice.Id,
@@ -1099,6 +1121,43 @@ namespace FNEV4.Infrastructure.Services
             {
                 _logger.LogError(ex, "Erreur lors de la création du log d'erreur API");
             }
+        }
+
+        /// <summary>
+        /// Génère un hash de certification pour l'intégrité des données
+        /// </summary>
+        private string GenerateCertificationHash(FneInvoice invoice, FneCertificationResult result)
+        {
+            try
+            {
+                var dataToHash = $"{invoice.InvoiceNumber}|{result.FneReference}|{result.VerificationToken}|{result.ProcessedAt:yyyy-MM-dd HH:mm:ss}";
+                using var sha256 = System.Security.Cryptography.SHA256.Create();
+                var hashBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(dataToHash));
+                return Convert.ToHexString(hashBytes);
+            }
+            catch
+            {
+                return Guid.NewGuid().ToString("N");
+            }
+        }
+
+        /// <summary>
+        /// Génère l'URL de téléchargement PDF à partir du token de vérification
+        /// </summary>
+        private string GetDownloadUrlFromToken(string? verificationToken)
+        {
+            if (string.IsNullOrEmpty(verificationToken))
+                return string.Empty;
+            
+            // Si le token contient déjà une URL complète
+            if (verificationToken.StartsWith("http://") || verificationToken.StartsWith("https://"))
+            {
+                // Convertir l'URL de vérification en URL de téléchargement PDF
+                return verificationToken.Replace("/verification/", "/download/") + ".pdf";
+            }
+            
+            // Format pour téléchargement selon documentation FNE
+            return $"http://54.247.95.108/ws/external/invoices/download/{verificationToken}.pdf";
         }
 
         // Classes pour la désérialisation des réponses API

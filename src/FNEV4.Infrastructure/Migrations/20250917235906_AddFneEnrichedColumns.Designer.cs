@@ -3,6 +3,7 @@ using System;
 using FNEV4.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FNEV4.Infrastructure.Migrations
 {
     [DbContext(typeof(FNEV4DbContext))]
-    partial class FNEV4DbContextModelSnapshot : ModelSnapshot
+    [Migration("20250917235906_AddFneEnrichedColumns")]
+    partial class AddFneEnrichedColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
@@ -535,22 +538,11 @@ namespace FNEV4.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("FneBalanceSticker")
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime?>("FneCertificationDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("FneCertificationHash")
-                        .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FneCertificationNumber")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("FneCertificationTimestamp")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FneCertifiedInvoiceDetails")
@@ -576,20 +568,12 @@ namespace FNEV4.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("FneProcessingStatus")
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("FnePublicVerificationToken")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FneQrCode")
                         .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("FneQrCodeData")
-                        .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FneReference")
@@ -1139,7 +1123,7 @@ namespace FNEV4.Infrastructure.Migrations
                         {
                             Id = new Guid("11111111-1111-1111-1111-111111111111"),
                             Code = "TVA",
-                            CreatedAt = new DateTime(2025, 9, 18, 9, 52, 1, 505, DateTimeKind.Utc).AddTicks(4778),
+                            CreatedAt = new DateTime(2025, 9, 17, 23, 59, 5, 275, DateTimeKind.Utc).AddTicks(6265),
                             Description = "TVA normal de 18%",
                             IsActive = true,
                             IsDeleted = false,
@@ -1149,7 +1133,7 @@ namespace FNEV4.Infrastructure.Migrations
                         {
                             Id = new Guid("22222222-2222-2222-2222-222222222222"),
                             Code = "TVAB",
-                            CreatedAt = new DateTime(2025, 9, 18, 9, 52, 1, 505, DateTimeKind.Utc).AddTicks(4824),
+                            CreatedAt = new DateTime(2025, 9, 17, 23, 59, 5, 275, DateTimeKind.Utc).AddTicks(6276),
                             Description = "TVA réduit de 9%",
                             IsActive = true,
                             IsDeleted = false,
@@ -1159,7 +1143,7 @@ namespace FNEV4.Infrastructure.Migrations
                         {
                             Id = new Guid("33333333-3333-3333-3333-333333333333"),
                             Code = "TVAC",
-                            CreatedAt = new DateTime(2025, 9, 18, 9, 52, 1, 505, DateTimeKind.Utc).AddTicks(4838),
+                            CreatedAt = new DateTime(2025, 9, 17, 23, 59, 5, 275, DateTimeKind.Utc).AddTicks(6284),
                             Description = "TVA exec conv de 0%",
                             IsActive = true,
                             IsDeleted = false,

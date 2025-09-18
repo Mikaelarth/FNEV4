@@ -3,6 +3,7 @@ using System;
 using FNEV4.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FNEV4.Infrastructure.Migrations
 {
     [DbContext(typeof(FNEV4DbContext))]
-    partial class FNEV4DbContextModelSnapshot : ModelSnapshot
+    [Migration("20250918000915_EnrichFneInvoiceColumns")]
+    partial class EnrichFneInvoiceColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
@@ -1139,7 +1142,7 @@ namespace FNEV4.Infrastructure.Migrations
                         {
                             Id = new Guid("11111111-1111-1111-1111-111111111111"),
                             Code = "TVA",
-                            CreatedAt = new DateTime(2025, 9, 18, 9, 52, 1, 505, DateTimeKind.Utc).AddTicks(4778),
+                            CreatedAt = new DateTime(2025, 9, 18, 0, 9, 14, 677, DateTimeKind.Utc).AddTicks(7390),
                             Description = "TVA normal de 18%",
                             IsActive = true,
                             IsDeleted = false,
@@ -1149,7 +1152,7 @@ namespace FNEV4.Infrastructure.Migrations
                         {
                             Id = new Guid("22222222-2222-2222-2222-222222222222"),
                             Code = "TVAB",
-                            CreatedAt = new DateTime(2025, 9, 18, 9, 52, 1, 505, DateTimeKind.Utc).AddTicks(4824),
+                            CreatedAt = new DateTime(2025, 9, 18, 0, 9, 14, 677, DateTimeKind.Utc).AddTicks(7396),
                             Description = "TVA réduit de 9%",
                             IsActive = true,
                             IsDeleted = false,
@@ -1159,7 +1162,7 @@ namespace FNEV4.Infrastructure.Migrations
                         {
                             Id = new Guid("33333333-3333-3333-3333-333333333333"),
                             Code = "TVAC",
-                            CreatedAt = new DateTime(2025, 9, 18, 9, 52, 1, 505, DateTimeKind.Utc).AddTicks(4838),
+                            CreatedAt = new DateTime(2025, 9, 18, 0, 9, 14, 677, DateTimeKind.Utc).AddTicks(7400),
                             Description = "TVA exec conv de 0%",
                             IsActive = true,
                             IsDeleted = false,

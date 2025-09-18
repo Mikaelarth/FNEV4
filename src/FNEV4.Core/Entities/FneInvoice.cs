@@ -195,6 +195,52 @@ namespace FNEV4.Core.Entities
         public string? FneValidationUrl { get; set; }
 
         /// <summary>
+        /// Balance de stickers après certification (de l'API FNE)
+        /// </summary>
+        public int? FneStickerBalance { get; set; }
+
+        /// <summary>
+        /// ID de la facture dans le système FNE (pour avoirs et références)
+        /// </summary>
+        [MaxLength(100)]
+        public string? FneInvoiceId { get; set; }
+
+        /// <summary>
+        /// URL de téléchargement de la facture certifiée PDF
+        /// </summary>
+        [MaxLength(500)]
+        public string? FneDownloadUrl { get; set; }
+
+        /// <summary>
+        /// Données détaillées de la facture certifiée (JSON)
+        /// </summary>
+        [MaxLength(4000)]
+        public string? FneCertifiedInvoiceDetails { get; set; }
+
+        /// <summary>
+        /// Warning retourné par l'API FNE
+        /// </summary>
+        public bool FneHasWarning { get; set; }
+
+        /// <summary>
+        /// Message de warning de l'API FNE
+        /// </summary>
+        [MaxLength(500)]
+        public string? FneWarningMessage { get; set; }
+
+        /// <summary>
+        /// NCC de l'entreprise retourné par l'API
+        /// </summary>
+        [MaxLength(50)]
+        public string? FneCompanyNcc { get; set; }
+
+        /// <summary>
+        /// Token de vérification publique FNE (peut être différent de VerificationToken)
+        /// </summary>
+        [MaxLength(500)]
+        public string? FnePublicVerificationToken { get; set; }
+
+        /// <summary>
         /// Indique si la facture est certifiée FNE
         /// </summary>
         public bool IsCertified { get; set; }
@@ -208,6 +254,35 @@ namespace FNEV4.Core.Entities
         /// Nombre de tentatives de certification
         /// </summary>
         public int RetryCount { get; set; } = 0;
+
+        /// <summary>
+        /// Données brutes du QR Code pour génération/affichage
+        /// </summary>
+        [MaxLength(1000)]
+        public string? FneQrCodeData { get; set; }
+
+        /// <summary>
+        /// Balance sticker - étiquette de validation officielle DGI
+        /// </summary>
+        [MaxLength(200)]
+        public string? FneBalanceSticker { get; set; }
+
+        /// <summary>
+        /// Timestamp de la certification FNE côté DGI
+        /// </summary>
+        public DateTime? FneCertificationTimestamp { get; set; }
+
+        /// <summary>
+        /// Statut de traitement FNE (PENDING, PROCESSED, ERROR, etc.)
+        /// </summary>
+        [MaxLength(50)]
+        public string? FneProcessingStatus { get; set; }
+
+        /// <summary>
+        /// Hash/empreinte de la facture certifiée pour vérification d'intégrité
+        /// </summary>
+        [MaxLength(256)]
+        public string? FneCertificationHash { get; set; }
 
         /// <summary>
         /// Navigation - Client associé
