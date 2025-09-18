@@ -5,16 +5,16 @@
         xmlns:converters="clr-namespace:FNEV4.Presentation.Converters"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
-        TextElement.FontSize="13"
+        TextElement.FontSize="12"
         TextOptions.TextFormattingMode="Ideal"
         TextOptions.TextRenderingMode="Auto"
         Background="{DynamicResource MaterialDesignPaper}"
         FontFamily="{DynamicResource MaterialDesignFont}"
-        Title="Détails de la Facture FNE"
-        Height="800"
-        Width="1200"
-        MinHeight="600"
-        MinWidth="900"
+        Title="Facture FNE - Aperçu et Gestion"
+        Height="900"
+        Width="1400"
+        MinHeight="700"
+        MinWidth="1200"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         Topmost="False"
@@ -29,654 +29,570 @@
         
         <!-- Converter personnalisé pour null vers visibilité -->
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
-        
-        <!-- Style pour les en-têtes de section -->
-        <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+
+        <!-- Styles pour facture professionnelle -->
+        <Style x:Key="InvoiceHeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
-            <Setter Property="Margin" Value="0,12,0,8"/>
         </Style>
 
-        <!-- Style pour les valeurs -->
-        <Style x:Key="ValueStyle" TargetType="TextBlock">
+        <Style x:Key="CompanyNameStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+        </Style>
+
+        <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
+            <Setter Property="Margin" Value="0,8,0,4"/>
+        </Style>
+
+        <Style x:Key="InvoiceFieldLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBodyLight}"/>
+            <Setter Property="Margin" Value="0,0,0,2"/>
+        </Style>
+
+        <Style x:Key="InvoiceFieldValueStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Margin" Value="8,2"/>
+            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
         </Style>
 
         <!-- Style pour les badges de statut -->
         <Style x:Key="StatusBadgeStyle" TargetType="Border">
             <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
     </Window.Resources>
 
-    <Grid Margin="24">
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>    <!-- Barre d'outils -->
+            <RowDefinition Height="*"/>       <!-- Contenu facture -->
         </Grid.RowDefinitions>
 
-        <!-- En-tête avec icône et titre -->
-        <Grid Grid.Row="0" Margin="0,0,0,16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <materialDesign:PackIcon Grid.Column="0"
-                                     Kind="FileDocumentOutline"
-                                     Width="32"
-                                     Height="32"
-                                     Foreground="{DynamicResource PrimaryHueMidBrush}"
-                                     VerticalAlignment="Center"
-                                     Margin="0,0,12,0"/>
-
-            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                <TextBlock Text="{Binding FactureTitle}"
-                           FontSize="20"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource MaterialDesignBody}"/>
-                <TextBlock Text="{Binding FactureSubtitle}"
-                           FontSize="14"
-                           Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-            </StackPanel>
-
-            <!-- Badge de statut -->
-            <Border Grid.Column="2"
-                    Style="{StaticResource StatusBadgeStyle}"
-                    Background="{Binding StatusBackground}">
-                <TextBlock Text="{Binding StatusText}"
-                           FontWeight="SemiBold"
-                           Foreground="White"/>
-            </Border>
-        </Grid>
-
-        <!-- Informations de la facture -->
-        <materialDesign:Card Grid.Row="1" 
-                             Margin="0,0,0,16"
-                             Padding="16">
+        <!-- Barre d'outils contextuelle en haut -->
+        <Border Grid.Row="0" 
+                Background="{DynamicResource MaterialDesignToolBarBackground}"
+                BorderBrush="{DynamicResource MaterialDesignDivider}"
+                BorderThickness="0,0,0,1"
+                Padding="16,8">
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Colonne 1: Informations client -->
-                <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                    <TextBlock Text="👤 INFORMATIONS CLIENT" Style="{StaticResource SectionHeaderStyle}"/>
+                <!-- Info facture et statut -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="Receipt" 
+                                             Width="24" Height="24"
+                                             Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                             VerticalAlignment="Center"
+                                             Margin="0,0,8,0"/>
+                    <TextBlock Text="{Binding FactureTitle}"
+                               FontSize="16" FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               Margin="0,0,16,0"/>
                     
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Code:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Facture.ClientCode}" Style="{StaticResource ValueStyle}"/>
-
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Nom:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Facture.ClientDisplayName}" Style="{StaticResource ValueStyle}"/>
-
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Template:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <Border Grid.Row="2" Grid.Column="1" 
-                                Background="{Binding TemplateBackground}"
-                                CornerRadius="8"
-                                Padding="6,2"
-                                HorizontalAlignment="Left"
-                                Margin="8,2">
-                            <TextBlock Text="{Binding TemplateDisplayName}" 
-                                       FontWeight="SemiBold"
-                                       Foreground="White"/>
-                        </Border>
-
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Point de Vente:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Facture.PointOfSale}" Style="{StaticResource ValueStyle}"/>
-
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Paiement:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding PaymentMethodDisplayName}" Style="{StaticResource ValueStyle}"/>
-                    </Grid>
+                    <!-- Badge de statut -->
+                    <Border Style="{StaticResource StatusBadgeStyle}"
+                            Background="{Binding StatusBackground}">
+                        <TextBlock Text="{Binding StatusText}"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="White"/>
+                    </Border>
                 </StackPanel>
 
-                <!-- Colonne 2: Informations facture -->
-                <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                    <TextBlock Text="📄 INFORMATIONS FACTURE" Style="{StaticResource SectionHeaderStyle}"/>
-                    
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
+                <!-- Actions contextuelles -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <!-- Bouton Certifier (si applicable) -->
+                    <Button Content="🏛️ CERTIFIER"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Background="{DynamicResource SecondaryHueMidBrush}"
+                            Command="{Binding CertifyInvoiceCommand}"
+                            Visibility="{Binding CertifyButtonVisibility}"
+                            Margin="0,0,8,0"
+                            ToolTip="Certifier cette facture auprès de la DGI"/>
 
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="N° Facture:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Facture.InvoiceNumber}" Style="{StaticResource ValueStyle}"/>
+                    <!-- Bouton Imprimer -->
+                    <Button Content="🖨️ IMPRIMER"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Margin="0,0,8,0"
+                            ToolTip="Imprimer cette facture"/>
 
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Date:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Facture.InvoiceDate, StringFormat=dd/MM/yyyy}" Style="{StaticResource ValueStyle}"/>
+                    <!-- Menu Plus d'options -->
+                    <Button Content="⋮"
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Plus d'options">
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="📄 Télécharger PDF" 
+                                          Command="{Binding DownloadPdfCommand}"
+                                          IsEnabled="{Binding IsCertified}"/>
+                                <MenuItem Header="🔍 Vérifier en ligne" 
+                                          Command="{Binding VerifyOnlineCommand}"
+                                          IsEnabled="{Binding IsCertified}"/>
+                                <MenuItem Header="📋 Copier QR Code" 
+                                          Command="{Binding CopyQrDataCommand}"
+                                          IsEnabled="{Binding IsCertified}"/>
+                                <Separator/>
+                                <MenuItem Header="🔍 Détails complets" 
+                                          Command="{Binding ShowFullDetailsCommand}"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
 
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Type:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Facture.InvoiceType}" Style="{StaticResource ValueStyle}"/>
-
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Nb Articles:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding NombreArticles}" Style="{StaticResource ValueStyle}"/>
-
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Référence FNE:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ReferenceFormatee}" Style="{StaticResource ValueStyle}"/>
-
-                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Certifiée le:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding DateCertificationFormatee}" Style="{StaticResource ValueStyle}"/>
-                    </Grid>
-                </StackPanel>
-
-                <!-- Colonne 3: Montants -->
-                <StackPanel Grid.Column="2">
-                    <TextBlock Text="💰 MONTANTS" Style="{StaticResource SectionHeaderStyle}"/>
-                    
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Montant HT:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Facture.TotalAmountHT, StringFormat='{}{0:N2} FCFA'}" Style="{StaticResource ValueStyle}"/>
-
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Montant TVA:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Facture.TotalVatAmount, StringFormat='{}{0:N2} FCFA'}" Style="{StaticResource ValueStyle}"/>
-
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Montant TTC:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Facture.TotalAmountTTC, StringFormat='{}{0:N2} FCFA'}" 
-                                   FontWeight="Bold"
-                                   FontSize="15"
-                                   Foreground="{DynamicResource PrimaryHueMidBrush}"
-                                   Style="{StaticResource ValueStyle}"/>
-
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Remise:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Facture.GlobalDiscount, StringFormat='{}{0:N2}%'}" Style="{StaticResource ValueStyle}"/>
-
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Message:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding MessageCommercialCourt}" 
-                                   Style="{StaticResource ValueStyle}"
-                                   TextWrapping="Wrap"/>
-                    </Grid>
+                    <!-- Bouton Fermer -->
+                    <Button Content="✕" 
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            Click="CloseButton_Click"
+                            ToolTip="Fermer"/>
                 </StackPanel>
             </Grid>
-        </materialDesign:Card>
+        </Border>
 
-        <!-- Section FNE Certification (nouvelle) -->
-        <materialDesign:Card Grid.Row="2" 
-                             Margin="0,0,0,16"
-                             Padding="16">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+        <!-- Contenu principal - Facture professionnelle -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                      Padding="0" Margin="0">
+            <Border Background="White" 
+                    BorderBrush="{DynamicResource MaterialDesignDivider}" 
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Margin="16">
+                <Grid Margin="32">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>    <!-- En-tête entreprise -->
+                        <RowDefinition Height="Auto"/>    <!-- Informations facture et client -->
+                        <RowDefinition Height="Auto"/>    <!-- Articles -->
+                        <RowDefinition Height="Auto"/>    <!-- Totaux -->
+                        <RowDefinition Height="Auto"/>    <!-- Certification FNE (si applicable) -->
+                        <RowDefinition Height="Auto"/>    <!-- Message commercial et QR -->
+                    </Grid.RowDefinitions>
 
-                <!-- En-tête FNE -->
-                <TextBlock Grid.Row="0"
-                           Text="🏛️ CERTIFICATION FNE - INFORMATIONS COMPLÈTES"
-                           Style="{StaticResource SectionHeaderStyle}"
-                           HorizontalAlignment="Center"
-                           FontSize="18"
-                           Margin="0,0,0,16"/>
+                    <!-- EN-TÊTE ENTREPRISE -->
+                    <Grid Grid.Row="0" Margin="0,0,0,32">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                <!-- Contenu FNE en colonnes -->
-                <Grid Grid.Row="1">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Colonne 1: Statut et Processus -->
-                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                        <TextBlock Text="📋 STATUT DE CERTIFICATION" Style="{StaticResource SectionHeaderStyle}"/>
-                        
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Statut:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                            <Border Grid.Row="0" Grid.Column="1" 
-                                    Background="{Binding ProcessingStatusBackground}"
-                                    CornerRadius="8"
-                                    Padding="8,4"
+                        <!-- Logo et informations entreprise -->
+                        <StackPanel Grid.Column="0">
+                            <!-- Espace pour logo entreprise -->
+                            <Border Width="120" Height="60" 
+                                    Background="{DynamicResource MaterialDesignChipBackground}"
+                                    CornerRadius="4"
                                     HorizontalAlignment="Left"
-                                    Margin="8,2">
-                                <TextBlock Text="{Binding Facture.FneProcessingStatus}" 
-                                           FontWeight="SemiBold"
-                                           Foreground="White"/>
+                                    Margin="0,0,0,16">
+                                <TextBlock Text="LOGO ENTREPRISE" 
+                                           FontSize="10" 
+                                           Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                           HorizontalAlignment="Center" 
+                                           VerticalAlignment="Center"/>
                             </Border>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Date Certification:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Facture.FneCertificationTimestamp, StringFormat=dd/MM/yyyy HH:mm:ss}" Style="{StaticResource ValueStyle}"/>
+                            <!-- TODO: Binding avec configuration entreprise -->
+                            <TextBlock Text="FNEV4 SARL" 
+                                       Style="{StaticResource CompanyNameStyle}"/>
+                            <TextBlock Text="Zone Industrielle de Yopougon" 
+                                       Style="{StaticResource InvoiceFieldValueStyle}"/>
+                            <TextBlock Text="Abidjan, Côte d'Ivoire" 
+                                       Style="{StaticResource InvoiceFieldValueStyle}"/>
+                            <TextBlock Text="Tél: +225 27 23 45 67 89" 
+                                       Style="{StaticResource InvoiceFieldValueStyle}"/>
+                            <TextBlock Text="Email: contact@fnev4.ci" 
+                                       Style="{StaticResource InvoiceFieldValueStyle}"/>
+                        </StackPanel>
 
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Hash Certification:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding CertificationHashShort}" 
-                                       Style="{StaticResource ValueStyle}"
-                                       FontFamily="Consolas"
-                                       FontSize="11"
-                                       Foreground="{DynamicResource SecondaryHueMidBrush}"/>
+                        <!-- Numéro de facture et date (mis en évidence) -->
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                            <TextBlock Text="FACTURE" 
+                                       Style="{StaticResource InvoiceHeaderStyle}"
+                                       HorizontalAlignment="Right"/>
+                            
+                            <Border Background="{DynamicResource PrimaryHueLightBrush}"
+                                    CornerRadius="8"
+                                    Padding="16,8"
+                                    Margin="0,8,0,16">
+                                <StackPanel>
+                                    <TextBlock Text="N° FACTURE" 
+                                               Style="{StaticResource InvoiceFieldLabelStyle}"
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Facture.InvoiceNumber}" 
+                                               FontSize="16" FontWeight="Bold"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
 
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Balance Sticker:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Facture.FneBalanceSticker}" 
-                                       Style="{StaticResource ValueStyle}"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource PrimaryHueMidBrush}"/>
-
-                            <TextBlock Grid.Row="4" Grid.Column="0" Text="NCC Entreprise:" FontWeight="SemiBold" Style="{StaticResource ValueStyle}"/>
-                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding CompanyNcc}" Style="{StaticResource ValueStyle}"/>
-                        </Grid>
-                    </StackPanel>
-
-                    <!-- Colonne 2: QR Code et Visualisation -->
-                    <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                        <TextBlock Text="📱 CODE QR" Style="{StaticResource SectionHeaderStyle}"/>
-                        
-                        <!-- Zone QR Code -->
-                        <Border Background="White"
-                                BorderBrush="{DynamicResource MaterialDesignDivider}"
-                                BorderThickness="2"
-                                CornerRadius="8"
-                                Padding="16"
-                                HorizontalAlignment="Center"
-                                Margin="0,8">
-                            <StackPanel HorizontalAlignment="Center">
-                                <!-- Image QR Code (sera générée) -->
-                                <Image Name="QrCodeImage"
-                                       Source="{Binding QrCodeImageSource}"
-                                       Width="150"
-                                       Height="150"
-                                       Stretch="Uniform"/>
-                                
-                                <!-- Placeholder si pas d'image QR -->
-                                <Border Name="QrCodePlaceholder"
-                                        Width="150"
-                                        Height="150"
-                                        Background="{DynamicResource MaterialDesignChipBackground}"
-                                        CornerRadius="4"
-                                        Visibility="{Binding QrCodeImageSource, Converter={StaticResource NullToVisibilityConverter}}">
-                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <materialDesign:PackIcon Kind="QrcodeScan" 
-                                                                 Width="48" 
-                                                                 Height="48"
-                                                                 Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                                        <TextBlock Text="QR Code" 
-                                                   FontSize="12"
-                                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                                   HorizontalAlignment="Center"
-                                                   Margin="0,8,0,0"/>
-                                    </StackPanel>
-                                </Border>
-                                
-                                <!-- Données QR résumées -->
-                                <TextBlock Text="Données QR Code:"
-                                           FontWeight="SemiBold"
-                                           Margin="0,12,0,4"
-                                           HorizontalAlignment="Center"/>
-                                <TextBlock Text="{Binding QrCodeDataShort}"
-                                           FontFamily="Consolas"
-                                           FontSize="9"
-                                           TextAlignment="Center"
-                                           MaxWidth="180"
-                                           Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                           ToolTip="{Binding Facture.FneQrCodeData}"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Boutons QR Code -->
-                        <UniformGrid Columns="2" Margin="0,8,0,0">
-                            <Button Content="📋 Copier"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                                    Command="{Binding CopyQrDataCommand}"
-                                    Margin="0,0,4,0"
-                                    ToolTip="Copier les données QR dans le presse-papiers"/>
-                            <Button Content="🔍 Voir"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                                    Command="{Binding ShowQrDataCommand}"
-                                    Margin="4,0,0,0"
-                                    ToolTip="Afficher les données QR complètes"/>
-                        </UniformGrid>
-                    </StackPanel>
-
-                    <!-- Colonne 3: Actions et Téléchargement -->
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Text="💾 ACTIONS" Style="{StaticResource SectionHeaderStyle}"/>
-                        
-                        <!-- Informations de téléchargement -->
-                        <Border Background="{DynamicResource MaterialDesignCardBackground}"
-                                BorderBrush="{DynamicResource MaterialDesignDivider}"
-                                BorderThickness="1"
-                                CornerRadius="8"
-                                Padding="12"
-                                Margin="0,8">
                             <StackPanel>
-                                <TextBlock Text="📄 Document Certifié" 
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,0,8"/>
-                                
-                                <TextBlock Text="URL de Téléchargement:"
-                                           FontSize="11"
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,0,4"/>
-                                <ScrollViewer MaxHeight="50" 
-                                              VerticalScrollBarVisibility="Auto">
-                                    <TextBlock Text="{Binding DownloadUrl}"
-                                               FontFamily="Consolas"
-                                               FontSize="9"
-                                               TextWrapping="Wrap"
-                                               Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                                </ScrollViewer>
-                                
-                                <TextBlock Text="Token de Vérification:"
-                                           FontSize="11"
-                                           FontWeight="SemiBold"
-                                           Margin="0,8,0,4"/>
-                                <TextBlock Text="{Binding VerificationTokenShort}"
-                                           FontFamily="Consolas"
-                                           FontSize="9"
-                                           Foreground="{DynamicResource SecondaryHueMidBrush}"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Boutons d'action -->
-                        <StackPanel Orientation="Vertical" 
-                                    HorizontalAlignment="Stretch"
-                                    Margin="0,8,0,0">
-                            
-                            <Button Content="📥 Télécharger PDF"
-                                    Style="{StaticResource MaterialDesignRaisedButton}"
-                                    Background="{DynamicResource PrimaryHueMidBrush}"
-                                    Foreground="White"
-                                    Command="{Binding DownloadPdfCommand}"
-                                    Margin="0,4"
-                                    Padding="12,10"
-                                    ToolTip="Télécharger le PDF certifié de la facture">
-                                <Button.Effect>
-                                    <DropShadowEffect ShadowDepth="2" BlurRadius="4" Opacity="0.3"/>
-                                </Button.Effect>
-                            </Button>
-                            
-                            <Button Content="🌐 Vérifier en Ligne"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                                    Command="{Binding VerifyOnlineCommand}"
-                                    Margin="0,4"
-                                    Padding="12,10"
-                                    ToolTip="Ouvrir le portail de vérification DGI dans le navigateur"/>
-                            
-                            <Button Content="📊 Détails Complets"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                                    Command="{Binding ShowFullDetailsCommand}"
-                                    Margin="0,4"
-                                    Padding="12,10"
-                                    ToolTip="Afficher tous les détails techniques de certification"/>
-
-                            <!-- Séparateur -->
-                            <Separator Margin="0,8"/>
-                            
-                            <!-- Informations rapides -->
-                            <TextBlock Text="ℹ️ Informations Rapides" 
-                                       FontWeight="SemiBold"
-                                       FontSize="12"
-                                       Margin="0,8,0,4"/>
-                            
-                            <StackPanel Orientation="Horizontal" Margin="0,2">
-                                <TextBlock Text="Balance Sticker: " FontSize="11" FontWeight="SemiBold"/>
-                                <TextBlock Text="{Binding Facture.FneBalanceSticker}" FontSize="11" 
-                                           Foreground="{DynamicResource PrimaryHueMidBrush}"/>
-                            </StackPanel>
-                            
-                            <StackPanel Orientation="Horizontal" Margin="0,2">
-                                <TextBlock Text="Statut Traitement: " FontSize="11" FontWeight="SemiBold"/>
-                                <Border Background="{Binding ProcessingStatusBackground}"
-                                        CornerRadius="8"
-                                        Padding="4,2">
-                                    <TextBlock Text="{Binding Facture.FneProcessingStatus}" 
-                                               FontSize="9" 
-                                               Foreground="White"
-                                               FontWeight="SemiBold"/>
-                                </Border>
-                            </StackPanel>
-                            
-                            <StackPanel Orientation="Horizontal" Margin="0,2"
-                                        Visibility="{Binding Facture.FneHasWarning, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <TextBlock Text="⚠️ Avertissement: " FontSize="11" FontWeight="SemiBold" 
-                                           Foreground="Orange"/>
-                                <TextBlock Text="{Binding Facture.FneWarningMessage}" 
-                                           FontSize="11" 
-                                           Foreground="Orange"
-                                           TextWrapping="Wrap"/>
+                                <TextBlock Text="Date:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
+                                <TextBlock Text="{Binding Facture.InvoiceDate, StringFormat='{}{0:dd/MM/yyyy}'}" 
+                                           Style="{StaticResource InvoiceFieldValueStyle}"/>
                             </StackPanel>
                         </StackPanel>
-                    </StackPanel>
-                </Grid>
-            </Grid>
-        </materialDesign:Card>
+                    </Grid>
 
-        <!-- DataGrid des articles -->
-        <materialDesign:Card Grid.Row="3" Padding="0">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+                    <!-- INFORMATIONS FACTURE ET CLIENT -->
+                    <Grid Grid.Row="1" Margin="0,0,0,24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                <!-- En-tête des articles -->
-                <Border Grid.Row="0" 
-                        Background="{DynamicResource PrimaryHueMidBrush}"
-                        Padding="16,12">
-                    <TextBlock Text="🛍️ DÉTAIL DES ARTICLES"
-                               FontSize="16"
-                               FontWeight="SemiBold"
-                               Foreground="White"/>
-                </Border>
+                        <!-- Informations client -->
+                        <Border Grid.Column="0" 
+                                BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="16"
+                                Margin="0,0,8,0">
+                            <StackPanel>
+                                <TextBlock Text="FACTURER À" Style="{StaticResource SectionTitleStyle}"/>
+                                <TextBlock Text="{Binding Facture.ClientDisplayName}" 
+                                           FontWeight="SemiBold" 
+                                           Style="{StaticResource InvoiceFieldValueStyle}"/>
+                                <TextBlock Text="{Binding Facture.ClientCode, StringFormat='Code: {0}'}" 
+                                           Style="{StaticResource InvoiceFieldValueStyle}"/>
+                                <!-- Adresse client si disponible -->
+                                <TextBlock Style="{StaticResource InvoiceFieldValueStyle}"
+                                           Foreground="{DynamicResource MaterialDesignBodyLight}">
+                                    <TextBlock.Text>
+                                        <Binding Path="Facture.Client.Address" TargetNullValue="Adresse non renseignée"/>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                                <!-- Téléphone client si disponible -->
+                                <TextBlock Style="{StaticResource InvoiceFieldValueStyle}"
+                                           Foreground="{DynamicResource MaterialDesignBodyLight}">
+                                    <TextBlock.Text>
+                                        <Binding Path="Facture.Client.Phone" StringFormat="Tél: {0}" TargetNullValue="Téléphone non renseigné"/>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                                <!-- Email client si disponible -->
+                                <TextBlock Style="{StaticResource InvoiceFieldValueStyle}"
+                                           Foreground="{DynamicResource MaterialDesignBodyLight}">
+                                    <TextBlock.Text>
+                                        <Binding Path="Facture.Client.Email" StringFormat="Email: {0}" TargetNullValue="Email non renseigné"/>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
 
-                <!-- DataGrid avec bindings corrigés -->
-                <DataGrid Grid.Row="1"
-                          ItemsSource="{Binding Articles}"
-                          AutoGenerateColumns="False"
-                          CanUserAddRows="False"
-                          CanUserDeleteRows="False"
-                          CanUserReorderColumns="True"
-                          CanUserResizeColumns="True"
-                          CanUserSortColumns="True"
-                          IsReadOnly="True"
-                          GridLinesVisibility="Horizontal"
-                          HeadersVisibility="Column"
-                          SelectionMode="Single"
-                          AlternatingRowBackground="#F8F9FA"
-                          materialDesign:DataGridAssist.CellPadding="8,4"
-                          materialDesign:DataGridAssist.ColumnHeaderPadding="8,8">
+                        <!-- Informations facture -->
+                        <Border Grid.Column="1" 
+                                BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="16"
+                                Margin="8,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="DÉTAILS FACTURE" Style="{StaticResource SectionTitleStyle}"/>
+                                
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
 
-                    <DataGrid.Columns>
-                        <!-- Code Article -->
-                        <DataGridTextColumn Header="Code Article"
-                                            Binding="{Binding ProductCode}"
-                                            Width="120"
-                                            ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Type:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Facture.InvoiceType}" Style="{StaticResource InvoiceFieldValueStyle}"/>
 
-                        <!-- Désignation avec le bon nom de propriété -->
-                        <DataGridTextColumn Header="Désignation"
-                                            Binding="{Binding Description}"
-                                            Width="*"
-                                            ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Template:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
+                                    <Border Grid.Row="1" Grid.Column="1" 
+                                            Background="{Binding TemplateBackground}" 
+                                            CornerRadius="3" Padding="4,2" HorizontalAlignment="Left">
+                                        <TextBlock Text="{Binding Facture.Template}" 
+                                                   Foreground="White" FontSize="9"/>
+                                    </Border>
 
-                        <!-- Quantité -->
-                        <DataGridTextColumn Header="Qté"
-                                            Binding="{Binding Quantity, StringFormat=N2}"
-                                            Width="80">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignDataGridTextColumnStyle}">
-                                    <Setter Property="TextAlignment" Value="Right"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Paiement:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding PaymentMethodDisplayName}" Style="{StaticResource InvoiceFieldValueStyle}"/>
 
-                        <!-- Unité avec le bon nom de propriété -->
-                        <DataGridTextColumn Header="Unité"
-                                            Binding="{Binding MeasurementUnit}"
-                                            Width="80"
-                                            ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Articles:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding NombreArticles}" Style="{StaticResource InvoiceFieldValueStyle}"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
 
-                        <!-- Prix Unitaire avec le bon nom de propriété -->
-                        <DataGridTextColumn Header="Prix Unit. (FCFA)"
-                                            Binding="{Binding UnitPrice, StringFormat='{}{0:N2}'}"
-                                            Width="130">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignDataGridTextColumnStyle}">
-                                    <Setter Property="TextAlignment" Value="Right"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
+                    <!-- ARTICLES -->
+                    <Border Grid.Row="2" 
+                            BorderBrush="{DynamicResource MaterialDesignDivider}"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Margin="0,0,0,24">
+                        <StackPanel>
+                            <!-- En-tête section articles -->
+                            <Border Background="{DynamicResource MaterialDesignDivider}"
+                                    Padding="16,8"
+                                    CornerRadius="4,4,0,0">
+                                <Grid>
+                                    <TextBlock Text="ARTICLES DE LA FACTURE" 
+                                               Style="{StaticResource SectionTitleStyle}"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding NombreArticles, StringFormat='{}{0} article(s)'}"
+                                               HorizontalAlignment="Right"
+                                               VerticalAlignment="Center"
+                                               Style="{StaticResource InvoiceFieldValueStyle}"
+                                               Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                </Grid>
+                            </Border>
 
-                        <!-- Type TVA avec le bon nom de propriété -->
-                        <DataGridTemplateColumn Header="Type TVA" Width="140">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
-                                        <!-- Code TVA avec couleur -->
-                                        <Border Background="{Binding VatCode, Converter={StaticResource TvaCodeToBrushConverter}}"
-                                                CornerRadius="8"
-                                                Padding="6,2"
-                                                HorizontalAlignment="Center"
-                                                Margin="0,2">
-                                            <TextBlock Text="{Binding VatCode}"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="White"
-                                                       HorizontalAlignment="Center"/>
-                                        </Border>
-                                        <!-- Description TVA -->
-                                        <TextBlock FontSize="10" 
+                            <!-- Table des articles -->
+                            <DataGrid ItemsSource="{Binding Articles}" 
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      SelectionMode="Single"
+                                      CanUserAddRows="False"
+                                      CanUserDeleteRows="False"
+                                      GridLinesVisibility="Horizontal"
+                                      HeadersVisibility="Column"
+                                      Background="White"
+                                      BorderThickness="0"
+                                      Margin="0">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="CODE" 
+                                                        Binding="{Binding ProductCode}" 
+                                                        Width="100"/>
+                                    <DataGridTextColumn Header="DÉSIGNATION" 
+                                                        Binding="{Binding Description}" 
+                                                        Width="*"/>
+                                    <DataGridTextColumn Header="QTÉ" 
+                                                        Binding="{Binding Quantity}" 
+                                                        Width="80"/>
+                                    <DataGridTextColumn Header="PRIX UNIT." 
+                                                        Binding="{Binding UnitPrice, StringFormat='{}{0:N0} FCFA'}" 
+                                                        Width="120"/>
+                                    <DataGridTemplateColumn Header="TVA" Width="100">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Background="{Binding VatCode, Converter={StaticResource TvaCodeToBrushConverter}}"
+                                                        CornerRadius="2" 
+                                                        Padding="4,2">
+                                                    <TextBlock Foreground="White" 
+                                                               FontWeight="SemiBold"
+                                                               FontSize="10"
+                                                               HorizontalAlignment="Center">
+                                                        <TextBlock.Text>
+                                                            <MultiBinding StringFormat="{}{0}-{1:0}%">
+                                                                <Binding Path="VatCode"/>
+                                                                <Binding Path="VatRate"/>
+                                                            </MultiBinding>
+                                                        </TextBlock.Text>
+                                                    </TextBlock>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="TOTAL" 
+                                                        Binding="{Binding LineAmountTTC, StringFormat='{}{0:N0} FCFA'}" 
+                                                        Width="120"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- TOTAUX -->
+                    <Border Grid.Row="3"
+                            BorderBrush="{DynamicResource MaterialDesignDivider}"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Margin="0,0,0,24">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Espace pour message commercial -->
+                            <StackPanel Grid.Column="0" Margin="16">
+                                <TextBlock Text="MESSAGE COMMERCIAL" 
+                                           Style="{StaticResource SectionTitleStyle}"
+                                           Margin="0,0,0,8"/>
+                                <TextBlock Text="Merci de votre confiance. Paiement sous 30 jours."
+                                           Style="{StaticResource InvoiceFieldValueStyle}"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                            </StackPanel>
+
+                            <!-- Totaux alignés à droite -->
+                            <Border Grid.Column="1" 
+                                    Background="{DynamicResource MaterialDesignChipBackground}"
+                                    Padding="16"
+                                    Margin="8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                        <RowDefinition Height="8"/>
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Sous-total HT:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Facture.TotalAmountHT, StringFormat='{}{0:N0} FCFA'}" Style="{StaticResource InvoiceFieldValueStyle}"/>
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="TVA:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Facture.TotalVatAmount, StringFormat='{}{0:N0} FCFA'}" Style="{StaticResource InvoiceFieldValueStyle}"/>
+
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Remise:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Facture.GlobalDiscount, StringFormat='{}{0:N2}%'}" Style="{StaticResource InvoiceFieldValueStyle}"/>
+
+                                    <Separator Grid.Row="3" Grid.ColumnSpan="2" Margin="0,4"/>
+
+                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="TOTAL TTC:" 
+                                               FontWeight="Bold" FontSize="16" 
+                                               Foreground="{DynamicResource PrimaryHueMediumBrush}"/>
+                                    <TextBlock Grid.Row="4" Grid.Column="1" 
+                                               Text="{Binding Facture.TotalAmountTTC, StringFormat='{}{0:N0} FCFA'}"
+                                               FontWeight="Bold" FontSize="16" 
+                                               Foreground="{DynamicResource PrimaryHueMediumBrush}"/>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- CERTIFICATION FNE (conditionnelle) -->
+                    <Border Grid.Row="4" 
+                            BorderBrush="{DynamicResource MaterialDesignDivider}"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Margin="0,0,0,16"
+                            Visibility="{Binding CertificationSectionVisibility}">
+                        <StackPanel Margin="16">
+                            <TextBlock Text="CERTIFICATION FNE" 
+                                       Style="{StaticResource SectionTitleStyle}"
+                                       Margin="0,0,0,16"/>
+
+                            <!-- Messages conditionnels -->
+                            <TextBlock Text="{Binding NonCertifiedMessage}" 
+                                       Foreground="{DynamicResource MaterialDesignValidationErrorBrush}"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,16"
+                                       Visibility="{Binding NonCertifiedMessageVisibility}"/>
+
+                            <!-- Informations de certification pour factures certifiées -->
+                            <Grid Visibility="{Binding CertificationInfoVisibility}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Informations principales -->
+                                <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Statut:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding StatusDisplayName}" Style="{StaticResource InvoiceFieldValueStyle}" Margin="8,0,0,0"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Date certification:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Facture.FneCertificationDate, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Style="{StaticResource InvoiceFieldValueStyle}" Margin="8,0,0,0"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="N° MECeF:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Facture.FneMecefNumber}" Style="{StaticResource InvoiceFieldValueStyle}" Margin="8,0,0,0"/>
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Contre-marque:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Facture.FneCounterMark}" Style="{StaticResource InvoiceFieldValueStyle}" Margin="8,0,0,0"/>
+                                    </Grid>
+                                </StackPanel>
+
+                                <!-- QR Code et actions -->
+                                <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                                    <TextBlock Text="VÉRIFICATION" Style="{StaticResource InvoiceFieldLabelStyle}" Margin="0,0,0,8"/>
+                                    
+                                    <!-- Espace pour QR Code -->
+                                    <Border Width="120" Height="120" 
+                                            Background="{DynamicResource MaterialDesignChipBackground}"
+                                            CornerRadius="4"
+                                            HorizontalAlignment="Center"
+                                            Margin="0,0,0,8">
+                                        <TextBlock Text="QR CODE" 
+                                                   FontSize="10" 
                                                    Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                                   HorizontalAlignment="Center"
-                                                   TextWrapping="Wrap"
-                                                   Margin="0,2">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding VatCode}" Value="TVA">
-                                                            <Setter Property="Text" Value="TVA normal 18%"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding VatCode}" Value="TVAB">
-                                                            <Setter Property="Text" Value="TVA réduit 9%"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding VatCode}" Value="TVAC">
-                                                            <Setter Property="Text" Value="TVA exec conv 0%"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding VatCode}" Value="TVAD">
-                                                            <Setter Property="Text" Value="TVA exec leg 0%"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding VatCode}" Value="">
-                                                            <Setter Property="Text" Value="Code TVA manquant"/>
-                                                            <Setter Property="Foreground" Value="Red"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding VatCode}" Value="{x:Null}">
-                                                            <Setter Property="Text" Value="Code TVA manquant"/>
-                                                            <Setter Property="Foreground" Value="Red"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                    <Setter Property="Text" Value="Type inconnu"/>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
+                                                   HorizontalAlignment="Center" 
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Content="Afficher QR" 
+                                                Command="{Binding ShowQrDataCommand}"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                materialDesign:ButtonAssist.CornerRadius="4"
+                                                Height="32" FontSize="10"
+                                                Margin="0,0,4,0"/>
+                                        <Button Content="Vérifier"
+                                                Command="{Binding VerifyOnlineCommand}"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                materialDesign:ButtonAssist.CornerRadius="4"
+                                                Height="32" FontSize="10"
+                                                Margin="4,0,0,0"/>
                                     </StackPanel>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
 
-                        <!-- Montant HT avec le bon nom de propriété -->
-                        <DataGridTextColumn Header="Montant HT (FCFA)"
-                                            Binding="{Binding LineAmountHT, StringFormat='{}{0:N2}'}"
-                                            Width="150">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignDataGridTextColumnStyle}">
-                                    <Setter Property="TextAlignment" Value="Right"/>
-                                    <Setter Property="FontWeight" Value="SemiBold"/>
-                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </Grid>
-        </materialDesign:Card>
+                    <!-- MESSAGE COMMERCIAL ET PIED DE PAGE -->
+                    <Grid Grid.Row="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-        <!-- Boutons d'action -->
-        <StackPanel Grid.Row="4" 
-                    Orientation="Horizontal" 
-                    HorizontalAlignment="Right" 
-                    Margin="0,16,0,0">
-            
-            <Button Content="📋 CERTIFIER"
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    Background="{DynamicResource SecondaryHueMidBrush}"
-                    BorderBrush="{DynamicResource SecondaryHueMidBrush}"
-                    Foreground="White"
-                    Padding="16,8"
-                    Click="CertifierButton_Click"
-                    Margin="0,0,8,0">
-                <Button.Effect>
-                    <DropShadowEffect ShadowDepth="2" BlurRadius="4" Opacity="0.3"/>
-                </Button.Effect>
-            </Button>
-            
-            <Button Content="🖨️ IMPRIMER"
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    Background="{DynamicResource PrimaryHueMidBrush}"
-                    BorderBrush="{DynamicResource PrimaryHueMidBrush}"
-                    Foreground="White"
-                    Padding="16,8"
-                    Click="ImprimerButton_Click"
-                    Margin="0,0,8,0">
-                <Button.Effect>
-                    <DropShadowEffect ShadowDepth="2" BlurRadius="4" Opacity="0.3"/>
-                </Button.Effect>
-            </Button>
-            
-            <Button Content="❌ FERMER"
-                    IsCancel="True"
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    Padding="16,8"
-                    Click="FermerButton_Click"
-                    Margin="8,0,0,0"/>
-        </StackPanel>
+                        <!-- Conditions de paiement et mentions légales -->
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="CONDITIONS DE RÈGLEMENT"
+                                       Style="{StaticResource InvoiceFieldLabelStyle}"
+                                       Margin="0,0,0,4"/>
+                            <TextBlock Text="Paiement sous 30 jours. Pénalités de retard applicables."
+                                       Style="{StaticResource InvoiceFieldValueStyle}"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                       FontSize="10"/>
+                        </StackPanel>
+
+                        <!-- Code-barres / références -->
+                        <Border Grid.Column="1" 
+                                Width="200" Height="40"
+                                Background="{DynamicResource MaterialDesignChipBackground}"
+                                CornerRadius="4"
+                                Margin="16,0,0,0">
+                            <TextBlock Text="CODE-BARRES FACTURE" 
+                                       FontSize="10" 
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                       HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+        </ScrollViewer>
     </Grid>
 </Window>

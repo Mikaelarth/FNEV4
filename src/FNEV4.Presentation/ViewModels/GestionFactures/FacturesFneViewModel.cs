@@ -124,16 +124,31 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         /// Commande pour voir les détails d'une facture
         /// </summary>
         [RelayCommand]
-        private void ViewFacture(FneInvoice? facture)
+        private async Task ViewFacture(FneInvoice? facture)
         {
             if (facture == null) return;
 
             try
             {
-                StatusMessage = $"Ouverture détails facture {facture.InvoiceNumber}";
+                StatusMessage = $"Chargement détails facture {facture.InvoiceNumber}...";
                 
-                // Créer le ViewModel pour le dialogue
-                var dialogViewModel = new FactureFneDetailsViewModel(facture);
+                // Recharger la facture avec ses relations pour s'assurer que toutes les données sont disponibles
+                var factureComplete = await _invoiceRepository.GetByIdWithDetailsAsync(facture.Id.ToString());
+                if (factureComplete == null)
+                {
+                    StatusMessage = "Erreur: facture introuvable";
+                    System.Windows.MessageBox.Show(
+                        "Impossible de charger les détails de cette facture.",
+                        "Erreur", 
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Error);
+                    return;
+                }
+                
+                StatusMessage = $"Ouverture détails facture {factureComplete.InvoiceNumber}";
+                
+                // Créer le ViewModel pour le dialogue avec la facture complètement chargée
+                var dialogViewModel = new FactureFneDetailsViewModel(factureComplete);
                 
                 // Trouver la fenêtre principale actuelle
                 var mainWindow = System.Windows.Application.Current.MainWindow;

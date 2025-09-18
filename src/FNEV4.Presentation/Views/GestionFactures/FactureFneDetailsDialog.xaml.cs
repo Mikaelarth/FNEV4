@@ -49,6 +49,11 @@ namespace FNEV4.Presentation.Views.GestionFactures
             this.Close();
         }
 
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
         private async void CertifierButton_Click(object sender, RoutedEventArgs e)
         {
             if (_serviceProvider == null)

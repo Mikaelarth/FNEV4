@@ -221,11 +221,62 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
             }
         }
 
+        #endregion
+
+        #region Propriétés de visibilité et contrôle d'état
+
+        /// <summary>
+        /// Indique si la facture est certifiée (pour conditionner l'affichage)
+        /// </summary>
+        public bool IsCertified => Facture?.Status?.ToLower() == "certified" || Facture?.IsCertified == true;
+
+        /// <summary>
+        /// Indique si la facture est un brouillon (peut être certifiée)
+        /// </summary>
+        public bool IsDraft => Facture?.Status?.ToLower() == "draft";
+
+        /// <summary>
+        /// Indique si la facture peut être certifiée (brouillon ou validée mais pas encore certifiée)
+        /// </summary>
+        public bool CanBeCertified => Facture?.Status?.ToLower() is "draft" or "validated" && !IsCertified;
+
+        /// <summary>
+        /// Visibilité des sections de certification FNE (uniquement si certifiée)
+        /// </summary>
+        public Visibility CertificationSectionVisibility => IsCertified ? Visibility.Visible : Visibility.Collapsed;
+
+        /// <summary>
+        /// Visibilité du bouton de certification (uniquement si peut être certifiée)
+        /// </summary>
+        public Visibility CertifyButtonVisibility => CanBeCertified ? Visibility.Visible : Visibility.Collapsed;
+
+        /// <summary>
+        /// Message d'état pour les factures non certifiées
+        /// </summary>
+        public string NonCertifiedMessage
+        {
+            get
+            {
+                return Facture?.Status?.ToLower() switch
+                {
+                    "draft" => "Cette facture est en brouillon. Vous pouvez la certifier via le bouton ci-dessous.",
+                    "validated" => "Cette facture est validée mais pas encore certifiée. Cliquez sur 'Certifier' pour obtenir la certification FNE.",
+                    "error" => "Une erreur s'est produite lors de la certification. Veuillez réessayer.",
+                    _ => "Cette facture n'est pas encore certifiée."
+                };
+            }
+        }
+
+        #endregion
+
+        #region Commandes
+
         public ICommand CopyQrDataCommand { get; private set; }
         public ICommand ShowQrDataCommand { get; private set; }
         public ICommand DownloadPdfCommand { get; private set; }
         public ICommand VerifyOnlineCommand { get; private set; }
         public ICommand ShowFullDetailsCommand { get; private set; }
+        public ICommand CertifyInvoiceCommand { get; private set; }
 
         private void InitializeCommands()
         {
@@ -234,6 +285,7 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
             DownloadPdfCommand = new RelayCommand(async () => await DownloadPdf(), CanDownloadPdf);
             VerifyOnlineCommand = new RelayCommand(VerifyOnline, CanVerifyOnline);
             ShowFullDetailsCommand = new RelayCommand(ShowFullDetails, CanShowFullDetails);
+            CertifyInvoiceCommand = new RelayCommand(async () => await CertifyInvoice(), CanCertifyInvoice);
         }
 
         private bool CanCopyQrData()
@@ -503,6 +555,50 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
             detailsWindow.ShowDialog();
         }
 
+        private bool CanCertifyInvoice()
+        {
+            return CanBeCertified;
+        }
+
+        private async Task CertifyInvoice()
+        {
+            try
+            {
+                if (!CanBeCertified)
+                {
+                    MessageBox.Show("Cette facture ne peut pas être certifiée dans son état actuel.", "Certification impossible", 
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var result = MessageBox.Show(
+                    $"Voulez-vous certifier la facture {Facture?.InvoiceNumber} ?\n\n" +
+                    "Cette action enverra la facture vers la DGI pour certification FNE.",
+                    "Confirmation de certification", 
+                    MessageBoxButton.YesNo, 
+                    MessageBoxImage.Question);
+
+                if (result != MessageBoxResult.Yes)
+                    return;
+
+                // TODO: Implémenter l'appel au service de certification FNE
+                // Ici on devrait appeler le service FneCertificationService
+                await Task.Delay(100); // Placeholder pour éviter l'erreur async
+                
+                MessageBox.Show(
+                    "Fonctionnalité de certification en cours d'implémentation.\n\n" +
+                    "Cette fonction appellera le service FneCertificationService pour certifier la facture auprès de la DGI.",
+                    "À implémenter", 
+                    MessageBoxButton.OK, 
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de la certification: {ex.Message}", "Erreur", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         #endregion
 
         #region Propriétés calculées pour l'affichage
@@ -714,6 +810,14 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
             OnPropertyChanged(nameof(DownloadUrl));
             OnPropertyChanged(nameof(CompanyNcc));
             OnPropertyChanged(nameof(ProcessingStatusBackground));
+            
+            // Propriétés de visibilité et état
+            OnPropertyChanged(nameof(IsCertified));
+            OnPropertyChanged(nameof(IsDraft));
+            OnPropertyChanged(nameof(CanBeCertified));
+            OnPropertyChanged(nameof(CertificationSectionVisibility));
+            OnPropertyChanged(nameof(CertifyButtonVisibility));
+            OnPropertyChanged(nameof(NonCertifiedMessage));
         }
 
         /// <summary>
