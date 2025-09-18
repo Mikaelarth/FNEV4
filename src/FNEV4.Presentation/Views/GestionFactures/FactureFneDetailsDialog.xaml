@@ -174,7 +174,6 @@
                         <RowDefinition Height="Auto"/>    <!-- Informations facture et client -->
                         <RowDefinition Height="Auto"/>    <!-- Articles -->
                         <RowDefinition Height="Auto"/>    <!-- Totaux -->
-                        <RowDefinition Height="Auto"/>    <!-- Certification FNE (si applicable) -->
                         <RowDefinition Height="Auto"/>    <!-- Message commercial et QR -->
                     </Grid.RowDefinitions>
 
@@ -183,6 +182,7 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="2*"/>
                             <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="140"/>   <!-- Colonne pour QR-Code -->
                         </Grid.ColumnDefinitions>
 
                         <!-- Logo et informations entreprise -->
@@ -201,15 +201,15 @@
                             </Border>
 
                             <!-- TODO: Binding avec configuration entreprise -->
-                            <TextBlock Text="FNEV4 SARL" 
+                            <TextBlock Text="{Binding CompanyName}" 
                                        Style="{StaticResource CompanyNameStyle}"/>
-                            <TextBlock Text="Zone Industrielle de Yopougon" 
+                            <TextBlock Text="{Binding CompanyAddress}" 
                                        Style="{StaticResource InvoiceFieldValueStyle}"/>
-                            <TextBlock Text="Abidjan, Côte d'Ivoire" 
+                            <TextBlock Text="{Binding CompanyLocation}" 
                                        Style="{StaticResource InvoiceFieldValueStyle}"/>
-                            <TextBlock Text="Tél: +225 27 23 45 67 89" 
+                            <TextBlock Text="{Binding CompanyPhone}" 
                                        Style="{StaticResource InvoiceFieldValueStyle}"/>
-                            <TextBlock Text="Email: contact@fnev4.ci" 
+                            <TextBlock Text="{Binding CompanyEmail}" 
                                        Style="{StaticResource InvoiceFieldValueStyle}"/>
                         </StackPanel>
 
@@ -238,6 +238,41 @@
                                 <TextBlock Text="{Binding Facture.InvoiceDate, StringFormat='{}{0:dd/MM/yyyy}'}" 
                                            Style="{StaticResource InvoiceFieldValueStyle}"/>
                             </StackPanel>
+                        </StackPanel>
+
+                        <!-- QR Code FNE (à droite) -->
+                        <StackPanel Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Top">
+                            <!-- QR Code compact -->
+                            <Border Width="120" Height="120" 
+                                    Background="{DynamicResource MaterialDesignChipBackground}"
+                                    CornerRadius="4"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,0,8"
+                                    Visibility="{Binding IsCertified, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <Grid>
+                                    <!-- QR Code Image (si disponible) -->
+                                    <Image Source="{Binding QrCodeImageSource}"
+                                           Width="110" Height="110"
+                                           Stretch="Uniform"
+                                           Visibility="{Binding QrCodeImageSource, Converter={StaticResource NullToVisibilityConverter}}"/>
+                                    
+                                    <!-- Placeholder si pas de QR Code -->
+                                    <TextBlock Text="QR CODE" 
+                                               FontSize="10" 
+                                               Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center"
+                                               Visibility="{Binding QrCodeImageSource, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Invert}"/>
+                                </Grid>
+                            </Border>
+                            
+                            <!-- Label certificat -->
+                            <TextBlock Text="CERTIFIÉ FNE" 
+                                       FontSize="10" 
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                       HorizontalAlignment="Center"
+                                       Visibility="{Binding IsCertified, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                         </StackPanel>
                     </Grid>
 
@@ -470,134 +505,8 @@
                         </Grid>
                     </Border>
 
-                    <!-- CERTIFICATION FNE (conditionnelle) -->
-                    <Border Grid.Row="4" 
-                            BorderBrush="{DynamicResource MaterialDesignDivider}"
-                            BorderThickness="1"
-                            CornerRadius="4"
-                            Margin="0,0,0,16"
-                            Visibility="{Binding CertificationSectionVisibility}">
-                        <StackPanel Margin="16">
-                            <TextBlock Text="CERTIFICATION FNE" 
-                                       Style="{StaticResource SectionTitleStyle}"
-                                       Margin="0,0,0,16"/>
-
-                            <!-- Messages conditionnels -->
-                            <TextBlock Text="{Binding NonCertifiedMessage}" 
-                                       Foreground="{DynamicResource MaterialDesignValidationErrorBrush}"
-                                       FontWeight="SemiBold"
-                                       TextWrapping="Wrap"
-                                       Margin="0,0,0,16"
-                                       Visibility="{Binding NonCertifiedMessageVisibility}"/>
-
-                            <!-- Informations de certification pour factures certifiées -->
-                            <Grid Visibility="{Binding CertificationInfoVisibility}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Informations principales -->
-                                <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition/>
-                                            <RowDefinition/>
-                                            <RowDefinition/>
-                                            <RowDefinition/>
-                                            <RowDefinition/>
-                                            <RowDefinition/>
-                                        </Grid.RowDefinitions>
-
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Statut:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
-                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding StatusDisplayName}" Style="{StaticResource InvoiceFieldValueStyle}" Margin="8,0,0,0"/>
-
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Date certification:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Facture.FneCertificationDate, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Style="{StaticResource InvoiceFieldValueStyle}" Margin="8,0,0,0"/>
-
-                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Référence FNE:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
-                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Facture.FneReference}" Style="{StaticResource InvoiceFieldValueStyle}" Margin="8,0,0,0"/>
-
-                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="N° MECeF:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
-                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Facture.FneMecefNumber}" Style="{StaticResource InvoiceFieldValueStyle}" Margin="8,0,0,0"/>
-
-                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Token vérification:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
-                                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding VerificationTokenShort}" Style="{StaticResource InvoiceFieldValueStyle}" Margin="8,0,0,0"/>
-
-                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Contre-marque:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
-                                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Facture.FneCounterMark}" Style="{StaticResource InvoiceFieldValueStyle}" Margin="8,0,0,0"/>
-                                    </Grid>
-                                </StackPanel>
-
-                                <!-- QR Code et actions -->
-                                <StackPanel Grid.Column="1" Margin="16,0,0,0">
-                                    <TextBlock Text="VÉRIFICATION" Style="{StaticResource InvoiceFieldLabelStyle}" Margin="0,0,0,8"/>
-                                    
-                                    <!-- QR Code réel -->
-                                    <Border Width="120" Height="120" 
-                                            Background="{DynamicResource MaterialDesignChipBackground}"
-                                            CornerRadius="4"
-                                            HorizontalAlignment="Center"
-                                            Margin="0,0,0,8">
-                                        <Grid>
-                                            <!-- QR Code Image (si disponible) -->
-                                            <Image Source="{Binding QrCodeImageSource}"
-                                                   Width="110" Height="110"
-                                                   Stretch="Uniform"
-                                                   Visibility="{Binding QrCodeImageSource, Converter={StaticResource NullToVisibilityConverter}}"/>
-                                            
-                                            <!-- Placeholder si pas de QR Code -->
-                                            <TextBlock Text="QR CODE" 
-                                                       FontSize="10" 
-                                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                                       HorizontalAlignment="Center" 
-                                                       VerticalAlignment="Center"
-                                                       Visibility="{Binding QrCodeImageSource, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Invert}"/>
-                                        </Grid>
-                                    </Border>
-
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button Content="Afficher QR" 
-                                                Command="{Binding ShowQrDataCommand}"
-                                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                materialDesign:ButtonAssist.CornerRadius="4"
-                                                Height="32" FontSize="10"
-                                                Margin="0,0,2,0"/>
-                                        <Button Content="Vérifier"
-                                                Command="{Binding VerifyOnlineCommand}"
-                                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                materialDesign:ButtonAssist.CornerRadius="4"
-                                                Height="32" FontSize="10"
-                                                Margin="2,0,0,0"/>
-                                    </StackPanel>
-                                    
-                                    <!-- Lien de téléchargement DGI -->
-                                    <TextBlock Text="TÉLÉCHARGEMENT DGI" Style="{StaticResource InvoiceFieldLabelStyle}" Margin="0,16,0,4"/>
-                                    <TextBlock Text="{Binding DownloadUrl}" 
-                                               FontSize="9" 
-                                               Foreground="{DynamicResource PrimaryHueMidBrush}"
-                                               TextWrapping="Wrap"
-                                               Margin="0,0,0,8"
-                                               Visibility="{Binding DownloadUrl, Converter={StaticResource NullToVisibilityConverter}}"/>
-                                    
-                                    <Button Content="📥 Télécharger PDF DGI" 
-                                            Command="{Binding DownloadPdfCommand}"
-                                            Style="{StaticResource MaterialDesignRaisedButton}"
-                                            materialDesign:ButtonAssist.CornerRadius="4"
-                                            Height="36" FontSize="11"
-                                            Background="{DynamicResource PrimaryHueMidBrush}"
-                                            Visibility="{Binding DownloadUrl, Converter={StaticResource NullToVisibilityConverter}}"/>
-                                </StackPanel>
-                            </Grid>
-                        </StackPanel>
-                    </Border>
-
                     <!-- MESSAGE COMMERCIAL ET PIED DE PAGE -->
-                    <Grid Grid.Row="5">
+                    <Grid Grid.Row="4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>

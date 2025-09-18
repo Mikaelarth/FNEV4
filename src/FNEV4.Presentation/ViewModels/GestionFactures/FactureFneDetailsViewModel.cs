@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Win32;
 using System.Text;
+using FNEV4.Infrastructure.Services;
 
 namespace FNEV4.Presentation.ViewModels.GestionFactures
 {
@@ -27,15 +28,29 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         private FneInvoice _facture;
         private ObservableCollection<FneInvoiceItem> _articles;
         private BitmapImage? _qrCodeImageSource;
+        private readonly IDatabaseService? _databaseService;
+        
+        // Informations entreprise chargées depuis la base
+        private string _companyName = "FNEV4 SARL";
+        private string _companyAddress = "Zone Industrielle de Yopougon";
+        private string _companyLocation = "Abidjan, Côte d'Ivoire";
+        private string _companyPhone = "Tél: +225 27 23 45 67 89";
+        private string _companyEmail = "Email: contact@fnev4.ci";
 
-        public FactureFneDetailsViewModel(FneInvoice facture)
+        public FactureFneDetailsViewModel(FneInvoice facture, IDatabaseService? databaseService = null)
         {
             _facture = facture ?? throw new ArgumentNullException(nameof(facture));
             _articles = new ObservableCollection<FneInvoiceItem>(facture.Items ?? new List<FneInvoiceItem>());
+            _databaseService = databaseService;
+            
+            Debug.WriteLine($"FactureFneDetailsViewModel - DatabaseService injecté: {_databaseService != null}");
             
             InitializeCommands();
             CalculateProperties();
             GenerateQrCodeImage();
+            
+            // Charger les informations d'entreprise depuis la base de données
+            LoadCompanyInfoSync();
         }
 
         public FneInvoice Facture
@@ -264,6 +279,75 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
                     "error" => "Une erreur s'est produite lors de la certification. Veuillez réessayer.",
                     _ => "Cette facture n'est pas encore certifiée."
                 };
+            }
+        }
+
+        #endregion
+
+        #region Informations Entreprise
+
+        /// <summary>
+        /// Nom de l'entreprise
+        /// </summary>
+        public string CompanyName
+        {
+            get => _companyName;
+            private set
+            {
+                _companyName = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Adresse de l'entreprise
+        /// </summary>
+        public string CompanyAddress
+        {
+            get => _companyAddress;
+            private set
+            {
+                _companyAddress = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Ville et pays de l'entreprise
+        /// </summary>
+        public string CompanyLocation
+        {
+            get => _companyLocation;
+            private set
+            {
+                _companyLocation = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Téléphone de l'entreprise
+        /// </summary>
+        public string CompanyPhone
+        {
+            get => _companyPhone;
+            private set
+            {
+                _companyPhone = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Email de l'entreprise
+        /// </summary>
+        public string CompanyEmail
+        {
+            get => _companyEmail;
+            private set
+            {
+                _companyEmail = value;
+                OnPropertyChanged();
             }
         }
 
@@ -882,6 +966,139 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
             catch
             {
                 return null;
+            }
+        }
+
+        #endregion
+
+        #region Chargement des informations d'entreprise
+
+        /// <summary>
+        /// Charge les informations d'entreprise depuis la base de données
+        /// </summary>
+        private async Task LoadCompanyInfoAsync()
+        {
+            Debug.WriteLine("LoadCompanyInfoAsync - Début");
+            
+            if (_databaseService == null)
+            {
+                Debug.WriteLine("LoadCompanyInfoAsync - DatabaseService est null");
+                return;
+            }
+
+            try
+            {
+                Debug.WriteLine("LoadCompanyInfoAsync - Appel GetTableDataAsync");
+                // Récupérer les données de la première entreprise active
+                var companyData = await _databaseService.GetTableDataAsync("Companies", 1, 1, "IsActive = 1 AND IsDeleted = 0");
+                
+                Debug.WriteLine($"LoadCompanyInfoAsync - Données reçues: {companyData?.Rows.Count ?? 0} lignes");
+                
+                if (companyData != null && companyData.Rows.Count > 0)
+                {
+                    var row = companyData.Rows[0];
+                    
+                    // Utiliser TradeName si disponible, sinon CompanyName
+                    var tradeName = row["TradeName"]?.ToString();
+                    var companyName = row["CompanyName"]?.ToString();
+                    CompanyName = !string.IsNullOrWhiteSpace(tradeName) ? tradeName : 
+                                 !string.IsNullOrWhiteSpace(companyName) ? companyName : "FNEV4 SARL";
+                    
+                    Debug.WriteLine($"LoadCompanyInfoAsync - CompanyName défini: {CompanyName}");
+                    
+                    // Adresse
+                    var address = row["Address"]?.ToString();
+                    CompanyAddress = !string.IsNullOrWhiteSpace(address) ? address : "Zone Industrielle de Yopougon";
+                    CompanyLocation = "Abidjan, Côte d'Ivoire"; // Valeur par défaut
+                    
+                    // Téléphone
+                    var phone = row["Phone"]?.ToString();
+                    CompanyPhone = !string.IsNullOrWhiteSpace(phone) ? $"Tél: {phone}" : "Tél: +225 27 23 45 67 89";
+                    
+                    // Email  
+                    var email = row["Email"]?.ToString();
+                    CompanyEmail = !string.IsNullOrWhiteSpace(email) ? $"Email: {email}" : "Email: contact@fnev4.ci";
+                    
+                    Debug.WriteLine($"Informations entreprise chargées: {CompanyName}");
+                }
+                else
+                {
+                    Debug.WriteLine("LoadCompanyInfoAsync - Aucune donnée d'entreprise trouvée");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Erreur lors du chargement des informations d'entreprise: {ex.Message}");
+                // Garder les valeurs par défaut
+            }
+        }
+
+        /// <summary>
+        /// Charge les informations de l'entreprise depuis la base de données de manière synchrone
+        /// </summary>
+        private void LoadCompanyInfoSync()
+        {
+            Debug.WriteLine("LoadCompanyInfoSync - Début");
+            
+            try
+            {
+                // Utiliser directement SQLite sans passer par IDatabaseService
+                string dbPath = @"D:\PROJET\FNE\FNEV4\data\FNEV4.db";
+                
+                if (!System.IO.File.Exists(dbPath))
+                {
+                    Debug.WriteLine($"LoadCompanyInfoSync - Base de données non trouvée: {dbPath}");
+                    return;
+                }
+                
+                Debug.WriteLine($"LoadCompanyInfoSync - Connexion à la base: {dbPath}");
+                
+                using (var connection = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={dbPath}"))
+                {
+                    connection.Open();
+                    
+                    var command = connection.CreateCommand();
+                    command.CommandText = "SELECT CompanyName, TradeName, Address, Phone, Email FROM Companies WHERE IsActive = 1 AND IsDeleted = 0 LIMIT 1";
+                    
+                    using (var reader = command.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            Debug.WriteLine("LoadCompanyInfoSync - Données trouvées");
+                            
+                            // Utiliser TradeName si disponible, sinon CompanyName
+                            var tradeName = reader["TradeName"]?.ToString();
+                            var companyName = reader["CompanyName"]?.ToString();
+                            CompanyName = !string.IsNullOrWhiteSpace(tradeName) ? tradeName : 
+                                         !string.IsNullOrWhiteSpace(companyName) ? companyName : "FNEV4 SARL";
+                            
+                            Debug.WriteLine($"LoadCompanyInfoSync - CompanyName: {CompanyName}");
+                            
+                            // Adresse
+                            var address = reader["Address"]?.ToString();
+                            CompanyAddress = !string.IsNullOrWhiteSpace(address) ? address : "Zone Industrielle de Yopougon";
+                            
+                            // Téléphone
+                            var phone = reader["Phone"]?.ToString();
+                            CompanyPhone = !string.IsNullOrWhiteSpace(phone) ? $"Tél: {phone}" : "Tél: +225 27 23 45 67 89";
+                            
+                            // Email  
+                            var email = reader["Email"]?.ToString();
+                            CompanyEmail = !string.IsNullOrWhiteSpace(email) ? $"Email: {email}" : "Email: contact@fnev4.ci";
+                            
+                            Debug.WriteLine($"LoadCompanyInfoSync - Informations chargées: {CompanyName}, {CompanyPhone}, {CompanyEmail}");
+                        }
+                        else
+                        {
+                            Debug.WriteLine("LoadCompanyInfoSync - Aucune donnée trouvée dans Companies");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"LoadCompanyInfoSync - Erreur: {ex.Message}");
+                // Garder les valeurs par défaut
             }
         }
 

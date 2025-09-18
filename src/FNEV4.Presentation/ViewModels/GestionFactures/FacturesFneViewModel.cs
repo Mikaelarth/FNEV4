@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using FNEV4.Core.Entities;
 using FNEV4.Core.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using FNEV4.Infrastructure.Services;
 
 namespace FNEV4.Presentation.ViewModels.GestionFactures
 {
@@ -21,6 +22,7 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         #region Services
         
         private readonly IInvoiceRepository _invoiceRepository;
+        private readonly IDatabaseService _databaseService;
         
         #endregion
 
@@ -67,9 +69,10 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
 
         #region Constructor
 
-        public FacturesFneViewModel(IInvoiceRepository invoiceRepository)
+        public FacturesFneViewModel(IInvoiceRepository invoiceRepository, IDatabaseService databaseService)
         {
             _invoiceRepository = invoiceRepository;
+            _databaseService = databaseService;
             
             // Charger les factures au démarrage
             _ = LoadFacturesAsync();
@@ -148,7 +151,7 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
                 StatusMessage = $"Ouverture détails facture {factureComplete.InvoiceNumber}";
                 
                 // Créer le ViewModel pour le dialogue avec la facture complètement chargée
-                var dialogViewModel = new FactureFneDetailsViewModel(factureComplete);
+                var dialogViewModel = new FactureFneDetailsViewModel(factureComplete, _databaseService);
                 
                 // Trouver la fenêtre principale actuelle
                 var mainWindow = System.Windows.Application.Current.MainWindow;

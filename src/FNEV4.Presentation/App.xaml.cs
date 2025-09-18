@@ -297,7 +297,11 @@ namespace FNEV4.Presentation
                     services.AddTransient<FNEV4.Presentation.ViewModels.GestionFactures.FacturesListViewModel>();
                     
                     // NOUVEAU: ViewModel pour le sous-menu Factures FNE
-                    services.AddTransient<FNEV4.Presentation.ViewModels.GestionFactures.FacturesFneViewModel>();
+                    services.AddTransient<FNEV4.Presentation.ViewModels.GestionFactures.FacturesFneViewModel>(
+                        provider => new FNEV4.Presentation.ViewModels.GestionFactures.FacturesFneViewModel(
+                            provider.GetRequiredService<IInvoiceRepository>(),
+                            provider.GetRequiredService<FNEV4.Infrastructure.Services.IDatabaseService>()
+                        ));
                     services.AddTransient<FNEV4.Presentation.ViewModels.GestionFactures.FactureFneDetailsViewModel>();
                     
                     // ViewModels Import & Traitement
