@@ -506,33 +506,42 @@ namespace FNEV4.Infrastructure.Services
                 .Where(i => i.FneInvoiceId == invoice.Id) // Utilise FneInvoiceId au lieu de InvoiceId
                 .ToListAsync();
 
+            // Récupérer les informations de l'entreprise
+            var company = await _context.Companies.FirstOrDefaultAsync();
+            if (company == null)
+            {
+                throw new InvalidOperationException("Aucune entreprise configurée dans la base de données");
+            }
+
             return new
             {
-                invoiceNumber = invoice.InvoiceNumber,
-                invoiceDate = invoice.InvoiceDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
-                totalAmount = invoice.TotalAmountTTC,
-                currency = "TND",
-                paymentMethod = GetPaymentMethodCode(invoice.PaymentMethod),
-                purchaseType = GetPurchaseTypeCode(invoice.InvoiceType),
-                client = new
-                {
-                    name = GetClientName(invoice),
-                    ncc = GetClientNcc(invoice),
-                    address = invoice.Client?.Address ?? "",
-                    city = invoice.Client?.Address ?? "", // Pas de propriété City, utilise Address
-                    postalCode = invoice.Client?.Address ?? "", // Pas de propriété PostalCode séparée
-                    country = "TN"
-                },
+                invoiceType = GetPurchaseTypeCode(invoice.InvoiceType), // "sale" ou "purchase"
+                paymentMethod = GetPaymentMethodCode(invoice.PaymentMethod), // "cash", "card", etc.
+                template = invoice.Template, // "B2C", "B2B", "B2G", "B2F"
+                isRne = invoice.IsRne, // true/false
+                rne = invoice.RneNumber ?? "", // Numéro RNE si applicable
+                clientNcc = GetClientNcc(invoice), // NCC si B2B
+                clientCompanyName = GetClientName(invoice), // Nom du client
+                clientPhone = invoice.Client?.Phone ?? "", // Téléphone obligatoire
+                clientEmail = invoice.Client?.Email ?? "", // Email obligatoire  
+                clientSellerName = invoice.Client?.SellerName ?? "", // Nom vendeur (optionnel)
+                pointOfSale = !string.IsNullOrEmpty(invoice.PointOfSale) ? invoice.PointOfSale : company.DefaultPointOfSale ?? "01", // Point de vente
+                establishment = GetEstablishmentName(company), // Nom établissement depuis Company
+                commercialMessage = invoice.CommercialMessage ?? "", // Message commercial (optionnel)
+                footer = invoice.Footer ?? "", // Footer (optionnel)
+                foreignCurrency = invoice.ForeignCurrency ?? "", // Devise étrangère (optionnel)
+                foreignCurrencyRate = invoice.ForeignCurrencyRate ?? 0, // Taux de change
                 items = items.Select(item => new
                 {
+                    taxes = GetTaxesForVatRate(item.VatRate), // Selon spécifications FNE
+                    reference = item.Reference ?? "", // Référence de l'article (optionnel)
                     description = item.Description,
                     quantity = item.Quantity,
-                    unitPrice = item.UnitPrice,
-                    totalPrice = item.LineAmountTTC, // Utilise LineAmountTTC au lieu de TotalPrice
-                    taxRate = item.VatRate, // VatRate est correct
-                    taxAmount = item.LineVatAmount, // Utilise LineVatAmount au lieu de TaxAmount
+                    amount = item.UnitPrice, // Prix unitaire HT selon API FNE
+                    discount = item.ItemDiscount, // Remise sur article
                     measurementUnit = item.MeasurementUnit ?? "pcs"
-                }).ToArray()
+                }).ToArray(),
+                discount = invoice.GlobalDiscount // Remise globale
             };
         }
 
@@ -594,18 +603,18 @@ namespace FNEV4.Infrastructure.Services
             {
                 _logger.LogDebug("Appel API FNE vers {BaseUrl}", configuration.BaseUrl);
 
-                // Mode développement/test - Simulation de succès pour les tokens d'exemple
-                if (configuration.Environment?.ToLower() == "test" || 
-                    configuration.ApiKey == "kAF01gEM40r1Uz5WLJn5lxAnGMwVjCME" ||
-                    configuration.BaseUrl?.Contains("54.247.95.108") == true)
+                // Mode simulation locale uniquement pour les tokens d'exemple de développement
+                if (configuration.ApiKey == "kAF01gEM40r1Uz5WLJn5lxAnGMwVjCME" ||
+                    configuration.BaseUrl?.Contains("localhost") == true ||
+                    configuration.BaseUrl?.Contains("127.0.0.1") == true)
                 {
-                    _logger.LogInformation("Mode TEST détecté - Simulation de certification réussie");
+                    _logger.LogInformation("Mode SIMULATION locale détecté - Génération de données factices");
                     
                     return new FneCertificationResult
                     {
                         IsSuccess = true,
-                        FneReference = $"FNE-TEST-{DateTime.Now:yyyyMMddHHmmss}-{Guid.NewGuid().ToString()[..8]}",
-                        VerificationToken = $"https://test.dgi.gouv.ci/verify/{Guid.NewGuid()}",
+                        FneReference = $"FNE-SIM-{DateTime.Now:yyyyMMddHHmmss}-{Guid.NewGuid().ToString()[..8]}",
+                        VerificationToken = $"https://simulation.local/verify/{Guid.NewGuid()}",
                         NccEntreprise = "12345678901",
                         StickerBalance = 100,
                         InvoiceId = invoiceData?.GetType().GetProperty("InvoiceId")?.GetValue(invoiceData)?.ToString(),
@@ -669,7 +678,7 @@ namespace FNEV4.Infrastructure.Services
                         InvoiceId = invoiceId,
                         
                         // Nouvelles informations enrichies pour exploitation maximale
-                        QrCodeData = verificationToken, // Le token est le contenu du QR-code
+                        QrCodeData = await GenerateQrCodeAsync(GetVerificationUrl(verificationToken)), // QR-code généré avec l'URL de vérification
                         DownloadUrl = GetDownloadUrlFromToken(verificationToken), // URL de téléchargement PDF
                         HasWarning = apiResponse.Warning,
                         WarningMessage = apiResponse.Warning ? $"⚠️ Stock de stickers faible ({balanceSticker} restants)" : null,
@@ -749,27 +758,34 @@ namespace FNEV4.Infrastructure.Services
         }
 
         // Méthodes utilitaires
+        /// <summary>
+        /// Mappe les méthodes de paiement aux codes FNE selon la documentation officielle
+        /// </summary>
         private string GetPaymentMethodCode(string? paymentMethod)
         {
             return paymentMethod switch
             {
-                "Espèces" => "1",
-                "Chèque" => "2", 
-                "Virement" => "3",
-                "Carte bancaire" => "4",
-                "Crédit" => "5",
-                _ => "1" // Par défaut espèces
+                "Espèces" => "cash",
+                "Chèque" => "check", 
+                "Virement" => "transfer",
+                "Carte bancaire" => "card",
+                "Mobile Money" => "mobile-money",
+                "À terme" => "deferred",
+                _ => "cash" // Par défaut espèces
             };
         }
 
+        /// <summary>
+        /// Mappe les types de facture aux codes FNE selon la documentation officielle
+        /// </summary>
         private string GetPurchaseTypeCode(string? invoiceType)
         {
             return invoiceType switch
             {
-                "Vente" => "1",
-                "Achat" => "2",
-                "Service" => "3",
-                _ => "1" // Par défaut vente
+                "Vente" => "sale",
+                "Achat" => "purchase", 
+                "Service" => "sale", // Les services sont traités comme des ventes
+                _ => "sale" // Par défaut vente
             };
         }
 
@@ -788,6 +804,31 @@ namespace FNEV4.Infrastructure.Services
             if (!string.IsNullOrEmpty(invoice.Client?.Name) && !string.IsNullOrEmpty(invoice.Client?.CompanyName))
                 return $"{invoice.Client.Name} {invoice.Client.CompanyName}";
             return invoice.Client?.Name ?? invoice.Client?.CompanyName ?? "Client";
+        }
+
+        /// <summary>
+        /// Mappe les taux de TVA aux codes de TVA FNE selon la documentation officielle
+        /// </summary>
+        private string[] GetTaxesForVatRate(decimal vatRate)
+        {
+            return vatRate switch
+            {
+                18m => new[] { "TVA" },    // TVA normale 18%
+                9m => new[] { "TVAB" },    // TVA réduite 9%
+                0m => new[] { "TVAC" },    // TVA exonérée conventionnelle 0%
+                _ => new[] { "TVA" }       // Par défaut TVA normale
+            };
+        }
+
+        /// <summary>
+        /// Détermine le nom de l'établissement depuis les données de l'entreprise
+        /// </summary>
+        private string GetEstablishmentName(Company company)
+        {
+            // Priorise le nom commercial, sinon utilise la raison sociale
+            return !string.IsNullOrEmpty(company.TradeName) 
+                ? company.TradeName 
+                : company.CompanyName;
         }
 
         /// <summary>

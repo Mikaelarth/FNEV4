@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyCopyrightAttribute("© 2025 FNEV4 Project")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1a17c27eeac7d8053ac973bfcae16fc837f8d95f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e2b4c1b26fbe1e635db0b8a9ab934cc01bf196bc")]
 [assembly: System.Reflection.AssemblyProductAttribute("FNEV4.Presentation")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FNEV4 - Application FNE Desktop")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

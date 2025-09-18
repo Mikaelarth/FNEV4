@@ -821,8 +821,7 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         }
 
         /// <summary>
-        /// Génère l'image QR Code à partir des données FNE
-        /// Pour l'instant, affiche un placeholder - à implémenter avec ZXing.Net
+        /// Génère l'image QR Code à partir des données FNE Base64
         /// </summary>
         private void GenerateQrCodeImage()
         {
@@ -834,12 +833,32 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
                     return;
                 }
 
-                // TODO: Implémenter la génération QR Code avec ZXing.Net
-                // Pour l'instant, on utilise un placeholder
-                QrCodeImageSource = CreatePlaceholderImage();
+                // Convertir les données Base64 en BitmapImage
+                var qrData = Facture.FneQrCodeData;
+                
+                // Si c'est déjà au format data:image/png;base64,xxx, extraire la partie Base64
+                if (qrData.StartsWith("data:image/png;base64,"))
+                {
+                    qrData = qrData.Substring("data:image/png;base64,".Length);
+                }
+
+                var imageBytes = Convert.FromBase64String(qrData);
+                
+                var bitmap = new BitmapImage();
+                using (var stream = new MemoryStream(imageBytes))
+                {
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = stream;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                }
+                
+                QrCodeImageSource = bitmap;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Erreur génération QR-code: {ex.Message}");
                 // En cas d'erreur, utiliser le placeholder
                 QrCodeImageSource = CreatePlaceholderImage();
             }
