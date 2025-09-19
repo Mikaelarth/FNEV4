@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Data;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FNEV4.Core.Entities;
@@ -24,12 +25,18 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         private readonly IInvoiceRepository _invoiceRepository;
         private readonly IDatabaseService _databaseService;
         
+        // Timer pour optimiser la recherche (debouncing)
+        private readonly DispatcherTimer _searchTimer;
+        
         #endregion
 
         #region Properties
 
         [ObservableProperty]
         private ObservableCollection<FneInvoice> factures = new();
+        
+        // Collection complète pour le filtrage local
+        private List<FneInvoice> _allFactures = new();
 
         [ObservableProperty]
         private FneInvoice? selectedFacture;
@@ -55,15 +62,45 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         [ObservableProperty]
         private int facturesCertifiees;
 
-        // Options de filtrage par statut
+        // Options de filtrage par statut (simplifiées selon les statuts réellement utilisés)
         public List<string> StatusOptions { get; } = new()
         {
             "Tous",
-            "Draft",
-            "Validated", 
-            "Certified",
-            "Error"
+            "Draft", 
+            "Certified"
         };
+
+        #endregion
+
+        #region Property Change Handlers
+        
+        /// <summary>
+        /// Applique les filtres quand le texte de recherche change (avec délai pour optimiser)
+        /// </summary>
+        partial void OnSearchTextChanged(string value)
+        {
+            // Arrêter le timer précédent
+            _searchTimer.Stop();
+            
+            // Si le texte est vide, filtrer immédiatement
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                ApplyLocalFilters();
+            }
+            else
+            {
+                // Sinon, attendre 300ms avant de filtrer (debouncing)
+                _searchTimer.Start();
+            }
+        }
+        
+        /// <summary>
+        /// Applique les filtres quand le statut sélectionné change
+        /// </summary>
+        partial void OnSelectedStatusChanged(string value)
+        {
+            ApplyLocalFilters();
+        }
 
         #endregion
 
@@ -73,6 +110,17 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         {
             _invoiceRepository = invoiceRepository;
             _databaseService = databaseService;
+            
+            // Initialiser le timer de recherche avec un délai de 300ms
+            _searchTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(300)
+            };
+            _searchTimer.Tick += (s, e) =>
+            {
+                _searchTimer.Stop();
+                ApplyLocalFilters();
+            };
             
             // Charger les factures au démarrage
             _ = LoadFacturesAsync();
@@ -95,14 +143,14 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
             {
                 var allFactures = await _invoiceRepository.GetAllAsync();
                 
-                Factures.Clear();
-                foreach (var facture in allFactures.OrderByDescending(f => f.CreatedAt))
-                {
-                    Factures.Add(facture);
-                }
+                // Stocker toutes les factures pour le filtrage local
+                _allFactures = allFactures.OrderByDescending(f => f.CreatedAt).ToList();
+                
+                // Appliquer les filtres
+                ApplyLocalFilters();
 
                 await UpdateStatisticsAsync();
-                StatusMessage = $"Chargé {Factures.Count} factures";
+                StatusMessage = $"Chargé {_allFactures.Count} factures";
             }
             catch (Exception ex)
             {
@@ -218,10 +266,9 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         /// Commande pour appliquer les filtres
         /// </summary>
         [RelayCommand]
-        private async Task ApplyFiltersAsync()
+        private void ApplyFilters()
         {
-            await LoadFacturesAsync();
-            // TODO: Implémenter le filtrage local pour optimiser les performances
+            ApplyLocalFilters();
         }
 
         /// <summary>
@@ -242,17 +289,66 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         #region Private Methods
 
         /// <summary>
+        /// Applique les filtres localement sur la collection complète (version optimisée)
+        /// </summary>
+        private void ApplyLocalFilters()
+        {
+            if (_allFactures == null || !_allFactures.Any())
+            {
+                Factures.Clear();
+                StatusMessage = "Aucune facture chargée";
+                return;
+            }
+
+            // Utiliser AsParallel pour améliorer les performances sur de grandes collections
+            IEnumerable<FneInvoice> filteredFactures = _allFactures;
+
+            // Filtrage par texte de recherche (optimisé)
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                var searchLower = SearchText.ToLower();
+                filteredFactures = filteredFactures.Where(f =>
+                    f != null &&
+                    (f.InvoiceNumber?.ToLower().Contains(searchLower) == true ||
+                     (f.ClientDisplayName ?? "").ToLower().Contains(searchLower) ||
+                     (f.ClientCode ?? "").ToLower().Contains(searchLower) ||
+                     f.TotalAmountTTC.ToString().Contains(searchLower)));
+            }
+
+            // Filtrage par statut (optimisé)
+            if (SelectedStatus != "Tous")
+            {
+                filteredFactures = filteredFactures.Where(f => 
+                    f != null && 
+                    !string.IsNullOrEmpty(f.Status) &&
+                    string.Equals(f.Status, SelectedStatus, StringComparison.OrdinalIgnoreCase));
+            }
+
+            // Convertir en liste une seule fois
+            var resultList = filteredFactures.Where(f => f != null && !string.IsNullOrEmpty(f.InvoiceNumber)).ToList();
+            
+            // Mettre à jour la collection sur le thread UI de manière optimisée
+            Factures.Clear();
+            foreach (var facture in resultList)
+            {
+                Factures.Add(facture);
+            }
+
+            // Message informatif
+            StatusMessage = $"Affichage: {Factures.Count} sur {_allFactures.Count} factures";
+        }
+
+        /// <summary>
         /// Met à jour les statistiques affichées
         /// </summary>
         private async Task UpdateStatisticsAsync()
         {
             try
             {
-                var stats = await _invoiceRepository.GetStatisticsAsync();
-                
-                TotalFactures = Factures.Count;
-                FacturesDraft = Factures.Count(f => f.Status == "draft");
-                FacturesCertifiees = Factures.Count(f => f.Status == "certified");
+                // Calculer sur la collection complète, pas filtrée
+                TotalFactures = _allFactures?.Count ?? 0;
+                FacturesDraft = _allFactures?.Count(f => f.Status.Equals("draft", StringComparison.OrdinalIgnoreCase)) ?? 0;
+                FacturesCertifiees = _allFactures?.Count(f => f.Status.Equals("certified", StringComparison.OrdinalIgnoreCase)) ?? 0;
             }
             catch (Exception ex)
             {
