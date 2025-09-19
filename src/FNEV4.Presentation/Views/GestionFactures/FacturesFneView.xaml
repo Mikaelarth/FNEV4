@@ -188,6 +188,31 @@
                            Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
                            Margin="0,0,0,8"
                            VerticalAlignment="Top" />
+
+                <!-- Indicateur de certification -->
+                <StackPanel Orientation="Horizontal" 
+                          Visibility="{Binding IsCertifying, Converter={StaticResource BooleanToVisibilityConverter}}"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Top"
+                          Background="{DynamicResource MaterialDesignPaper}"
+                          Margin="0,8,0,0"
+                          Opacity="0.95">
+                    <materialDesign:PackIcon Kind="Certificate" 
+                                           Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                           Width="24" Height="24"
+                                           Margin="12,8,8,8" />
+                    <TextBlock Text="{Binding CertificationStatus}"
+                             Foreground="{DynamicResource MaterialDesignBody}"
+                             FontSize="14"
+                             FontWeight="Medium"
+                             VerticalAlignment="Center"
+                             Margin="0,8,12,8" />
+                    <ProgressBar IsIndeterminate="True"
+                               Width="100"
+                               Height="4"
+                               VerticalAlignment="Center"
+                               Margin="0,8,12,8" />
+                </StackPanel>
                 
                 <DataGrid ItemsSource="{Binding Factures}"
                           SelectedItem="{Binding SelectedFacture}"

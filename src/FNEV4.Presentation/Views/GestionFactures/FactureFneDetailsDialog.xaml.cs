@@ -12,6 +12,17 @@ using Microsoft.Extensions.Logging;
 namespace FNEV4.Presentation.Views.GestionFactures
 {
     /// <summary>
+    /// Événement pour notifier qu'une facture a été certifiée avec succès
+    /// </summary>
+    public class InvoiceCertifiedEventArgs : EventArgs
+    {
+        public Guid InvoiceId { get; set; }
+        public string InvoiceNumber { get; set; } = string.Empty;
+        public string FneReference { get; set; } = string.Empty;
+        public DateTime CertificationDate { get; set; }
+    }
+
+    /// <summary>
     /// Dialog de détails d'une facture FNE
     /// Basé sur la structure de Sage100FactureDetailsDialog
     /// </summary>
@@ -19,6 +30,11 @@ namespace FNEV4.Presentation.Views.GestionFactures
     {
         private readonly IServiceProvider? _serviceProvider;
         private readonly ILogger<FactureFneDetailsDialog>? _logger;
+
+        /// <summary>
+        /// Événement déclenché quand une facture est certifiée avec succès
+        /// </summary>
+        public event EventHandler<InvoiceCertifiedEventArgs>? InvoiceCertified;
 
         public FactureFneDetailsDialog(IServiceProvider? serviceProvider = null, ILogger<FactureFneDetailsDialog>? logger = null)
         {
@@ -146,6 +162,15 @@ namespace FNEV4.Presentation.Views.GestionFactures
 
                         _logger?.LogInformation("Certification réussie pour la facture {InvoiceNumber} - Référence: {FneReference}", 
                             factureComplete.InvoiceNumber, certificationResult.FneReference);
+
+                        // Déclencher l'événement pour notifier la vue principale
+                        InvoiceCertified?.Invoke(this, new InvoiceCertifiedEventArgs
+                        {
+                            InvoiceId = factureComplete.Id,
+                            InvoiceNumber = factureComplete.InvoiceNumber ?? "",
+                            FneReference = certificationResult.FneReference ?? "",
+                            CertificationDate = certificationResult.ProcessedAt
+                        });
 
                         // Afficher le succès avec détails
                         var successMessage = $"✅ Certification FNE réussie !\n\n" +

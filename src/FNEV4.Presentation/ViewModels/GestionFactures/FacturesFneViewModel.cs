@@ -9,8 +9,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FNEV4.Core.Entities;
 using FNEV4.Core.Interfaces;
+using FNEV4.Core.Interfaces.Services.Fne;
 using Microsoft.Extensions.DependencyInjection;
 using FNEV4.Infrastructure.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace FNEV4.Presentation.ViewModels.GestionFactures
 {
@@ -24,6 +26,7 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         
         private readonly IInvoiceRepository _invoiceRepository;
         private readonly IDatabaseService _databaseService;
+        private readonly IFneCertificationService _certificationService;
         
         // Timer pour optimiser la recherche (debouncing)
         private readonly DispatcherTimer _searchTimer;
@@ -61,6 +64,12 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
 
         [ObservableProperty]
         private int facturesCertifiees;
+
+        [ObservableProperty]
+        private bool isCertifying;
+
+        [ObservableProperty]
+        private string certificationStatus = string.Empty;
 
         // Options de filtrage par statut (simplifiées selon les statuts réellement utilisés)
         public List<string> StatusOptions { get; } = new()
@@ -106,10 +115,11 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
 
         #region Constructor
 
-        public FacturesFneViewModel(IInvoiceRepository invoiceRepository, IDatabaseService databaseService)
+        public FacturesFneViewModel(IInvoiceRepository invoiceRepository, IDatabaseService databaseService, IFneCertificationService certificationService)
         {
             _invoiceRepository = invoiceRepository;
             _databaseService = databaseService;
+            _certificationService = certificationService;
             
             // Initialiser le timer de recherche avec un délai de 300ms
             _searchTimer = new DispatcherTimer
@@ -213,8 +223,14 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
                     Owner = mainWindow,
                     WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner
                 };
+
+                // S'abonner à l'événement de certification pour mettre à jour la liste
+                dialog.InvoiceCertified += OnInvoiceCertifiedInDialog;
                 
                 dialog.ShowDialog();
+
+                // Se désabonner après fermeture du dialog
+                dialog.InvoiceCertified -= OnInvoiceCertifiedInDialog;
                 
                 StatusMessage = "Prêt";
             }
@@ -272,16 +288,141 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         }
 
         /// <summary>
-        /// Commande pour certifier une facture (action future)
+        /// Commande pour certifier une facture via l'API FNE
         /// </summary>
         [RelayCommand]
-        private void CertifyFacture(FneInvoice? facture)
+        private async Task CertifyFacture(FneInvoice? facture)
         {
             if (facture == null) return;
 
-            StatusMessage = $"Certification de la facture {facture.InvoiceNumber}";
-            System.Windows.MessageBox.Show("Fonctionnalité de certification à implémenter", "À venir", 
-                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            // Vérifier si la facture est déjà certifiée
+            if (facture.Status?.ToLower() == "certified")
+            {
+                StatusMessage = $"La facture {facture.InvoiceNumber} est déjà certifiée";
+                return;
+            }
+
+            // Dialog de confirmation
+            var result = System.Windows.MessageBox.Show(
+                $"Êtes-vous sûr de vouloir certifier la facture {facture.InvoiceNumber} ?\n\n" +
+                $"Client: {facture.ClientDisplayName}\n" +
+                $"Montant: {facture.TotalAmountTTC:C}\n" +
+                $"Date: {facture.InvoiceDate:dd/MM/yyyy}\n\n" +
+                "Cette action est irréversible.",
+                "Confirmation de Certification",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Question);
+
+            if (result != System.Windows.MessageBoxResult.Yes) return;
+
+            // Démarrer le processus de certification
+            IsCertifying = true;
+            CertificationStatus = "Préparation de la certification...";
+            StatusMessage = $"Certification de la facture {facture.InvoiceNumber} en cours...";
+
+            try
+            {
+                CertificationStatus = "Validation des données...";
+                
+                // Récupérer la configuration FNE active (même logique que CertificationManuelleViewModel)
+                var configuration = await GetActiveFneConfigurationAsync();
+                if (configuration == null)
+                {
+                    throw new InvalidOperationException("Aucune configuration FNE active trouvée.\nVeuillez configurer l'API FNE d'abord.");
+                }
+
+                CertificationStatus = "Envoi vers l'API FNE...";
+                
+                // Appeler le service de certification
+                var certificationResult = await _certificationService.CertifyInvoiceAsync(facture, configuration);
+
+                if (certificationResult.IsSuccess)
+                {
+                    // Mise à jour de la facture en cas de succès
+                    facture.Status = "certified";
+                    facture.FneCertificationDate = DateTime.Now;
+                    
+                    // Sauvegarder en base de données
+                    await _invoiceRepository.UpdateAsync(facture);
+                    
+                    // Mettre à jour les statistiques
+                    await UpdateStatisticsAsync();
+                    
+                    CertificationStatus = "Certification réussie !";
+                    StatusMessage = $"Facture {facture.InvoiceNumber} certifiée avec succès";
+                    
+                    // Message de succès
+                    System.Windows.MessageBox.Show(
+                        $"La facture {facture.InvoiceNumber} a été certifiée avec succès !\n\n" +
+                        $"Date de certification: {facture.FneCertificationDate:dd/MM/yyyy HH:mm}\n" +
+                        $"Temps de traitement: {certificationResult.ProcessingTimeMs}ms",
+                        "Certification Réussie",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Information);
+                }
+                else
+                {
+                    // Gestion des erreurs
+                    var errorMessage = !string.IsNullOrEmpty(certificationResult.ErrorMessage) 
+                        ? certificationResult.ErrorMessage 
+                        : "Erreur inconnue lors de la certification";
+                    
+                    CertificationStatus = "Échec de la certification";
+                    StatusMessage = $"Échec certification facture {facture.InvoiceNumber}: {errorMessage}";
+                    
+                    System.Windows.MessageBox.Show(
+                        $"Échec de la certification de la facture {facture.InvoiceNumber}\n\n" +
+                        $"Erreur: {errorMessage}\n\n" +
+                        "Veuillez vérifier les données de la facture et réessayer.",
+                        "Échec de la Certification",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                CertificationStatus = "Erreur lors de la certification";
+                StatusMessage = $"Erreur certification: {ex.Message}";
+                
+                System.Windows.MessageBox.Show(
+                    $"Une erreur s'est produite lors de la certification :\n\n{ex.Message}",
+                    "Erreur",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsCertifying = false;
+                // Effacer le statut après quelques secondes
+                await Task.Delay(3000);
+                CertificationStatus = string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Récupère la configuration FNE active pour la certification
+        /// </summary>
+        private async Task<FneConfiguration?> GetActiveFneConfigurationAsync()
+        {
+            try
+            {
+                // Utiliser le même pattern que CertificationManuelleViewModel
+                var dbContext = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
+                    .GetRequiredService<FNEV4.Infrastructure.Data.FNEV4DbContext>(
+                        App.ServiceProvider);
+                
+                var activeConfig = await dbContext.FneConfigurations
+                    .Where(c => c.IsActive && !c.IsDeleted)
+                    .OrderByDescending(c => c.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                return activeConfig;
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Erreur configuration: {ex.Message}";
+                return null;
+            }
         }
 
         #endregion
@@ -353,6 +494,29 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
             catch (Exception ex)
             {
                 StatusMessage = $"Erreur statistiques: {ex.Message}";
+            }
+        }
+
+        /// <summary>
+        /// Gestionnaire d'événement appelé quand une facture est certifiée depuis le dialog de détails
+        /// </summary>
+        private async void OnInvoiceCertifiedInDialog(object sender, Views.GestionFactures.InvoiceCertifiedEventArgs e)
+        {
+            try
+            {
+                StatusMessage = $"Mise à jour après certification de la facture {e.InvoiceNumber}...";
+
+                // Recharger les données pour refléter les changements
+                await LoadFacturesAsync();
+
+                // Mettre à jour les statistiques
+                await UpdateStatisticsAsync();
+
+                StatusMessage = $"Facture {e.InvoiceNumber} certifiée avec succès - Référence FNE: {e.FneReference}";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Erreur lors de la mise à jour après certification: {ex.Message}";
             }
         }
 

@@ -300,7 +300,8 @@ namespace FNEV4.Presentation
                     services.AddTransient<FNEV4.Presentation.ViewModels.GestionFactures.FacturesFneViewModel>(
                         provider => new FNEV4.Presentation.ViewModels.GestionFactures.FacturesFneViewModel(
                             provider.GetRequiredService<IInvoiceRepository>(),
-                            provider.GetRequiredService<FNEV4.Infrastructure.Services.IDatabaseService>()
+                            provider.GetRequiredService<FNEV4.Infrastructure.Services.IDatabaseService>(),
+                            provider.GetRequiredService<IFneCertificationService>()
                         ));
                     services.AddTransient<FNEV4.Presentation.ViewModels.GestionFactures.FactureFneDetailsViewModel>();
                     

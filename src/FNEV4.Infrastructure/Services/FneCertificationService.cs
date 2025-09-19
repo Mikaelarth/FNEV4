@@ -69,7 +69,7 @@ namespace FNEV4.Infrastructure.Services
                     if (result.IsSuccess)
                     {
                         // Mise à jour avec toutes les données enrichies FNE
-                        invoice.Status = "Certified";
+                        invoice.Status = "certified";
                         invoice.FneReference = result.FneReference;
                         invoice.VerificationToken = result.VerificationToken;
                         
