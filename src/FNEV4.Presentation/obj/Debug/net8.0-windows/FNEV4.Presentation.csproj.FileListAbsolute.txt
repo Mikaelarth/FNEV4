@@ -919,3 +919,4 @@ D:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\Gestio
 D:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\GestionFactures\FacturesFneView.baml
 D:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\GestionFactures\FactureFneDetailsDialog.g.cs
 D:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\obj\Debug\net8.0-windows\Views\GestionFactures\FactureFneDetailsDialog.baml
+D:\PROJET\FNE\FNEV4\src\FNEV4.Presentation\bin\Debug\net8.0-windows\BarcodeStandard.dll

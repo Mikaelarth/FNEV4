@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <!-- Material Design pour WPF -->
+    <PackageReference Include="BarcodeLib" Version="2.4.0" />
     <PackageReference Include="MaterialDesignThemes" Version="4.9.0" />
     <PackageReference Include="MaterialDesignColors" Version="2.1.4" />
     

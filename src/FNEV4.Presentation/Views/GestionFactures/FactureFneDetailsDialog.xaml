@@ -410,7 +410,7 @@
                                                         Binding="{Binding Quantity}" 
                                                         Width="80"/>
                                     <DataGridTextColumn Header="PRIX UNIT." 
-                                                        Binding="{Binding UnitPrice, StringFormat='{}{0:N0} FCFA'}" 
+                                                        Binding="{Binding UnitPrice, StringFormat='{}{0:N2} FCFA'}" 
                                                         Width="120"/>
                                     <DataGridTemplateColumn Header="TVA" Width="100">
                                         <DataGridTemplateColumn.CellTemplate>
@@ -434,7 +434,7 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTextColumn Header="TOTAL" 
-                                                        Binding="{Binding LineAmountTTC, StringFormat='{}{0:N0} FCFA'}" 
+                                                        Binding="{Binding LineAmountTTC, StringFormat='{}{0:N2} FCFA'}" 
                                                         Width="120"/>
                                 </DataGrid.Columns>
                             </DataGrid>
@@ -458,7 +458,7 @@
                                 <TextBlock Text="MESSAGE COMMERCIAL" 
                                            Style="{StaticResource SectionTitleStyle}"
                                            Margin="0,0,0,8"/>
-                                <TextBlock Text="Merci de votre confiance. Paiement sous 30 jours."
+                                <TextBlock Text="{Binding Facture.CommercialMessage, TargetNullValue='Aucun message commercial'}"
                                            Style="{StaticResource InvoiceFieldValueStyle}"
                                            TextWrapping="Wrap"
                                            Foreground="{DynamicResource MaterialDesignBodyLight}"/>
@@ -483,10 +483,10 @@
                                     </Grid.RowDefinitions>
 
                                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Sous-total HT:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
-                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Facture.TotalAmountHT, StringFormat='{}{0:N0} FCFA'}" Style="{StaticResource InvoiceFieldValueStyle}"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Facture.TotalAmountHT, StringFormat='{}{0:N2} FCFA'}" Style="{StaticResource InvoiceFieldValueStyle}"/>
 
                                     <TextBlock Grid.Row="1" Grid.Column="0" Text="TVA:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Facture.TotalVatAmount, StringFormat='{}{0:N0} FCFA'}" Style="{StaticResource InvoiceFieldValueStyle}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Facture.TotalVatAmount, StringFormat='{}{0:N2} FCFA'}" Style="{StaticResource InvoiceFieldValueStyle}"/>
 
                                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Remise:" Style="{StaticResource InvoiceFieldLabelStyle}"/>
                                     <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Facture.GlobalDiscount, StringFormat='{}{0:N2}%'}" Style="{StaticResource InvoiceFieldValueStyle}"/>
@@ -497,7 +497,7 @@
                                                FontWeight="Bold" FontSize="16" 
                                                Foreground="{DynamicResource PrimaryHueMediumBrush}"/>
                                     <TextBlock Grid.Row="4" Grid.Column="1" 
-                                               Text="{Binding Facture.TotalAmountTTC, StringFormat='{}{0:N0} FCFA'}"
+                                               Text="{Binding Facture.TotalAmountTTC, StringFormat='{}{0:N2} FCFA'}"
                                                FontWeight="Bold" FontSize="16" 
                                                Foreground="{DynamicResource PrimaryHueMediumBrush}"/>
                                 </Grid>
@@ -517,7 +517,7 @@
                             <TextBlock Text="CONDITIONS DE RÈGLEMENT"
                                        Style="{StaticResource InvoiceFieldLabelStyle}"
                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="Paiement sous 30 jours. Pénalités de retard applicables."
+                            <TextBlock Text="{Binding Facture.Footer, TargetNullValue='Aucune condition spécifiée'}"
                                        Style="{StaticResource InvoiceFieldValueStyle}"
                                        Foreground="{DynamicResource MaterialDesignBodyLight}"
                                        FontSize="10"/>
@@ -529,11 +529,11 @@
                                 Background="{DynamicResource MaterialDesignChipBackground}"
                                 CornerRadius="4"
                                 Margin="16,0,0,0">
-                            <TextBlock Text="CODE-BARRES FACTURE" 
-                                       FontSize="10" 
-                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                       HorizontalAlignment="Center" 
-                                       VerticalAlignment="Center"/>
+                            <Image Source="{Binding BarcodeImageSource}"
+                                   Stretch="Uniform"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Margin="4"/>
                         </Border>
                     </Grid>
                 </Grid>

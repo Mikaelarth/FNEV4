@@ -18,6 +18,19 @@
           }
         }
       },
+      "BarcodeLib/2.4.0": {
+        "type": "package",
+        "dependencies": {
+          "System.Drawing.Common": "5.0.2",
+          "System.Text.Json": "5.0.2"
+        },
+        "compile": {
+          "lib/netstandard2.0/BarcodeStandard.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/BarcodeStandard.dll": {}
+        }
+      },
       "ClosedXML/0.102.2": {
         "type": "package",
         "dependencies": {
@@ -3202,6 +3215,20 @@
         "icon.png",
         "lib/netstandard2.1/AutoMapper.dll",
         "lib/netstandard2.1/AutoMapper.xml"
+      ]
+    },
+    "BarcodeLib/2.4.0": {
+      "sha512": "SXMILkQm3jpngFmSa6AafsaJNid8UWCZh1v4w2oWxBzXnuVaL/S7H+nMxslWbPOPz1AVaLenRbFgy3OtX9J4dQ==",
+      "type": "package",
+      "path": "barcodelib/2.4.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "barcodelib.2.4.0.nupkg.sha512",
+        "barcodelib.nuspec",
+        "lib/netstandard2.0/BarcodeStandard.dll",
+        "upca.jpg"
       ]
     },
     "ClosedXML/0.102.2": {
@@ -9180,6 +9207,7 @@
   "projectFileDependencyGroups": {
     "net8.0-windows7.0": [
       "AutoMapper >= 12.0.1",
+      "BarcodeLib >= 2.4.0",
       "CommunityToolkit.Mvvm >= 8.2.2",
       "FNEV4.Application >= 1.0.0",
       "FNEV4.Core >= 1.0.0",
@@ -9251,6 +9279,10 @@
           "AutoMapper": {
             "target": "Package",
             "version": "[12.0.1, )"
+          },
+          "BarcodeLib": {
+            "target": "Package",
+            "version": "[2.4.0, )"
           },
           "CommunityToolkit.Mvvm": {
             "target": "Package",

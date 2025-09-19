@@ -2,8 +2,6 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows.Media;
-using FNEV4.Core.Entities;
 using System.Linq;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
@@ -12,9 +10,15 @@ using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using Microsoft.Win32;
 using System.Text;
 using FNEV4.Infrastructure.Services;
+using BarcodeLib;
+using FNEV4.Core.Entities;
+using WpfMedia = System.Windows.Media;
+using DrawingMedia = System.Drawing;
+using System.Drawing.Imaging;
 
 namespace FNEV4.Presentation.ViewModels.GestionFactures
 {
@@ -28,6 +32,7 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         private FneInvoice _facture;
         private ObservableCollection<FneInvoiceItem> _articles;
         private BitmapImage? _qrCodeImageSource;
+        private BitmapImage? _barcodeImageSource;
         private readonly IDatabaseService? _databaseService;
         
         // Informations entreprise chargées depuis la base
@@ -48,6 +53,7 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
             InitializeCommands();
             CalculateProperties();
             GenerateQrCodeImage();
+            GenerateBarcode();
             
             // Charger les informations d'entreprise depuis la base de données
             LoadCompanyInfoSync();
@@ -86,6 +92,19 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
             set
             {
                 _qrCodeImageSource = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Image source pour l'affichage du code-barres de la facture
+        /// </summary>
+        public BitmapImage? BarcodeImageSource
+        {
+            get => _barcodeImageSource;
+            set
+            {
+                _barcodeImageSource = value;
                 OnPropertyChanged();
             }
         }
@@ -169,17 +188,17 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         /// <summary>
         /// Couleur de fond pour le statut de traitement
         /// </summary>
-        public Brush ProcessingStatusBackground
+        public WpfMedia.Brush ProcessingStatusBackground
         {
             get
             {
                 return Facture?.FneProcessingStatus?.ToLower() switch
                 {
-                    "success" or "completed" => new SolidColorBrush(Color.FromRgb(76, 175, 80)),   // Vert
-                    "processing" or "in-progress" => new SolidColorBrush(Color.FromRgb(255, 152, 0)), // Orange
-                    "pending" => new SolidColorBrush(Color.FromRgb(33, 150, 243)),  // Bleu
-                    "error" or "failed" => new SolidColorBrush(Color.FromRgb(244, 67, 54)),       // Rouge
-                    _ => new SolidColorBrush(Color.FromRgb(158, 158, 158))      // Gris
+                    "success" or "completed" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(76, 175, 80)),   // Vert
+                    "processing" or "in-progress" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(255, 152, 0)), // Orange
+                    "pending" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(33, 150, 243)),  // Bleu
+                    "error" or "failed" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(244, 67, 54)),       // Rouge
+                    _ => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(158, 158, 158))      // Gris
                 };
             }
         }
@@ -429,7 +448,7 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
                 var textBlock = new System.Windows.Controls.TextBlock
                 {
                     Text = Facture.FneQrCodeData,
-                    FontFamily = new FontFamily("Consolas"),
+                    FontFamily = new WpfMedia.FontFamily("Consolas"),
                     FontSize = 12,
                     TextWrapping = TextWrapping.Wrap
                 };
@@ -629,7 +648,7 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
             var textBlock = new System.Windows.Controls.TextBlock
             {
                 Text = details.ToString(),
-                FontFamily = new FontFamily("Consolas"),
+                FontFamily = new WpfMedia.FontFamily("Consolas"),
                 FontSize = 12,
                 TextWrapping = TextWrapping.Wrap
             };
@@ -718,17 +737,17 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         /// <summary>
         /// Couleur de fond du badge de statut
         /// </summary>
-        public Brush StatusBackground
+        public WpfMedia.Brush StatusBackground
         {
             get
             {
                 return Facture?.Status?.ToLower() switch
                 {
-                    "certified" => new SolidColorBrush(Color.FromRgb(76, 175, 80)),   // Vert
-                    "draft" => new SolidColorBrush(Color.FromRgb(158, 158, 158)),     // Gris
-                    "validated" => new SolidColorBrush(Color.FromRgb(33, 150, 243)),  // Bleu
-                    "error" => new SolidColorBrush(Color.FromRgb(244, 67, 54)),       // Rouge
-                    _ => new SolidColorBrush(Color.FromRgb(96, 125, 139))             // Gris bleu
+                    "certified" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(76, 175, 80)),   // Vert
+                    "draft" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(158, 158, 158)),     // Gris
+                    "validated" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(33, 150, 243)),  // Bleu
+                    "error" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(244, 67, 54)),       // Rouge
+                    _ => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(96, 125, 139))             // Gris bleu
                 };
             }
         }
@@ -736,17 +755,17 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         /// <summary>
         /// Couleur de fond du badge template
         /// </summary>
-        public Brush TemplateBackground
+        public WpfMedia.Brush TemplateBackground
         {
             get
             {
                 return Facture?.Template switch
                 {
-                    "B2B" => new SolidColorBrush(Color.FromRgb(33, 150, 243)),  // Bleu
-                    "B2C" => new SolidColorBrush(Color.FromRgb(76, 175, 80)),   // Vert
-                    "B2G" => new SolidColorBrush(Color.FromRgb(156, 39, 176)),  // Violet
-                    "B2F" => new SolidColorBrush(Color.FromRgb(255, 152, 0)),   // Orange
-                    _ => new SolidColorBrush(Color.FromRgb(158, 158, 158))      // Gris
+                    "B2B" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(33, 150, 243)),  // Bleu
+                    "B2C" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(76, 175, 80)),   // Vert
+                    "B2G" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(156, 39, 176)),  // Violet
+                    "B2F" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(255, 152, 0)),   // Orange
+                    _ => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(158, 158, 158))      // Gris
                 };
             }
         }
@@ -843,16 +862,16 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
         /// <summary>
         /// Obtient la couleur associée au type de TVA selon les spécifications FNE
         /// </summary>
-        public static Brush GetTvaColorBrush(string? codeTva)
+        public static WpfMedia.Brush GetTvaColorBrush(string? codeTva)
         {
             return codeTva?.ToUpper() switch
             {
-                "TVA" => new SolidColorBrush(Color.FromRgb(76, 175, 80)),   // Vert - TVA normal 18%
-                "TVAB" => new SolidColorBrush(Color.FromRgb(255, 152, 0)),  // Orange - TVA réduit 9%
-                "TVAC" => new SolidColorBrush(Color.FromRgb(158, 158, 158)), // Gris - TVA exec conv 0%
-                "TVAD" => new SolidColorBrush(Color.FromRgb(96, 125, 139)),  // Gris bleu - TVA exec leg 0%
-                null or "" => new SolidColorBrush(Color.FromRgb(244, 67, 54)), // Rouge - Erreur
-                _ => new SolidColorBrush(Color.FromRgb(158, 158, 158))       // Gris par défaut
+                "TVA" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(76, 175, 80)),   // Vert - TVA normal 18%
+                "TVAB" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(255, 152, 0)),  // Orange - TVA réduit 9%
+                "TVAC" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(158, 158, 158)), // Gris - TVA exec conv 0%
+                "TVAD" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(96, 125, 139)),  // Gris bleu - TVA exec leg 0%
+                null or "" => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(244, 67, 54)), // Rouge - Erreur
+                _ => new WpfMedia.SolidColorBrush(WpfMedia.Color.FromRgb(158, 158, 158))       // Gris par défaut
             };
         }
 
@@ -966,6 +985,61 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
             catch
             {
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Génère un code-barres pour la facture
+        /// </summary>
+        private void GenerateBarcode()
+        {
+            try
+            {
+                if (_facture?.InvoiceNumber == null)
+                {
+                    Debug.WriteLine("GenerateBarcode - Numéro de facture non disponible");
+                    return;
+                }
+
+                var barcodeText = $"FNE-{_facture.InvoiceNumber}";
+                Debug.WriteLine($"GenerateBarcode - Génération du code-barres pour: {barcodeText}");
+
+                var barcode = new Barcode();
+                var barcodeImage = barcode.Encode(TYPE.CODE128, barcodeText, 300, 60);
+
+                if (barcodeImage != null)
+                {
+                    // Convertir System.Drawing.Image en System.Drawing.Bitmap puis en BitmapImage WPF
+                    var bitmap = new DrawingMedia.Bitmap(barcodeImage);
+                    BarcodeImageSource = ConvertBitmapToBitmapImage(bitmap);
+                    Debug.WriteLine("GenerateBarcode - Code-barres généré avec succès");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Erreur lors de la génération du code-barres: {ex.Message}");
+                BarcodeImageSource = null;
+            }
+        }
+
+        /// <summary>
+        /// Convertit un System.Drawing.Bitmap en BitmapImage WPF
+        /// </summary>
+        private BitmapImage ConvertBitmapToBitmapImage(DrawingMedia.Bitmap bitmap)
+        {
+            using (var memory = new MemoryStream())
+            {
+                bitmap.Save(memory, ImageFormat.Png);
+                memory.Position = 0;
+
+                var bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.StreamSource = memory;
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.EndInit();
+                bitmapImage.Freeze(); // Permet l'utilisation thread-safe
+
+                return bitmapImage;
             }
         }
 

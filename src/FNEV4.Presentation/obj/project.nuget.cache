@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "8soQP2CRfh8=",
+  "dgSpecHash": "Ko9CwirnxrA=",
   "success": true,
   "projectFilePath": "D:\\PROJET\\FNE\\FNEV4\\src\\FNEV4.Presentation\\FNEV4.Presentation.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\HP\\.nuget\\packages\\automapper\\12.0.1\\automapper.12.0.1.nupkg.sha512",
+    "C:\\Users\\HP\\.nuget\\packages\\barcodelib\\2.4.0\\barcodelib.2.4.0.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\closedxml\\0.102.2\\closedxml.0.102.2.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\communitytoolkit.mvvm\\8.2.2\\communitytoolkit.mvvm.8.2.2.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\documentformat.openxml\\2.20.0\\documentformat.openxml.2.20.0.nupkg.sha512",
