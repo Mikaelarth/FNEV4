@@ -21,6 +21,50 @@
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="Height" Value="40"/>
         </Style>
+
+        <!-- Style pour les lignes sélectionnées -->
+        <Style x:Key="SelectableDataGridRowStyle" TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+            <Setter Property="MinHeight" Value="48"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Style.Triggers>
+                <!-- Style au survol -->
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F5F5F5"/>
+                </Trigger>
+                
+                <!-- Style pour les lignes sélectionnées -->
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource PrimaryHueLightBrush}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+                
+                <!-- Style pour les lignes sélectionnées au survol -->
+                <MultiTrigger>
+                    <MultiTrigger.Conditions>
+                        <Condition Property="IsSelected" Value="True"/>
+                        <Condition Property="IsMouseOver" Value="True"/>
+                    </MultiTrigger.Conditions>
+                    <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </MultiTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Style pour les cellules sélectionnées -->
+        <Style x:Key="SelectableDataGridCellStyle" TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Style.Triggers>
+                <!-- Style pour les cellules dans des lignes sélectionnées -->
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected}" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
 
     <Grid>
@@ -183,7 +227,14 @@
                 </Style>
             </materialDesign:Card.Style>
             <Grid>
-                <!-- Indicateur de chargement -->
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Contenu principal avec DataGrid -->
+                <Grid Grid.Row="0">
+                    <!-- Indicateur de chargement -->
                 <ProgressBar IsIndeterminate="True" 
                            Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
                            Margin="0,0,0,8"
@@ -216,11 +267,12 @@
                 
                 <DataGrid ItemsSource="{Binding Factures}"
                           SelectedItem="{Binding SelectedFacture}"
+                          x:Name="FacturesDataGrid"
                           AutoGenerateColumns="False"
                           CanUserAddRows="False"
                           CanUserDeleteRows="False"
                           IsReadOnly="True"
-                          SelectionMode="Single"
+                          SelectionMode="Extended"
                           GridLinesVisibility="None"
                           HeadersVisibility="Column"
                           Background="Transparent"
@@ -235,27 +287,11 @@
                           EnableColumnVirtualization="False"
                           Margin="8">
                     <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
-                            <Setter Property="Height" Value="40"/>
-                            <Setter Property="FontSize" Value="12"/>
-                            <Setter Property="BorderThickness" Value="0"/>
-                            <Setter Property="BorderBrush" Value="Transparent"/>
-                            <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#F0F8FF"/>
-                                </Trigger>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="#E3F2FD"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource SelectableDataGridRowStyle}"/>
                     </DataGrid.RowStyle>
                     
                     <DataGrid.CellStyle>
-                        <Style TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
-                            <Setter Property="Padding" Value="8,4"/>
-                            <Setter Property="BorderThickness" Value="0"/>
-                            <Setter Property="BorderBrush" Value="Transparent"/>
+                        <Style TargetType="DataGridCell" BasedOn="{StaticResource SelectableDataGridCellStyle}">
                             <Setter Property="VerticalAlignment" Value="Center"/>
                             <Setter Property="HorizontalAlignment" Value="Stretch"/>
                             <Setter Property="Background" Value="Transparent"/>
@@ -271,6 +307,34 @@
                     </DataGrid.CellStyle>
                     
                     <DataGrid.Columns>
+                        <!-- Indicateur de sélection -->
+                        <DataGridTemplateColumn Width="Auto" MinWidth="50" CanUserResize="False" CanUserSort="False">
+                            <DataGridTemplateColumn.Header>
+                                <materialDesign:PackIcon Kind="CheckboxMultipleMarked" 
+                                                       Width="16" Height="16"
+                                                       Foreground="White"
+                                                       VerticalAlignment="Center" />
+                            </DataGridTemplateColumn.Header>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <!-- Indicateur de sélection - cercle coloré -->
+                                        <Ellipse Width="16" Height="16" 
+                                                Fill="{DynamicResource PrimaryHueMidBrush}"
+                                                Visibility="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                        
+                                        <!-- Icône de check à l'intérieur -->
+                                        <materialDesign:PackIcon Kind="Check" 
+                                                               Width="12" Height="12"
+                                                               Foreground="White"
+                                                               VerticalAlignment="Center"
+                                                               HorizontalAlignment="Center"
+                                                               Visibility="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        
                         <!-- Numéro de facture -->
                         <DataGridTextColumn Header="NUMÉRO"
                                             Binding="{Binding InvoiceNumber}"
@@ -478,6 +542,71 @@
                                    HorizontalAlignment="Center" />
                     </StackPanel>
                 </Grid>
+                </Grid>
+                
+                <!-- Barre d'actions en masse (visible avec sélection multiple) -->
+                <Border Grid.Row="1" 
+                        Background="{DynamicResource PrimaryHueLightBrush}"
+                        CornerRadius="4"
+                        Margin="8,0,8,8"
+                        Padding="12,8"
+                        Visibility="{Binding HasMultipleSelection, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="CheckboxMultipleMarked" 
+                                               Foreground="White"
+                                               Width="20" Height="20"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,0" />
+                        <TextBlock Text="{Binding SelectedCount, StringFormat='{}{0} facture(s) sélectionnée(s)'}"
+                                 Foreground="White"
+                                 FontWeight="Medium"
+                                 VerticalAlignment="Center"
+                                 Margin="0,0,16,0" />
+                        
+                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="4"
+                                Background="{DynamicResource MaterialDesignLightGreenBrush}"
+                                BorderBrush="{DynamicResource MaterialDesignLightGreenBrush}"
+                                Command="{Binding CertifyMultipleCommand}"
+                                Margin="0,0,8,0"
+                                Height="32"
+                                Padding="12,4">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CertificateOutline" 
+                                                       Width="16" Height="16"
+                                                       Foreground="White"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,4,0" />
+                                <TextBlock Text="CERTIFIER" 
+                                         Foreground="White"
+                                         FontSize="11"
+                                         FontWeight="Bold"
+                                         VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="4"
+                                Background="{DynamicResource MaterialDesignRedBrush}"
+                                BorderBrush="{DynamicResource MaterialDesignRedBrush}"
+                                Command="{Binding DeleteMultipleCommand}"
+                                Height="32"
+                                Padding="12,4">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Delete" 
+                                                       Width="16" Height="16"
+                                                       Foreground="White"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,4,0" />
+                                <TextBlock Text="SUPPRIMER" 
+                                         Foreground="White"
+                                         FontSize="11"
+                                         FontWeight="Bold"
+                                         VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
             </Grid>
         </materialDesign:Card>
 

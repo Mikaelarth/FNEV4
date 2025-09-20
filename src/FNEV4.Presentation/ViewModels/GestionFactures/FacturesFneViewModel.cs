@@ -79,6 +79,16 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
             "Certified"
         };
 
+        // Propriétés pour les actions de masse
+        [ObservableProperty]
+        private ObservableCollection<FneInvoice> selectedFactures = new();
+
+        [ObservableProperty]
+        private bool hasMultipleSelection;
+
+        [ObservableProperty]
+        private int selectedCount;
+
         #endregion
 
         #region Property Change Handlers
@@ -518,6 +528,227 @@ namespace FNEV4.Presentation.ViewModels.GestionFactures
             {
                 StatusMessage = $"Erreur lors de la mise à jour après certification: {ex.Message}";
             }
+        }
+
+        #endregion
+
+        #region Actions de masse
+
+        /// <summary>
+        /// Certifie plusieurs factures sélectionnées en masse
+        /// </summary>
+        [RelayCommand]
+        private async Task CertifyMultipleAsync()
+        {
+            if (SelectedFactures == null || SelectedFactures.Count == 0)
+            {
+                StatusMessage = "Aucune facture sélectionnée pour la certification.";
+                return;
+            }
+
+            var facturesACertifier = SelectedFactures.Where(f => f.Status.Equals("draft", StringComparison.OrdinalIgnoreCase)).ToList();
+            
+            if (facturesACertifier.Count == 0)
+            {
+                StatusMessage = "Aucune facture en statut 'draft' n'est sélectionnée.";
+                return;
+            }
+
+            IsCertifying = true;
+            CertificationStatus = $"Certification de {facturesACertifier.Count} factures en cours...";
+            StatusMessage = $"Démarrage de la certification en masse de {facturesACertifier.Count} factures...";
+
+            int successCount = 0;
+            int errorCount = 0;
+            var errors = new List<string>();
+
+            try
+            {
+                // Récupérer la configuration FNE active
+                var configuration = await GetActiveFneConfigurationAsync();
+                if (configuration == null)
+                {
+                    throw new InvalidOperationException("Aucune configuration FNE active trouvée.\nVeuillez configurer l'API FNE d'abord.");
+                }
+
+                // Traiter chaque facture sélectionnée
+                for (int i = 0; i < facturesACertifier.Count; i++)
+                {
+                    var facture = facturesACertifier[i];
+                    CertificationStatus = $"Certification {i + 1}/{facturesACertifier.Count}: {facture.InvoiceNumber}";
+                    
+                    try
+                    {
+                        var certificationResult = await _certificationService.CertifyInvoiceAsync(facture, configuration);
+
+                        if (certificationResult.IsSuccess)
+                        {
+                            // Mise à jour de la facture en cas de succès
+                            facture.Status = "certified";
+                            facture.FneCertificationDate = DateTime.Now;
+                            
+                            // Sauvegarder en base de données
+                            await _invoiceRepository.UpdateAsync(facture);
+                            successCount++;
+                        }
+                        else
+                        {
+                            errors.Add($"Facture {facture.InvoiceNumber}: {certificationResult.ErrorMessage}");
+                            errorCount++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errors.Add($"Facture {facture.InvoiceNumber}: {ex.Message}");
+                        errorCount++;
+                    }
+                }
+
+                // Mettre à jour les statistiques
+                await UpdateStatisticsAsync();
+
+                // Message de résumé
+                if (errorCount == 0)
+                {
+                    StatusMessage = $"✅ Certification en masse réussie: {successCount} factures certifiées";
+                }
+                else if (successCount > 0)
+                {
+                    StatusMessage = $"⚠️ Certification partielle: {successCount} réussies, {errorCount} erreurs";
+                }
+                else
+                {
+                    StatusMessage = $"❌ Échec de la certification: {errorCount} erreurs";
+                }
+
+                // Afficher les erreurs si nécessaire
+                if (errors.Count > 0 && errors.Count <= 5)
+                {
+                    StatusMessage += $" - {string.Join("; ", errors)}";
+                }
+                else if (errors.Count > 5)
+                {
+                    StatusMessage += $" - Voir les logs pour le détail des erreurs";
+                }
+
+                // Vider la sélection après l'opération
+                SelectedFactures.Clear();
+                UpdateMultipleSelection();
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"❌ Erreur lors de la certification en masse: {ex.Message}";
+            }
+            finally
+            {
+                IsCertifying = false;
+                CertificationStatus = "";
+            }
+        }
+
+        /// <summary>
+        /// Supprime plusieurs factures sélectionnées en masse
+        /// </summary>
+        [RelayCommand]
+        private async Task DeleteMultipleAsync()
+        {
+            if (SelectedFactures == null || SelectedFactures.Count == 0)
+            {
+                StatusMessage = "Aucune facture sélectionnée pour la suppression.";
+                return;
+            }
+
+            var facturesASupprimer = SelectedFactures.ToList();
+
+            // Confirmation de suppression
+            var messageBoxResult = System.Windows.MessageBox.Show(
+                $"Êtes-vous sûr de vouloir supprimer {facturesASupprimer.Count} factures ?\n\nCette action est irréversible.",
+                "Confirmation de suppression",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
+
+            if (messageBoxResult != System.Windows.MessageBoxResult.Yes)
+            {
+                StatusMessage = "Suppression annulée par l'utilisateur.";
+                return;
+            }
+
+            IsLoading = true;
+            StatusMessage = $"Suppression de {facturesASupprimer.Count} factures en cours...";
+
+            int successCount = 0;
+            int errorCount = 0;
+            var errors = new List<string>();
+
+            try
+            {
+                // Traiter chaque facture sélectionnée
+                foreach (var facture in facturesASupprimer)
+                {
+                    try
+                    {
+                        await _invoiceRepository.DeleteAsync(facture.Id.ToString());
+                        successCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        errors.Add($"Facture {facture.InvoiceNumber}: {ex.Message}");
+                        errorCount++;
+                    }
+                }
+
+                // Recharger les données après suppression
+                await LoadFacturesAsync();
+
+                // Message de résumé
+                if (errorCount == 0)
+                {
+                    StatusMessage = $"✅ Suppression en masse réussie: {successCount} factures supprimées";
+                }
+                else if (successCount > 0)
+                {
+                    StatusMessage = $"⚠️ Suppression partielle: {successCount} supprimées, {errorCount} erreurs";
+                }
+                else
+                {
+                    StatusMessage = $"❌ Échec de la suppression: {errorCount} erreurs";
+                }
+
+                // Afficher les erreurs si nécessaire
+                if (errors.Count > 0 && errors.Count <= 3)
+                {
+                    StatusMessage += $" - {string.Join("; ", errors)}";
+                }
+                else if (errors.Count > 3)
+                {
+                    StatusMessage += $" - Voir les logs pour le détail des erreurs";
+                }
+
+                // Vider la sélection après l'opération
+                SelectedFactures.Clear();
+                UpdateMultipleSelection();
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"❌ Erreur lors de la suppression en masse: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        #endregion
+
+        #region Helpers
+
+        /// <summary>
+        /// Met à jour les propriétés liées à la sélection multiple
+        /// </summary>
+        public void UpdateMultipleSelection()
+        {
+            SelectedCount = SelectedFactures?.Count ?? 0;
+            HasMultipleSelection = SelectedCount > 0;
         }
 
         #endregion
